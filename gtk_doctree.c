@@ -1,14 +1,12 @@
 #include "gtk_doctree.h"
 
-// enum { COLNAME = 0, NUMCOL };
-
 /** create and initialize a new buffer instance to add to tree */
-kinst_t *buf_new_inst (gchar *fname)
+kinst_t *buf_new_inst (const gchar *fname)
 {
     kinst_t *inst = g_slice_new (kinst_t);
     if (!inst)
         return NULL;
-    inst->buf = gtk_text_buffer_new (NULL);
+    inst->buf = gtk_source_buffer_new (NULL);
     if (fname)
         inst->filename = g_strdup_printf ("%s", fname);
     else
@@ -27,7 +25,38 @@ void buf_delete_inst (kinst_t *inst)
     g_slice_free (kinst_t, inst);
 }
 
-GtkTreeModel *create_and_fill_model (void)
+void doctree_append (GtkWidget *view, const gchar *filename)
+{
+    GtkTreeStore *treestore;
+    GtkTreeIter toplevel;
+    const gchar *name = filename ? filename : "untitled";
+
+    treestore = GTK_TREE_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(view)));
+    gtk_tree_store_append (treestore, &toplevel, NULL);
+    gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
+    gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(name), -1);
+}
+
+GtkTreeModel *doctree_add (mainwin_t *app, const gchar *filename)
+{
+    GtkTreeStore *treestore;
+    GtkTreeIter toplevel;
+    const gchar *name = filename ? filename : "untitled";
+
+    if (app->doctreeview)
+        treestore = GTK_TREE_STORE(gtk_tree_view_get_model (
+                                GTK_TREE_VIEW(app->doctreeview)));
+    else
+        treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
+
+    gtk_tree_store_append (treestore, &toplevel, NULL);
+    gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
+    gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(name), -1);
+
+    return GTK_TREE_MODEL (treestore);
+}
+
+GtkTreeModel *create_and_fill_model (mainwin_t *app)
 {
     gint nfiles = 4;
     /* tree with directory component commented out for single list
@@ -64,9 +93,11 @@ GtkTreeModel *create_and_fill_model (void)
 #endif
 
     return GTK_TREE_MODEL (treestore);
+
+    if (app) {}
 }
 
-GtkWidget *create_view_and_model (void)
+GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
 {
     GtkTreeViewColumn *col;
     GtkCellRenderer *renderer;
@@ -93,11 +124,15 @@ GtkWidget *create_view_and_model (void)
     gtk_tree_view_column_add_attribute(col, renderer,
         "text", COLNAME);
 
-    model = create_and_fill_model();
+    model = create_and_fill_model(app);
     gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
     g_object_unref(model);
 
+    doctree_append (view, "newfile");
+
     return view;
+
+    if (argv) {}
 }
 
 /** doctree callbacks */

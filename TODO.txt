@@ -1,0 +1,3 @@
+mainwin
+
+  * remove all treeview / model create out of main win create and init view and model with "Untitled" before creating window. Create function to scan through names to append "Untitled(2)", etc..

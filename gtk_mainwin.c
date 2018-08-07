@@ -202,7 +202,7 @@ GtkWidget *create_window (mainwin_t *mwin)
                                     GTK_POLICY_AUTOMATIC);
     gtk_widget_show (treescroll);
 
-    mwin->doctreeview = create_view_and_model();
+    mwin->doctreeview = create_view_and_model(mwin, NULL);
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(mwin->doctreeview));
     /*
      * border
@@ -226,7 +226,7 @@ GtkWidget *create_window (mainwin_t *mwin)
     gtk_widget_show (ibarvbox);
 
     /* create scrolled_window and textview */
-    mwin->view = gtk_text_view_new ();
+    mwin->view = gtk_source_view_new ();
     gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (mwin->view), GTK_WRAP_WORD);
     gtk_text_view_set_left_margin (GTK_TEXT_VIEW (mwin->view), 5);
     gtk_widget_show (mwin->view);

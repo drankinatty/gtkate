@@ -8,14 +8,14 @@
 enum { COLNAME = 0, COLINST, NUMCOL };
 
 typedef struct {
-    GtkTextBuffer *buf;                 /* textview buffer instance */
+    GtkSourceBuffer *buf;               /* textview buffer instance */
     gchar *filename;                    /* filename associated with buffer */
     gint line, col;                     /* line, col when switching */
     // gboolean readonly;                  /* readonly flag */
 } kinst_t;
 
-GtkTreeModel *create_and_fill_model (void);
-GtkWidget *create_view_and_model (void);
+GtkTreeModel *create_and_fill_model (mainwin_t *app);
+GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv);
 
 /** doctree callbacks */
 void doctree_activate (GtkWidget *widget, gpointer data);
