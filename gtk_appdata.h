@@ -48,15 +48,22 @@ typedef struct mainwin {
 
     GtkTreeModel    *doctreemodel;      /* document tree model */
 
-    guint           winwidth,
-                    winheight;
+    gint            winwidth,           /* main window width  */
+                    winheight,          /* main window height */
+                    swbordersz;         /* scrolled_window border size */
 
-    gboolean        showtoolbar,
-                    showdocwin;
+    gboolean        showtoolbar,        /* flag to show/hide toolbar */
+                    showdocwin;         /* flag to show/hide treeview */
 
-    gchar           *tabstring;
+    gchar           *fontname;          /* pango fontname */
+
+    gint            tabstop;            /* number of spaces in tab */
+    gint            softtab;            /* number of spaced to indent */
+    gchar           *tabstring;         /* chars that make up tabstring */
 
     gchar           *laststyle;         /* sourceview last highlight style */
+
+    gboolean        indentauto;         /* auto-indent on return */
 
     gboolean        lineno;             /* show line numbers */
     gboolean        linehghlt;          /* current line highlight */

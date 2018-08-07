@@ -1,3 +1,16 @@
 mainwin
 
-  * remove all treeview / model create out of main win create and init view and model with "Untitled" before creating window. Create function to scan through names to append "Untitled(2)", etc..
+  * remove all treeview / model create out of mainwin create and init view and model with "Untitled" before creating window. Create function to scan through names to append "Untitled(2)", etc..
+
+menu
+
+  * adapt menu from gtkwrte, will need refactoring and many of the variables used will not be needed.
+
+toolbar
+
+  * incorporate toolbar from gtkwrite.
+
+buffer
+
+  * adapt file open/save for document tree entries and check for buffer modified.
+

@@ -1,24 +1,39 @@
 #include "gtk_mainwin.h"
 
-void mainwin_init (mainwin_t *mwin, char **argv)
+void mainwin_init (mainwin_t *app, char **argv)
 {
-    mwin->window = NULL;
-    mwin->toolbar = NULL;
-    mwin->vboxtree = NULL;
-    mwin->view = NULL;
+    app->window         = NULL;         /* main window pointer */
+    app->toolbar        = NULL;         /* toolbar widget */
+    app->vboxtree       = NULL;         /* vbox for treeview show/hide */
+    app->view           = NULL;         /* sourceview widget */
 
-    mwin->winwidth = 780;
-    mwin->winheight = 800;
+    app->winwidth       = 780;          /* default window width   */
+    app->winheight      = 800;          /* default window height  */
+    app->swbordersz     = 0;            /* scrolled_window border */
 
-    mwin->showtoolbar = TRUE;
-    mwin->showdocwin = TRUE;
+    app->showtoolbar    = TRUE;         /* toolbar is visible */
+    app->showdocwin     = TRUE;         /* document tree is visible */
+
+    app->fontname       = g_strdup ("DejaVu Sans Mono 8");
+
+    app->tabstop        = 8;            /* number of spaces per tab */
+    app->softtab        = 4;            /* soft tab stop size */
+    app->tabstring      = NULL;         /* tabstring for indent */
+
+    app->indentauto     = TRUE;         /* auto-indent on return */
+
+    app->lineno         = FALSE;        /* show line numbers (sourceview) */
+    app->linehghlt      = TRUE;         /* highlight current line */
+
+    app->showmargin     = TRUE;         /* show margin at specific column */
+    app->marginwidth    = 80;           /* initial right margin to display */
 
     if (argv) {}
 }
 
-void mainwin_destroy (mainwin_t *mwin)
+void mainwin_destroy (mainwin_t *app)
 {
-    if (mwin) {};
+    if (app) {};
 }
 
 /*
@@ -52,7 +67,7 @@ gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
  *  and connect callback functions. 'app' contains
  *  widgets for window, text_view and statusbar.
  */
-GtkWidget *create_window (mainwin_t *mwin)
+GtkWidget *create_window (mainwin_t *app)
 {
     GtkAccelGroup *mainaccel;
     GtkWidget *vbox;                /* vbox container   */
@@ -91,14 +106,14 @@ GtkWidget *create_window (mainwin_t *mwin)
     // gchar *iconfile;            /* filename to loading icon */
 
     /* create toplevel window */
-    if (!(mwin->window = gtk_window_new (GTK_WINDOW_TOPLEVEL))) {
+    if (!(app->window = gtk_window_new (GTK_WINDOW_TOPLEVEL))) {
         g_fprintf (stderr, "create_window() gtk_window_new failure.\n");
         return NULL;
     }
     // gtk_window_set_position (GTK_WINDOW (window), GTK_WIN_POS_CENTER);
-    gtk_window_set_position (GTK_WINDOW (mwin->window), GTK_WIN_POS_NONE);
-    gtk_window_set_default_size (GTK_WINDOW (mwin->window), mwin->winwidth,
-                                    mwin->winheight);
+    gtk_window_set_position (GTK_WINDOW (app->window), GTK_WIN_POS_NONE);
+    gtk_window_set_default_size (GTK_WINDOW (app->window), app->winwidth,
+                                    app->winheight);
     // // gtk_window_move (GTK_WINDOW (app->window), app->winrootx, app->winrooty);
 
     /* create icon filename and set icon */
@@ -111,13 +126,13 @@ GtkWidget *create_window (mainwin_t *mwin)
 
     /* create & attach accelerator group */
     mainaccel = gtk_accel_group_new ();
-    gtk_window_add_accel_group (GTK_WINDOW (mwin->window), mainaccel);
+    gtk_window_add_accel_group (GTK_WINDOW (app->window), mainaccel);
 
     /* create vbox to hold menu, toolbar, scrolled_windows, textview & statusbar
      * and add contaier to main window
      */
     vbox = gtk_vbox_new (FALSE, 0);
-    gtk_container_add (GTK_CONTAINER (mwin->window), vbox);
+    gtk_container_add (GTK_CONTAINER (app->window), vbox);
     // gtk_box_set_spacing (GTK_BOX (vbox), 0);
 
     /* create menubar and menus to add */
@@ -160,17 +175,17 @@ GtkWidget *create_window (mainwin_t *mwin)
      * GTK_TOOLBAR_ICONS, GTK_TOOLBAR_TEXT, GTK_TOOLBAR_BOTH, GTK_TOOLBAR_BOTH_HORIZ
      */
     // app->toolbar = create_toolbar (mainaccel, app);
-    mwin->toolbar = gtk_toolbar_new ();
-    gtk_box_pack_start(GTK_BOX(vbox), mwin->toolbar, FALSE, FALSE, 0);
-    gtk_widget_show (mwin->toolbar);
+    app->toolbar = gtk_toolbar_new ();
+    gtk_box_pack_start(GTK_BOX(vbox), app->toolbar, FALSE, FALSE, 0);
+    gtk_widget_show (app->toolbar);
 
-    gtk_container_set_border_width(GTK_CONTAINER(mwin->toolbar), 2);
-    gtk_toolbar_set_show_arrow (GTK_TOOLBAR(mwin->toolbar), TRUE);
-    gtk_toolbar_set_style(GTK_TOOLBAR(mwin->toolbar), GTK_TOOLBAR_ICONS);
+    gtk_container_set_border_width(GTK_CONTAINER(app->toolbar), 2);
+    gtk_toolbar_set_show_arrow (GTK_TOOLBAR(app->toolbar), TRUE);
+    gtk_toolbar_set_style(GTK_TOOLBAR(app->toolbar), GTK_TOOLBAR_ICONS);
 
     exit = gtk_tool_button_new_from_stock(GTK_STOCK_QUIT);
     gtk_tool_item_set_homogeneous (exit, FALSE);
-    gtk_toolbar_insert(GTK_TOOLBAR(mwin->toolbar), exit, -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), exit, -1);
     gtk_widget_set_tooltip_text (GTK_WIDGET(exit), "Quit ");
 
     /* create hbox to display dirtree and ibar/scrolled_window */
@@ -186,13 +201,13 @@ GtkWidget *create_window (mainwin_t *mwin)
 //     gtk_widget_show (hbox);
     gtk_widget_show (hpaned);
     /* create vbox for directory tree */
-    mwin->vboxtree = gtk_vbox_new (FALSE, 0);
-    gtk_widget_set_size_request (mwin->vboxtree, treewidth, -1);
-//     gtk_box_pack_start(GTK_BOX(hbox), mwin->vboxtree, FALSE, TRUE, 0);
-    gtk_paned_pack1 (GTK_PANED(hpaned), mwin->vboxtree, TRUE, FALSE);
-    gtk_widget_show (mwin->vboxtree);
+    app->vboxtree = gtk_vbox_new (FALSE, 0);
+    gtk_widget_set_size_request (app->vboxtree, treewidth, -1);
+//     gtk_box_pack_start(GTK_BOX(hbox), app->vboxtree, FALSE, TRUE, 0);
+    gtk_paned_pack1 (GTK_PANED(hpaned), app->vboxtree, TRUE, FALSE);
+    gtk_widget_show (app->vboxtree);
 //     label = gtk_label_new ("\nvboxtree region");
-//     gtk_box_pack_start(GTK_BOX(mwin->vboxtree), label, FALSE, FALSE, 0);
+//     gtk_box_pack_start(GTK_BOX(app->vboxtree), label, FALSE, FALSE, 0);
 //     gtk_widget_show (label);
 
     /* create scrolled_window for tree */
@@ -202,16 +217,16 @@ GtkWidget *create_window (mainwin_t *mwin)
                                     GTK_POLICY_AUTOMATIC);
     gtk_widget_show (treescroll);
 
-    mwin->doctreeview = create_view_and_model(mwin, NULL);
-    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(mwin->doctreeview));
+    app->doctreeview = create_view_and_model(app, NULL);
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->doctreeview));
     /*
      * border
      */
-    gtk_container_set_border_width(GTK_CONTAINER(mwin->vboxtree), bordersz);
-    gtk_container_add (GTK_CONTAINER (treescroll), mwin->doctreeview);
-    gtk_box_pack_start(GTK_BOX(mwin->vboxtree), treescroll, TRUE, TRUE, 0);
-//     gtk_tree_view_set_headers_visible (GTK_TREE_VIEW(mwin->doctreeview), FALSE);
-    gtk_widget_show (mwin->doctreeview);
+    gtk_container_set_border_width(GTK_CONTAINER(app->vboxtree), bordersz);
+    gtk_container_add (GTK_CONTAINER (treescroll), app->doctreeview);
+    gtk_box_pack_start(GTK_BOX(app->vboxtree), treescroll, TRUE, TRUE, 0);
+//     gtk_tree_view_set_headers_visible (GTK_TREE_VIEW(app->doctreeview), FALSE);
+    gtk_widget_show (app->doctreeview);
 
     /* create vbox for infobar and scrolled_window */
     vboxibscroll = gtk_vbox_new (FALSE, 0);
@@ -226,28 +241,30 @@ GtkWidget *create_window (mainwin_t *mwin)
     gtk_widget_show (ibarvbox);
 
     /* create scrolled_window and textview */
-    mwin->view = gtk_source_view_new ();
-    gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (mwin->view), GTK_WRAP_WORD);
-    gtk_text_view_set_left_margin (GTK_TEXT_VIEW (mwin->view), 5);
-    gtk_widget_show (mwin->view);
-    scrolled_textview = gtk_scrolled_window_new (NULL, NULL);
-    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_textview),
-                                    GTK_POLICY_AUTOMATIC,
-                                    GTK_POLICY_AUTOMATIC);
-    gtk_container_add (GTK_CONTAINER (scrolled_textview), mwin->view);
+//     app->view = gtk_source_view_new ();
+//     gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (app->view), GTK_WRAP_WORD);
+//     gtk_text_view_set_left_margin (GTK_TEXT_VIEW (app->view), 5);
+//     gtk_widget_show (app->view);
+//     scrolled_textview = gtk_scrolled_window_new (NULL, NULL);
+//     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_textview),
+//                                     GTK_POLICY_AUTOMATIC,
+//                                     GTK_POLICY_AUTOMATIC);
+//     gtk_container_add (GTK_CONTAINER (scrolled_textview), app->view);
     /*
      * border
      */
-    gtk_container_set_border_width (GTK_CONTAINER (scrolled_textview), bordersz);
+//     gtk_container_set_border_width (GTK_CONTAINER (scrolled_textview), bordersz);
+    scrolled_textview = create_textview_scrolledwindow (app);
     gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
     gtk_widget_show (scrolled_textview);
 
     /* Change default font throughout the widget */
     font_desc = pango_font_description_from_string ("DejaVu Sans Mono 8");
-    gtk_widget_modify_font (mwin->view, font_desc);
+    gtk_widget_modify_font (app->view, font_desc);
 
     /* set tab to lesser of softtab and tabstop if softtab set */
-    set_tab_size (font_desc, mwin->view, 4);
+    set_tab_size (font_desc, app, 4);
+    // set_tab_size (font_desc, app->view, 4);
     pango_font_description_free (font_desc);
 
     /* create/pack statusbar at end within gtk_alignment */
@@ -265,10 +282,10 @@ GtkWidget *create_window (mainwin_t *mwin)
     gtk_widget_show (vbox);
 
     /* connect all signals */
-    g_signal_connect (G_OBJECT (mwin->window), "delete-event", /* window del */
+    g_signal_connect (G_OBJECT (app->window), "delete-event", /* window del */
                       G_CALLBACK (on_window_delete_event), NULL);
 
-    g_signal_connect (G_OBJECT (mwin->window), "destroy",    /* window dest  */
+    g_signal_connect (G_OBJECT (app->window), "destroy",    /* window dest  */
                       G_CALLBACK (on_window_destroy), NULL);
 
     /* general */
@@ -295,26 +312,31 @@ GtkWidget *create_window (mainwin_t *mwin)
                       G_CALLBACK (menu_file_quit_activate), NULL);
 
     g_signal_connect (G_OBJECT (showtbMi), "activate",      /* show toolbar */
-                      G_CALLBACK (menu_showtb_activate), mwin);
+                      G_CALLBACK (menu_showtb_activate), app);
 
     g_signal_connect (G_OBJECT (showdocMi), "activate",      /* show toolbar */
-                      G_CALLBACK (menu_showdoc_activate), mwin);
+                      G_CALLBACK (menu_showdoc_activate), app);
 
     g_signal_connect (selection, "changed",
-                        G_CALLBACK (doctree_activate), mwin);
+                        G_CALLBACK (doctree_activate), app);
 
     /* set window title */
-    gtk_window_set_title (GTK_WINDOW (mwin->window), "New GtkWrite Layout");
+    gtk_window_set_title (GTK_WINDOW (app->window), "New GtkWrite Layout");
     // gtkwrite_window_set_title (NULL, app);
-    gtk_widget_show (mwin->window);
+    gtk_widget_show (app->window);
 
+for (gint i = 1; i < 9; i++) {
+    gchar *name = g_strdup_printf ("%s_%02d", "NewFile", i);
+    doctree_append (app->doctreeview, name);
+    g_free (name);
+}
     /* showall widgets */
-    gtk_widget_show_all (mwin->window);
+    gtk_widget_show_all (app->window);
 
     /* TODO: load saved settings */
     // gtk_widget_set_visible (app->toolbar, app->showtoolbar);
     // gtk_widget_set_sensitive (app->tbappearMi, app->showtoolbar);
 
 
-    return mwin->window;
+    return app->window;
 }

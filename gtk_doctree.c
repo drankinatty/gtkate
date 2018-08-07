@@ -29,33 +29,49 @@ void doctree_append (GtkWidget *view, const gchar *filename)
 {
     GtkTreeStore *treestore;
     GtkTreeIter toplevel;
-    const gchar *name = filename ? filename : "untitled";
+    const gchar *name = filename ? filename : "Untitled";
 
     treestore = GTK_TREE_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(view)));
+    if (!treestore) {
+        /* handle no model error */
+        return;
+    }
     gtk_tree_store_append (treestore, &toplevel, NULL);
     gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
-    gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(name), -1);
+    gtk_tree_store_set (treestore, &toplevel, COLINST,
+                        buf_new_inst(filename), -1);
 }
 
-GtkTreeModel *doctree_add (mainwin_t *app, const gchar *filename)
+GtkTreeModel *treemodel_init (gchar **argv)
 {
     GtkTreeStore *treestore;
     GtkTreeIter toplevel;
-    const gchar *name = filename ? filename : "untitled";
 
-    if (app->doctreeview)
-        treestore = GTK_TREE_STORE(gtk_tree_view_get_model (
-                                GTK_TREE_VIEW(app->doctreeview)));
-    else
-        treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
+    treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
 
-    gtk_tree_store_append (treestore, &toplevel, NULL);
-    gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
-    gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(name), -1);
+    if (argv) {
+        while (*argv) {
+            gtk_tree_store_append (treestore, &toplevel, NULL);
+            gtk_tree_store_set (treestore, &toplevel, COLNAME, *argv, -1);
+            gtk_tree_store_set (treestore, &toplevel, COLINST,
+                                buf_new_inst(*argv), -1);
+            argv++;
+        }
+    }
+    else {
+        const gchar *name = "Untitled";
+        gtk_tree_store_append (treestore, &toplevel, NULL);
+        gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
+        gtk_tree_store_set (treestore, &toplevel, COLINST,
+                            buf_new_inst(NULL), -1);
+    }
 
     return GTK_TREE_MODEL (treestore);
 }
 
+/* initial test create/fill with up to 100 files to test scrolling window
+ * for document tree.
+ */
 GtkTreeModel *create_and_fill_model (mainwin_t *app)
 {
     gint nfiles = 4;
@@ -124,15 +140,37 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
     gtk_tree_view_column_add_attribute(col, renderer,
         "text", COLNAME);
 
-    model = create_and_fill_model(app);
+    // model = create_and_fill_model(app);  /* test create & fill */
+    model = treemodel_init (NULL);  /* init taking argument list */
     gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
     g_object_unref(model);
 
-    doctree_append (view, "newfile");
+    // doctree_append (view, "newfile");    /* test append works fine */
 
     return view;
 
-    if (argv) {}
+    if (argv || app) {}
+}
+
+/** returns buffer instance of selected document, which includes sourceview
+ *  buffer, associate filename (or NULL if "Untitled"), and current line and
+ *  column for insert mark in buffer so view can be restored.
+ */
+kinst_t *inst_get_selected (gpointer data)
+{
+    GtkTreeSelection *selection;        /* tree selection for buffer inst */
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    mainwin_t *app = data;
+    char *value;
+    kinst_t *inst = NULL;
+
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->doctreeview));
+    if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
+        gtk_tree_model_get (model, &iter, COLNAME, &value, COLINST, &inst, -1);
+    }
+
+    return inst;
 }
 
 /** doctree callbacks */
@@ -141,7 +179,7 @@ void doctree_activate (GtkWidget *widget, gpointer data)
 {
     GtkTreeIter iter;
     GtkTreeModel *model;
-    mainwin_t *mwin = data;
+    mainwin_t *app = data;
     char *value, *title;
     kinst_t *inst;
 
@@ -153,9 +191,9 @@ void doctree_activate (GtkWidget *widget, gpointer data)
         // g_print ("filename: %s\n", value);
         title = g_strdup_printf ("%s - %s", APPNAME, value);
 
-        gtk_window_set_title (GTK_WINDOW (mwin->window), title);
+        gtk_window_set_title (GTK_WINDOW (app->window), title);
 
-        gtk_text_view_set_buffer (GTK_TEXT_VIEW(mwin->view),
+        gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view),
                                     GTK_TEXT_BUFFER(inst->buf));
 
         g_free (value); /* values with type G_TYPE_STRING or G_TYPE_BOXED */
