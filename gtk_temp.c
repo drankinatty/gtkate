@@ -28,30 +28,83 @@ void menu_showdoc_activate (GtkMenuItem *menuitem, gpointer data)
     if (menuitem) {}
 }
 
-/** function to set the tab width to sz spaces based on font description */
-// void set_tab_size (PangoFontDescription *font_desc, GtkWidget *view, gint sz)
-// {
-//     GtkWidget *window;
-//     PangoTabArray *tab_array;
-//     PangoLayout *layout;
-//     gchar *tabstring;
-//     gint width, height, pixelwidth, i;
-//
-//     window = gtk_widget_get_toplevel (view);
-//
-//     tabstring = g_strdup_printf ("%*s", sz, " ");
-//     gtk_window_get_size (GTK_WINDOW(window), &width, &height);
-//     // g_print ("width: %d\nheight: %d\n", width, height);
-//
-//     layout = gtk_widget_create_pango_layout (view, tabstring);
-//     pango_layout_set_font_description (layout, font_desc);
-//     pango_layout_get_pixel_size (layout, &pixelwidth, NULL);
-//     if (width) {
-//         tab_array = pango_tab_array_new (width/pixelwidth, TRUE);
-//         for (i = 0; i * pixelwidth < width; i++)
-//             pango_tab_array_set_tab (tab_array, i, PANGO_TAB_LEFT, i * pixelwidth);
-//
-//         gtk_text_view_set_tabs (GTK_TEXT_VIEW(view), tab_array);
-//         pango_tab_array_free (tab_array);
-//     }
-// }
+GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
+{
+    GtkWidget *menubar;             /* menu container   */
+
+    GtkWidget *fileMenu;            /* file menu        */
+    GtkWidget *fileMi;
+    GtkWidget *sep;
+    GtkWidget *quitMi;
+    GtkWidget *showtbMi;
+    GtkWidget *showdocMi;
+
+    menubar = gtk_menu_bar_new ();
+    gtk_widget_show (menubar);
+
+    fileMenu = gtk_menu_new ();
+    fileMi = gtk_menu_item_new_with_mnemonic ("_File");
+    sep = gtk_separator_menu_item_new ();
+    quitMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT,
+                                                   NULL);
+    showtbMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_CONVERT,
+                                                   NULL);
+    gtk_menu_item_set_label (GTK_MENU_ITEM (showtbMi), "_Show/Hide Toolbar");
+    showdocMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_DIRECTORY,
+                                                   NULL);
+    gtk_menu_item_set_label (GTK_MENU_ITEM (showdocMi), "Show/Hide _Documents");
+    /* create entries under 'File' then add to menubar */
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (fileMi), fileMenu);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), quitMi);
+    sep = gtk_separator_menu_item_new ();
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), showtbMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), showdocMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
+    gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
+                                GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (showtbMi, "activate", mainaccel,
+                                GDK_KEY_t, GDK_CONTROL_MASK,
+                                GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (showdocMi, "activate", mainaccel,
+                                GDK_KEY_d, GDK_CONTROL_MASK,
+                                GTK_ACCEL_VISIBLE);
+
+    /* File Menu */
+    g_signal_connect (G_OBJECT (quitMi), "activate",        /* file Quit    */
+                      G_CALLBACK (menu_file_quit_activate), NULL);
+
+    g_signal_connect (G_OBJECT (showtbMi), "activate",      /* show toolbar */
+                      G_CALLBACK (menu_showtb_activate), app);
+
+    g_signal_connect (G_OBJECT (showdocMi), "activate",      /* show toolbar */
+                      G_CALLBACK (menu_showdoc_activate), app);
+
+    return menubar;
+}
+
+GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
+{
+    GtkToolItem *tbexit;            /* toolbar */
+
+    app->toolbar = gtk_toolbar_new ();
+    gtk_widget_show (app->toolbar);
+
+    gtk_container_set_border_width(GTK_CONTAINER(app->toolbar), 2);
+    gtk_toolbar_set_show_arrow (GTK_TOOLBAR(app->toolbar), TRUE);
+    gtk_toolbar_set_style(GTK_TOOLBAR(app->toolbar), GTK_TOOLBAR_ICONS);
+
+    tbexit = gtk_tool_button_new_from_stock(GTK_STOCK_QUIT);
+    gtk_tool_item_set_homogeneous (tbexit, FALSE);
+    gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), tbexit, -1);
+    gtk_widget_set_tooltip_text (GTK_WIDGET(tbexit), "Quit ");
+
+    /* Toolbar uses same menu callback */
+    g_signal_connect (G_OBJECT (tbexit), "clicked",         /* file Quit    */
+                      G_CALLBACK (menu_file_quit_activate), NULL);
+
+    return app->toolbar;
+
+    if (mainaccel) {}
+}

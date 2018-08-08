@@ -7,13 +7,16 @@
 
 enum { COLNAME = 0, COLINST, NUMCOL };
 
+/** struct for unique buffer info with proposed additions shown commented */
 typedef struct {
     GtkSourceBuffer *buf;               /* textview buffer instance */
     gchar *filename;                    /* filename associated with buffer */
+        // *syntaxfn;                      /* syntax highlight ID for filename */
     gint line, col;                     /* line, col when switching */
     // gboolean readonly;                  /* readonly flag */
 } kinst_t;
 
+/** function prototypes */
 void doctree_append (GtkWidget *view, const gchar *filename);
 GtkTreeModel *treemodel_init (gchar **argv);
 GtkTreeModel *create_and_fill_model (mainwin_t *app);
