@@ -85,8 +85,6 @@ GtkWidget *create_window (mainwin_t *app)
     guint pleft;
     guint pright;
 
-//     GtkToolItem *exit;              /* toolbar */
-
     GtkTreeSelection *selection;    /* document tree selection for callback */
     gint treewidth = 180;
 
