@@ -11,7 +11,7 @@ enum { COLNAME = 0, COLINST, NUMCOL };
 typedef struct {
     GtkSourceBuffer *buf;               /* textview buffer instance */
     gchar *filename;                    /* filename associated with buffer */
-        // *syntaxfn;                      /* syntax highlight ID for filename */
+        // *lang_id;                       /* sourceview language ID */
     gint line, col;                     /* line, col when switching */
     // gboolean readonly;                  /* readonly flag */
 } kinst_t;

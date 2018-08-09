@@ -50,6 +50,7 @@ typedef struct mainwin {
 
     gint            winwidth,           /* main window width  */
                     winheight,          /* main window height */
+                    treewidth,          /* document tree width */
                     swbordersz;         /* scrolled_window border size */
 
     gboolean        showtoolbar,        /* flag to show/hide toolbar */

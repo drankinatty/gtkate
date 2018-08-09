@@ -9,6 +9,7 @@ void mainwin_init (mainwin_t *app, char **argv)
 
     app->winwidth       = 840;          /* default window width   */
     app->winheight      = 800;          /* default window height  */
+    app->treewidth      = 180;          /* initial treeiew width */
     app->swbordersz     = 0;            /* scrolled_window border */
 
     app->showtoolbar    = TRUE;         /* toolbar is visible */
@@ -85,9 +86,6 @@ GtkWidget *create_window (mainwin_t *app)
     guint pleft;
     guint pright;
 
-    GtkTreeSelection *selection;    /* document tree selection for callback */
-    gint treewidth = 180;
-
     /* temp vars */
     gint bordersz = 0;
 
@@ -142,14 +140,14 @@ GtkWidget *create_window (mainwin_t *app)
      * to be resized to accommodate longer filenames.
      */
     hpaned = gtk_hpaned_new();
-    gtk_paned_set_position (GTK_PANED(hpaned), treewidth);
+    gtk_paned_set_position (GTK_PANED(hpaned), app->treewidth);
     gtk_container_set_border_width(GTK_CONTAINER(hpaned), 2);
     gtk_box_pack_start (GTK_BOX(vbox), hpaned, TRUE, TRUE, 0);
     gtk_widget_show (hpaned);
 
     /* create vbox for directory tree */
     app->vboxtree = gtk_vbox_new (FALSE, 0);
-    gtk_widget_set_size_request (app->vboxtree, treewidth, -1);
+    gtk_widget_set_size_request (app->vboxtree, app->treewidth, -1);
     /* pack into left-pane with resize, shrink set FALSE, FALSE to prevent
      * left pane from expanding on window resize and to prevent it from being
      * made smaller that initial size. (consider leaving 40px or so at bottom
@@ -170,7 +168,6 @@ GtkWidget *create_window (mainwin_t *app)
 
     /* create TreeView and model */
     app->doctreeview = create_view_and_model(app, NULL);
-    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->doctreeview));
     gtk_container_set_border_width(GTK_CONTAINER(app->vboxtree), bordersz);
     gtk_container_add (GTK_CONTAINER (treescroll), app->doctreeview);
     gtk_box_pack_start(GTK_BOX(app->vboxtree), treescroll, TRUE, TRUE, 0);
@@ -229,10 +226,6 @@ GtkWidget *create_window (mainwin_t *app)
     g_signal_connect (G_OBJECT (app->view), "toggle-overwrite",
                       G_CALLBACK (on_insmode), app);
     */
-
-    /* TreeView/model */
-    g_signal_connect (selection, "changed",
-                        G_CALLBACK (doctree_activate), app);
 
     /* set window title */
     gtk_window_set_title (GTK_WINDOW (app->window), "New GtkWrite Layout");

@@ -119,6 +119,7 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
     GtkCellRenderer *renderer;
     GtkWidget *view;
     GtkTreeModel *model;
+    GtkTreeSelection *selection;        /* tree selection for buffer inst */
 
     view = gtk_tree_view_new();
 
@@ -146,6 +147,12 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
     g_object_unref(model);
 
     // doctree_append (view, "newfile");    /* test append works fine */
+
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(view));
+
+    /* TreeView/model callbacks */
+    g_signal_connect (selection, "changed",
+                        G_CALLBACK (doctree_activate), app);
 
     return view;
 
