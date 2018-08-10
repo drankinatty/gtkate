@@ -87,6 +87,7 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
 GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
 {
     GtkToolItem *tbexit;            /* toolbar */
+    GtkToolItem *info;
 
     app->toolbar = gtk_toolbar_new ();
     gtk_widget_show (app->toolbar);
@@ -100,9 +101,17 @@ GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
     gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), tbexit, -1);
     gtk_widget_set_tooltip_text (GTK_WIDGET(tbexit), "Quit ");
 
+    info = gtk_tool_button_new_from_stock(GTK_STOCK_DIALOG_INFO);
+    gtk_tool_item_set_homogeneous (info, FALSE);
+    gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), info, -1);
+    gtk_widget_set_tooltip_text (GTK_WIDGET(info), "Tree Output to term ");
+
     /* Toolbar uses same menu callback */
     g_signal_connect (G_OBJECT (tbexit), "clicked",         /* file Quit    */
                       G_CALLBACK (menu_file_quit_activate), NULL);
+
+    g_signal_connect (G_OBJECT (info), "clicked",          /* info btn      */
+                      G_CALLBACK (doctree_for_each), app);
 
     return app->toolbar;
 

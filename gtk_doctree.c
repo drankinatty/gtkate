@@ -144,6 +144,7 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
     // model = create_and_fill_model(app);  /* test create & fill */
     model = treemodel_init (NULL);  /* init taking argument list */
     gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
+app->doctreemodel = model;
     g_object_unref(model);
 
     // doctree_append (view, "newfile");    /* test append works fine */
@@ -157,6 +158,38 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
     return view;
 
     if (argv || app) {}
+}
+
+void doctree_for_each (GtkWidget *widget, mainwin_t *app)
+{
+    GtkTreeModel *model = NULL;
+    GtkTreeIter iter;
+    gboolean valid;
+    gint nrows = 0;
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->doctreeview));
+    if (!model) {
+        g_print ("error: tree_view_get_model - failed.\n");
+        return;
+    }
+
+    valid = gtk_tree_model_get_iter_first (model, &iter);
+    while (valid) {
+        gchar *str = NULL;
+        kinst_t *inst = NULL;
+
+        gtk_tree_model_get (model, &iter,
+                            COLNAME, &str, COLINST, &inst, -1);
+        g_print ("name: %-12s  filename: %s\n", str, inst->filename);
+        g_free (str);
+
+        nrows++;
+
+        valid = gtk_tree_model_iter_next (model, &iter);
+    }
+    g_print ("total: %d rows\n", nrows);
+
+    if (widget) {}
 }
 
 /** returns buffer instance of selected document, which includes sourceview

@@ -44,6 +44,7 @@ typedef struct mainwin {
                     *toolbar,           /* applicate toolbar */
                     *vboxtree,          /* expandable document tree */
                     *doctreeview,       /* document tree view */
+                    *ibarvbox,          /* vbox for infobar */
                     *view;              /* textview widget */
 
     GtkTreeModel    *doctreemodel;      /* document tree model */
@@ -54,7 +55,9 @@ typedef struct mainwin {
                     swbordersz;         /* scrolled_window border size */
 
     gboolean        showtoolbar,        /* flag to show/hide toolbar */
-                    showdocwin;         /* flag to show/hide treeview */
+                    showdocwin,         /* flag to show/hide treeview */
+                    winrestore,         /* flag to restore win size */
+                    winszsaved;         /* flag win size saved by user */
 
     gchar           *fontname;          /* pango fontname */
 
@@ -75,6 +78,8 @@ typedef struct mainwin {
     const gchar     *comment_single;    /* single line comment */
     const gchar     *comment_blk_beg;   /* blobk comment begin */
     const gchar     *comment_blk_end;   /* block comment end */
+
+    gint            nrecent;            /* no. recent files in chooser */
 
 } mainwin_t;
 

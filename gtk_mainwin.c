@@ -1,5 +1,6 @@
 #include "gtk_mainwin.h"
 
+/* move init to a gtk_appdata.c as keyfile will change */
 void mainwin_init (mainwin_t *app, char **argv)
 {
     app->window         = NULL;         /* main window pointer */
@@ -9,6 +10,8 @@ void mainwin_init (mainwin_t *app, char **argv)
 
     app->winwidth       = 840;          /* default window width   */
     app->winheight      = 800;          /* default window height  */
+    app->winrestore     = FALSE;        /* restore window size */
+    app->winszsaved     = FALSE;        /* win size saved */
     app->treewidth      = 180;          /* initial treeiew width */
     app->swbordersz     = 0;            /* scrolled_window border */
 
@@ -28,6 +31,8 @@ void mainwin_init (mainwin_t *app, char **argv)
 
     app->showmargin     = TRUE;         /* show margin at specific column */
     app->marginwidth    = 80;           /* initial right margin to display */
+
+    app->nrecent        = 40;           /* no. recent chooser files */
 
     if (argv) {}
 }

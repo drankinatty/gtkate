@@ -4,6 +4,7 @@
 #include <gdk/gdkkeysyms.h>  /* for GDK key values */
 
 #include "gtk_appdata.h"
+#include "gtk_doctree.h"
 
 void menu_file_quit_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_showtb_activate (GtkMenuItem *menuitem, gpointer data);
