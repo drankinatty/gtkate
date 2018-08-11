@@ -32,7 +32,8 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->showmargin     = TRUE;         /* show margin at specific column */
     app->marginwidth    = 80;           /* initial right margin to display */
 
-    app->nrecent        = 40;           /* no. recent chooser files */
+    app->nrecent        = 40;           /* no. of recent chooser files */
+    app->nuntitled      = 0;            /* next "Untitled(n) in tree */
 
     if (argv) {}
 }
@@ -172,11 +173,11 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_widget_show (treescroll);
 
     /* create TreeView and model */
-    app->doctreeview = create_view_and_model(app, NULL);
+    app->treeview = create_view_and_model(app, NULL);
     gtk_container_set_border_width(GTK_CONTAINER(app->vboxtree), bordersz);
-    gtk_container_add (GTK_CONTAINER (treescroll), app->doctreeview);
+    gtk_container_add (GTK_CONTAINER (treescroll), app->treeview);
     gtk_box_pack_start(GTK_BOX(app->vboxtree), treescroll, TRUE, TRUE, 0);
-    gtk_widget_show (app->doctreeview);
+    gtk_widget_show (app->treeview);
 
     /* create vbox for infobar and scrolled_window */
     vboxibscroll = gtk_vbox_new (FALSE, 0);
@@ -240,9 +241,12 @@ GtkWidget *create_window (mainwin_t *app)
     /* append 8 files to tree - temp */
     for (gint i = 1; i < 9; i++) {
         gchar *name = g_strdup_printf ("%s_%02d", "NewFile", i);
-        doctree_append (app->doctreeview, name);
+        // doctree_append (app->treeview, name);
+        doctree_newfile (app, name);
         g_free (name);
     }
+    doctree_newfile (app, NULL);
+    doctree_newfile (app, NULL);
 
     /* showall widgets */
     gtk_widget_show_all (app->window);

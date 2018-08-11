@@ -25,6 +25,25 @@ void buf_delete_inst (kinst_t *inst)
     g_slice_free (kinst_t, inst);
 }
 
+void doctree_newfile (mainwin_t *app, const gchar *filename)
+{
+    gchar *name;
+    if (filename == NULL) {
+        if (app->nuntitled) {
+            name = g_strdup_printf ("Untitled(%d)", app->nuntitled);
+            app->nuntitled++;
+        }
+        else
+            name = g_strdup ("Untitled");
+    }
+    else
+        name = g_strdup (filename);
+
+    doctree_append (app->treeview, name);
+
+    g_free (name);
+}
+
 void doctree_append (GtkWidget *view, const gchar *filename)
 {
     GtkTreeStore *treestore;
@@ -42,7 +61,7 @@ void doctree_append (GtkWidget *view, const gchar *filename)
                         buf_new_inst(filename), -1);
 }
 
-GtkTreeModel *treemodel_init (gchar **argv)
+GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv)
 {
     GtkTreeStore *treestore;
     GtkTreeIter toplevel;
@@ -64,6 +83,7 @@ GtkTreeModel *treemodel_init (gchar **argv)
         gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
         gtk_tree_store_set (treestore, &toplevel, COLINST,
                             buf_new_inst(NULL), -1);
+        app->nuntitled++;
     }
 
     return GTK_TREE_MODEL (treestore);
@@ -142,9 +162,9 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
         "text", COLNAME);
 
     // model = create_and_fill_model(app);  /* test create & fill */
-    model = treemodel_init (NULL);  /* init taking argument list */
+    model = treemodel_init (app, NULL);  /* init taking argument list */
     gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
-app->doctreemodel = model;
+app->treemodel = model;
     g_object_unref(model);
 
     // doctree_append (view, "newfile");    /* test append works fine */
@@ -167,7 +187,7 @@ void doctree_for_each (GtkWidget *widget, mainwin_t *app)
     gboolean valid;
     gint nrows = 0;
 
-    model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->doctreeview));
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->treeview));
     if (!model) {
         g_print ("error: tree_view_get_model - failed.\n");
         return;
@@ -205,7 +225,7 @@ kinst_t *inst_get_selected (gpointer data)
     char *value;
     kinst_t *inst = NULL;
 
-    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->doctreeview));
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
     if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
         gtk_tree_model_get (model, &iter, COLNAME, &value, COLINST, &inst, -1);
     }

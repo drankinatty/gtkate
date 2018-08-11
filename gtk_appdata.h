@@ -24,14 +24,13 @@
  #include <glib-object.h>
 #endif
 
-// #ifdef WGTKSOURCEVIEW2
+/* build with GTKSOURCEVIEW2 by default */
+#if defined (WGTKSOURCEVIEW3) || defined (WGTKSOURCEVIEW4)
+ #include <gtksourceview/gtksource.h>
+#else   /* WGTKSOURCEVIEW2 */
  #include <gtksourceview/gtksourceview.h>
  #include <gtksourceview/gtksourcelanguagemanager.h>
-// #elif defined WGTKSOURCEVIEW3
-//  #include <gtksourceview/gtksource.h>
-// #elif defined WGTKSOURCEVIEW4
-//  #include <gtksourceview/gtksource.h>
-// #endif
+#endif
 
 #if defined (_WIN32) || defined (_WIN64) || defined (_WINNT)
  #define HAVEMSWIN 1
@@ -39,21 +38,80 @@
 
 #define APPNAME "GtKate"
 
+#define VER        "0.0.1"
+#define SITE       "https://www.rankinlawfirm.com"
+#define LICENSE    "LICENSE"
+#define CFGDIR     "gtkate"
+#define CFGFILE    "gtkate.cfg"
+#define IMGDIR     "img"
+#define LOGO       "gtkate.png"
+#define ICON       "gtkate.ico"
+#define RCFILE     "gtkrc-2.0_gtkate"
+
+/* TODO: dynamically strip 'Program Files' from from app->exename
+ * and replace with progra~1 or progra~2 below to preserve correct
+ * logo display for 'portable' installs.
+ */
+#define WINPRG     "c:/progra~1/gtkate"
+#define WINPRG86   "c:/progra~2/gtkate"
+#define NIXSHARE   "/usr/share/gtkate"
+
+#define EOL_LF          "\n"
+#define EOL_CR          "\r"
+#define EOL_CRLF        "\r\n"
+#define EOL_NO          3
+#define EOLNM_LF        "LF"
+#define EOLNM_CR        "CR"
+#define EOLNM_CRLF      "CRLF"
+/* added for settings dialog */
+#define EOLTXT_LF       "Linux / Unix / OSX"
+#define EOLTXT_CRLF     "DOS / Windows"
+#define EOLTXT_CR       "Macintosh (pre-OSX)"
+#define EOLTXT_FILE     "Use EOL from File"
+#define EOLTXT_OS       "Use OS Default"
+#define EOLTXT_NO       5
+
+enum eolorder { LF, CRLF, CR, FILE_EOL, OS_EOL };
+enum {  IBAR_VISIBLE = 0x1,
+        IBAR_LABEL_SELECT = 0x2,
+        IBAR_VIEW_SENSITIVE = 0x4 };    /* infobar flags */
+enum { LEFT, RIGHT, STKMAX  = 0x4 };    /* boolean stack constants */
+
+enum { COLNAME = 0, COLINST, NUMCOL };
+
+/** struct for unique buffer info with proposed additions shown commented */
+typedef struct {
+    GtkSourceBuffer *buf;               /* textview buffer instance */
+    gchar *filename,                    /* filename associated with buffer */
+        *lang_id;                       /* sourceview language ID */
+    gint line, col;                     /* line, col when switching */
+
+    const gchar     *comment_single;    /* single line comment */
+    const gchar     *comment_blk_beg;   /* blobk comment begin */
+    const gchar     *comment_blk_end;   /* block comment end */
+
+    // gboolean readonly;                  /* readonly flag */
+} kinst_t;
+
+/** structure for application main window and settings */
 typedef struct mainwin {
+    /* window widgets */
     GtkWidget       *window,            /* application main windows */
                     *toolbar,           /* applicate toolbar */
                     *vboxtree,          /* expandable document tree */
-                    *doctreeview,       /* document tree view */
+                    *treeview,          /* document tree view */
                     *ibarvbox,          /* vbox for infobar */
                     *view;              /* textview widget */
 
-    GtkTreeModel    *doctreemodel;      /* document tree model */
+    GtkTreeModel    *treemodel;         /* document tree model */
 
+    /* window layout/size */
     gint            winwidth,           /* main window width  */
                     winheight,          /* main window height */
                     treewidth,          /* document tree width */
                     swbordersz;         /* scrolled_window border size */
 
+    /* settings flags/file information */
     gboolean        showtoolbar,        /* flag to show/hide toolbar */
                     showdocwin,         /* flag to show/hide treeview */
                     winrestore,         /* flag to restore win size */
@@ -75,11 +133,10 @@ typedef struct mainwin {
     gboolean        showmargin;         /* show right margin */
     gint            marginwidth;        /* column width for margin */
 
-    const gchar     *comment_single;    /* single line comment */
-    const gchar     *comment_blk_beg;   /* blobk comment begin */
-    const gchar     *comment_blk_end;   /* block comment end */
+    gint            nrecent;            /* no. of recent files in chooser */
 
-    gint            nrecent;            /* no. recent files in chooser */
+    /* treeview display parameters */
+    gint            nuntitled;          /* next "Untitled(n) in tree */
 
 } mainwin_t;
 
