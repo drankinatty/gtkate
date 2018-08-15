@@ -2,50 +2,6 @@
 
 #define NTESTFN 16
 
-/* move init to a gtk_appdata.c as keyfile will change */
-void mainwin_init (mainwin_t *app, char **argv)
-{
-    app->window         = NULL;         /* main window pointer */
-    app->toolbar        = NULL;         /* toolbar widget */
-    app->vboxtree       = NULL;         /* vbox for treeview show/hide */
-    app->view           = NULL;         /* sourceview widget */
-
-    app->winwidth       = 840;          /* default window width   */
-    app->winheight      = 800;          /* default window height  */
-    app->winrestore     = FALSE;        /* restore window size */
-    app->winszsaved     = FALSE;        /* win size saved */
-    app->treewidth      = 180;          /* initial treeiew width */
-    app->swbordersz     = 0;            /* scrolled_window border */
-    app->nsplit         = 0;            /* no. of split editor panes shown */
-
-    app->showtoolbar    = TRUE;         /* toolbar is visible */
-    app->showdocwin     = TRUE;         /* document tree is visible */
-
-    app->fontname       = g_strdup ("DejaVu Sans Mono 8");
-
-    app->tabstop        = 8;            /* number of spaces per tab */
-    app->softtab        = 4;            /* soft tab stop size */
-    app->tabstring      = NULL;         /* tabstring for indent */
-
-    app->indentauto     = TRUE;         /* auto-indent on return */
-
-    app->lineno         = FALSE;        /* show line numbers (sourceview) */
-    app->linehghlt      = TRUE;         /* highlight current line */
-
-    app->showmargin     = TRUE;         /* show margin at specific column */
-    app->marginwidth    = 80;           /* initial right margin to display */
-
-    app->nrecent        = 40;           /* no. of recent chooser files */
-    app->nuntitled      = 0;            /* next "Untitled(n) in tree */
-
-    if (argv) {}
-}
-
-void mainwin_destroy (mainwin_t *app)
-{
-    if (app) {};
-}
-
 /*
  * window callbacks
  */
@@ -73,6 +29,23 @@ gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
     if (event) {}
 }
 
+/** creates a new pixbuf from filename.
+ *  you are responsible for calling g_object_unref() on
+ *  the pixbuf when done.
+ */
+GdkPixbuf *create_pixbuf_from_file (const gchar *filename)
+{
+    GdkPixbuf *pixbuf;
+    GError *error = NULL;
+    pixbuf = gdk_pixbuf_new_from_file (filename, &error);
+
+    if (!pixbuf) {
+        g_warning (error->message); /* log to terminal window */
+        g_error_free (error);
+    }
+
+    return pixbuf;
+}
 /** create application window & initialize values
  *  and connect callback functions. 'app' contains
  *  widgets for window, text_view and statusbar.
@@ -99,7 +72,7 @@ GtkWidget *create_window (mainwin_t *app)
     /* temp vars */
     gint bordersz = 0;
 
-    // gchar *iconfile;            /* filename to loading icon */
+    gchar *iconfile;            /* filename to loading icon */
 
     /* create toplevel window */
     if (!(app->window = gtk_window_new (GTK_WINDOW_TOPLEVEL))) {
@@ -113,12 +86,12 @@ GtkWidget *create_window (mainwin_t *app)
     // gtk_window_move (GTK_WINDOW (app->window), app->winrootx, app->winrooty);
 
     /* create icon filename and set icon */
-    /*
     if ((iconfile = g_strdup_printf ("%s/%s", app->imgdir, ICON))) {
-        gtk_window_set_icon(GTK_WINDOW(window), create_pixbuf_from_file (iconfile));
+        GdkPixbuf *pixbuf = create_pixbuf_from_file (iconfile);
+        gtk_window_set_icon(GTK_WINDOW(app->window), pixbuf);
+        g_object_unref (pixbuf);
         g_free (iconfile);
     }
-    */
 
     /* create & attach accelerator group */
     mainaccel = gtk_accel_group_new ();
@@ -211,9 +184,10 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
     gtk_widget_show (scrolled_textview);
 
-    gtk_text_buffer_insert_at_cursor (gtk_text_view_get_buffer(
-                                        GTK_TEXT_VIEW(app->view)),
-                                        "buffer_1\n", -1);
+//     gtk_text_buffer_insert_at_cursor (gtk_text_view_get_buffer(
+//                                         GTK_TEXT_VIEW(app->view)),
+//                                         "buffer_1\n", -1);
+
 //     /* == pack2 - split test == */
 //     /* vpaned works perfect to split editor window horizontally */
 //     /* create vbox for infobar and scrolled_window */

@@ -9,8 +9,6 @@
 #include "gtk_textview.h"
 #include "gtk_temp.h"
 
-void mainwin_init (mainwin_t *app, char **argv);
-void mainwin_destroy (mainwin_t *app);
 GtkWidget *create_window (mainwin_t *app);
 
 #endif

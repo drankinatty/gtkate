@@ -1,36 +1,5 @@
 #include "gtk_doctree.h"
 
-/** create and initialize a new buffer instance to add to tree */
-kinst_t *buf_new_inst (const gchar *fname)
-{
-    kinst_t *inst = g_slice_new (kinst_t);
-
-    if (!inst)
-        return NULL;
-
-    inst->buf = gtk_source_buffer_new (NULL);
-
-    inst->filename = NULL;
-    inst->fname = NULL;
-    inst->fpath = NULL;
-    inst->fext = NULL;
-
-    inst->line = inst->col = 0;
-
-    inst->lang_id = NULL;
-
-    inst->comment_single = NULL;
-    inst->comment_blk_beg = NULL;
-    inst->comment_blk_end = NULL;
-
-    if (fname) {
-        inst->filename = g_strdup (fname);
-        split_fname (inst);
-    }
-
-    return inst;
-}
-
 /** free memory for allocated buffer instance */
 void buf_delete_inst (kinst_t *inst)
 {
@@ -83,6 +52,8 @@ void treeview_append (mainwin_t *app, const gchar *filename)
         g_print ("treeview_append() error: !name\n");
         return;
     }
+    gtk_text_buffer_insert_at_cursor (GTK_TEXT_BUFFER(inst->buf),
+                                        name, -1);
 
     treestore = GTK_TREE_STORE(gtk_tree_view_get_model (
                                 GTK_TREE_VIEW(app->treeview)));
@@ -127,7 +98,9 @@ GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv)
     }
     else
         treeview_append (app, NULL);
+
     g_object_unref(app->treemodel);
+
     return GTK_TREE_MODEL (treestore);
 }
 

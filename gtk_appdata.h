@@ -100,6 +100,17 @@ typedef struct {
 
 /** structure for application main window and settings */
 typedef struct mainwin {
+    /* user, path and config settings */
+    const gchar     *user;              /* current username */
+    gchar           *usrdatadir;        /* user data dir    */
+    gchar           *sysdatadir;        /* system data dir  */
+    gchar           *imgdir;            /* image directory  */
+
+    /* config data */
+    gchar           *cfgdir;            /* user config dir */
+    gchar           *cfgfile;           /* user config file */
+    GKeyFile        *keyfile;           /* key_file for config */
+
     /* window widgets */
     GtkWidget       *window,            /* application main windows */
                     *toolbar,           /* applicate toolbar */
@@ -145,10 +156,34 @@ typedef struct mainwin {
     /* treeview display parameters */
     gint            nuntitled;          /* next "Untitled(n) in tree */
 
+    /* boolean stack implementation
+     * to provide keypress history.
+     */
+    guint           bstack[STKMAX];     /* sizeof guint * CHAR_BIT * STKMAX bits */
+    guint           bindex;             /* bit index */
+
 } mainwin_t;
 
 /** function prototypes */
+
+void mainwin_init (mainwin_t *app, char **argv);
+void mainwin_destroy (mainwin_t *app);
+kinst_t *buf_new_inst (const gchar *fn);
+
+/* filename functions */
 void inst_free_filename (kinst_t *inst);
 void split_fname (kinst_t *inst);
+gchar *uri_to_filename (const gchar *uri);
+gchar *get_posix_filename (const gchar *fn);
+
+/* boolean stack functions */
+void bstack_clear (mainwin_t *app);
+int bstack_push (mainwin_t *app, int v);
+int bstack_pop (mainwin_t *app);
+int bstack_last (mainwin_t *app);
+
+/* date & time functions */
+gchar *get_local_datetime (void);
+
 
 #endif
