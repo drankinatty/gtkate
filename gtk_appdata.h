@@ -71,6 +71,8 @@
 #define EOLTXT_OS       "Use OS Default"
 #define EOLTXT_NO       5
 
+#define MAXSPLIT        4
+
 enum eolorder { LF, CRLF, CR, FILE_EOL, OS_EOL };
 enum {  IBAR_VISIBLE = 0x1,
         IBAR_LABEL_SELECT = 0x2,
@@ -83,6 +85,9 @@ enum { COLNAME = 0, COLINST, NUMCOL };
 typedef struct {
     GtkSourceBuffer *buf;               /* textview buffer instance */
     gchar *filename,                    /* filename associated with buffer */
+        *fname,                         /* filename only - without path */
+        *fpath,                         /* file path */
+        *fext,                          /* file extension */
         *lang_id;                       /* sourceview language ID */
     gint line, col;                     /* line, col when switching */
 
@@ -100,6 +105,7 @@ typedef struct mainwin {
                     *toolbar,           /* applicate toolbar */
                     *vboxtree,          /* expandable document tree */
                     *treeview,          /* document tree view */
+                    *vpsplit,           /* vpaned to split doc window */
                     *ibarvbox,          /* vbox for infobar */
                     *view;              /* textview widget */
 
@@ -109,7 +115,8 @@ typedef struct mainwin {
     gint            winwidth,           /* main window width  */
                     winheight,          /* main window height */
                     treewidth,          /* document tree width */
-                    swbordersz;         /* scrolled_window border size */
+                    swbordersz,         /* scrolled_window border size */
+                    nsplit;             /* no. of split panes shown */
 
     /* settings flags/file information */
     gboolean        showtoolbar,        /* flag to show/hide toolbar */
@@ -139,5 +146,9 @@ typedef struct mainwin {
     gint            nuntitled;          /* next "Untitled(n) in tree */
 
 } mainwin_t;
+
+/** function prototypes */
+void inst_free_filename (kinst_t *inst);
+void split_fname (kinst_t *inst);
 
 #endif

@@ -4,14 +4,29 @@
 kinst_t *buf_new_inst (const gchar *fname)
 {
     kinst_t *inst = g_slice_new (kinst_t);
+
     if (!inst)
         return NULL;
+
     inst->buf = gtk_source_buffer_new (NULL);
-    if (fname)
-        inst->filename = g_strdup_printf ("%s", fname);
-    else
-        inst->filename = NULL;
+
+    inst->filename = NULL;
+    inst->fname = NULL;
+    inst->fpath = NULL;
+    inst->fext = NULL;
+
     inst->line = inst->col = 0;
+
+    inst->lang_id = NULL;
+
+    inst->comment_single = NULL;
+    inst->comment_blk_beg = NULL;
+    inst->comment_blk_end = NULL;
+
+    if (fname) {
+        inst->filename = g_strdup (fname);
+        split_fname (inst);
+    }
 
     return inst;
 }
@@ -19,129 +34,160 @@ kinst_t *buf_new_inst (const gchar *fname)
 /** free memory for allocated buffer instance */
 void buf_delete_inst (kinst_t *inst)
 {
-    if (inst->filename)
-        g_free (inst->filename);
+    if (!inst)
+        return;
+
+    if (inst->filename) g_free (inst->filename);
+    if (inst->fname)    g_free (inst->fname);
+    if (inst->fpath)    g_free (inst->fpath);
+    if (inst->fext)     g_free (inst->fext);
 
     g_slice_free (kinst_t, inst);
 }
 
-void doctree_newfile (mainwin_t *app, const gchar *filename)
+/** given kinst_t instance, set treeview name for entry to Untitled(n)
+ *  if inst is NULL, update app->nuntitled, or set name to inst->fname.
+ */
+gchar *treeview_setname (mainwin_t *app, kinst_t *inst)
 {
     gchar *name;
-    if (filename == NULL) {
-        if (app->nuntitled) {
+    if (inst->filename == NULL) {
+        if (app->nuntitled)
             name = g_strdup_printf ("Untitled(%d)", app->nuntitled);
-            app->nuntitled++;
-        }
         else
             name = g_strdup ("Untitled");
+        app->nuntitled++;
     }
     else
-        name = g_strdup (filename);
+        name = g_strdup (inst->fname);
 
-    doctree_append (app->treeview, name);
-
-    g_free (name);
+    return name;
 }
 
-void doctree_append (GtkWidget *view, const gchar *filename)
+void treeview_append (mainwin_t *app, const gchar *filename)
 {
     GtkTreeStore *treestore;
     GtkTreeIter toplevel;
-    const gchar *name = filename ? filename : "Untitled";
+    kinst_t *inst = buf_new_inst (filename);  /* new instance split filename */
+    gchar *name = NULL;
 
-    treestore = GTK_TREE_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(view)));
-    if (!treestore) {
-        /* handle no model error */
+    if (!inst) {    /* validate instance allocated */
+        /* handle error */
+        g_print ("treeview_append() error : !inst\n");
         return;
     }
+
+    name = treeview_setname (app, inst);    /* get treeview name */
+    if (!name) {
+        /* handle error */
+        g_print ("treeview_append() error: !name\n");
+        return;
+    }
+
+    treestore = GTK_TREE_STORE(gtk_tree_view_get_model (
+                                GTK_TREE_VIEW(app->treeview)));
+    if (!treestore) {
+        /* handle no model error */
+        g_print ("treeview_append() error: !treestore\n");
+        g_free (name);
+        return;
+    }
+
+    /* appeand name and pointer to inst as entry in treeview */
     gtk_tree_store_append (treestore, &toplevel, NULL);
     gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
-    gtk_tree_store_set (treestore, &toplevel, COLINST,
-                        buf_new_inst(filename), -1);
+    gtk_tree_store_set (treestore, &toplevel, COLINST, inst, -1);
+
+    g_free (name);  /* free name */
 }
 
+/** create tree model and initialize treestore with filenames provided in
+ *  argv or Untitled, set app->treemodel. argv must end with sentinel NULL.
+ */
 GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv)
 {
     GtkTreeStore *treestore;
-    GtkTreeIter toplevel;
 
+    /* create model with string and pointer to inst.
+     * TODO - consider just using pointer to inst and change render to
+     *        render name from inst->fname
+     */
     treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
+    if (!treestore) {
+        g_print ("treemodel_init() error: !treestore\n");
+    }
+    app->treemodel = GTK_TREE_MODEL(treestore);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(app->treeview), app->treemodel);
 
     if (argv) {
         while (*argv) {
-            gtk_tree_store_append (treestore, &toplevel, NULL);
-            gtk_tree_store_set (treestore, &toplevel, COLNAME, *argv, -1);
-            gtk_tree_store_set (treestore, &toplevel, COLINST,
-                                buf_new_inst(*argv), -1);
+            treeview_append (app, *argv);
             argv++;
         }
     }
-    else {
-        const gchar *name = "Untitled";
-        gtk_tree_store_append (treestore, &toplevel, NULL);
-        gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
-        gtk_tree_store_set (treestore, &toplevel, COLINST,
-                            buf_new_inst(NULL), -1);
-        app->nuntitled++;
-    }
-
+    else
+        treeview_append (app, NULL);
+    g_object_unref(app->treemodel);
     return GTK_TREE_MODEL (treestore);
 }
 
 /* initial test create/fill with up to 100 files to test scrolling window
- * for document tree.
+ * for document tree. also showns example of adding directory the filenames.
  */
-GtkTreeModel *create_and_fill_model (mainwin_t *app)
-{
-    gint nfiles = 4;
-    /* tree with directory component commented out for single list
-     * enable toplevel/child for directory/filename struct or omit
-     * directory and simply have a tree of filenames.
-     */
-    GtkTreeStore *treestore;
-    GtkTreeIter toplevel/*, child*/;
+// GtkTreeModel *create_and_fill_model (mainwin_t *app)
+// {
+//     gint nfiles = 4;
+//     /* tree with directory component commented out for single list
+//      * enable toplevel/child for directory/filename struct or omit
+//      * directory and simply have a tree of filenames.
+//      */
+//     GtkTreeStore *treestore;
+//     GtkTreeIter toplevel/*, child*/;
+//
+//     treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
+// #ifdef WITHDIR
+//     GtkTreeIter child;
+//
+//     gtk_tree_store_append (treestore, &toplevel, NULL);
+//     gtk_tree_store_set (treestore, &toplevel, COLNAME, "Directory1", -1);
+//     gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(NULL), -1);
+//
+//     for (gint i = 0; i < nfiles; i++) {
+//         gchar *name = g_strdup_printf ("Filename_%03d", i);
+//         gtk_tree_store_append (treestore, &child, &toplevel);
+//         gtk_tree_store_set (treestore, &child, COLNAME, name, -1);
+//         gtk_tree_store_set (treestore, &child, COLINST, buf_new_inst(name), -1);
+//         g_free (name);
+//     }
+// #else
+//     for (gint i = 0; i < nfiles; i++) {
+//         gchar *name = g_strdup_printf ("Filename_%03d", i);
+//         gtk_tree_store_append (treestore, &toplevel, NULL);
+//         gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
+//         gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(name), -1);
+//         g_free (name);
+//     }
+// #endif
+//
+//     return GTK_TREE_MODEL (treestore);
+//
+//     if (app) {}
+// }
 
-//     treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING);
-    treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
-#ifdef WITHDIR
-    GtkTreeIter child;
-
-    gtk_tree_store_append (treestore, &toplevel, NULL);
-    gtk_tree_store_set (treestore, &toplevel, COLNAME, "Directory1", -1);
-    gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(NULL), -1);
-
-    for (gint i = 0; i < nfiles; i++) {
-        gchar *name = g_strdup_printf ("Filename_%03d", i);
-        gtk_tree_store_append (treestore, &child, &toplevel);
-        gtk_tree_store_set (treestore, &child, COLNAME, name, -1);
-        gtk_tree_store_set (treestore, &child, COLINST, buf_new_inst(name), -1);
-        g_free (name);
-    }
-#else
-    for (gint i = 0; i < nfiles; i++) {
-        gchar *name = g_strdup_printf ("Filename_%03d", i);
-        gtk_tree_store_append (treestore, &toplevel, NULL);
-        gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
-        gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(name), -1);
-        g_free (name);
-    }
-#endif
-
-    return GTK_TREE_MODEL (treestore);
-
-    if (app) {}
-}
-
+/** create treeview and initialize treemodel */
 GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
 {
     GtkTreeViewColumn *col;
     GtkCellRenderer *renderer;
     GtkWidget *view;
-    GtkTreeModel *model;
     GtkTreeSelection *selection;        /* tree selection for buffer inst */
 
     view = gtk_tree_view_new();
+    app->treeview = view;               /* set pointer to treeview */
+    /* TODO - consider (app->treeview)[n] to allow multiple views for
+     * showing files grouped by directory, or sorted based on opening or
+     * ascending/descending alphabetical sort.
+     */
 
     col = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(col, "Documents");
@@ -161,14 +207,9 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
     gtk_tree_view_column_add_attribute(col, renderer,
         "text", COLNAME);
 
-    // model = create_and_fill_model(app);  /* test create & fill */
-    model = treemodel_init (app, NULL);  /* init taking argument list */
-    gtk_tree_view_set_model(GTK_TREE_VIEW(view), model);
-app->treemodel = model;
-    g_object_unref(model);
+    treemodel_init (app, argv); /* initialize treemodel, set app->treemodel */
 
-    // doctree_append (view, "newfile");    /* test append works fine */
-
+    /* selection to set callback */
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(view));
 
     /* TreeView/model callbacks */
@@ -176,10 +217,9 @@ app->treemodel = model;
                         G_CALLBACK (doctree_activate), app);
 
     return view;
-
-    if (argv || app) {}
 }
 
+/* simple test for_each to dump kinst_t information */
 void doctree_for_each (GtkWidget *widget, mainwin_t *app)
 {
     GtkTreeModel *model = NULL;
@@ -200,7 +240,9 @@ void doctree_for_each (GtkWidget *widget, mainwin_t *app)
 
         gtk_tree_model_get (model, &iter,
                             COLNAME, &str, COLINST, &inst, -1);
-        g_print ("name: %-12s  filename: %s\n", str, inst->filename);
+        // g_print ("name: %-12s  filename: %s\n", str, inst->filename);
+        g_print ("name: %-16s  filename: %-22s  fname: %-16s  path: %-10s  ext: %s\n",
+                str, inst->filename, inst->fname, inst->fpath, inst->fext);
         g_free (str);
 
         nrows++;
@@ -233,6 +275,10 @@ kinst_t *inst_get_selected (gpointer data)
     return inst;
 }
 
+/* TODO
+ * void inst_set_selected (kinst_t inst)
+ */
+
 /** doctree callbacks */
 
 void doctree_activate (GtkWidget *widget, gpointer data)
@@ -246,9 +292,8 @@ void doctree_activate (GtkWidget *widget, gpointer data)
     if (gtk_tree_selection_get_selected (GTK_TREE_SELECTION(widget),
                                             &model, &iter)) {
 
-        // gtk_tree_model_get (model, &iter, COLNAME, &value,  -1);
         gtk_tree_model_get (model, &iter, COLNAME, &value, COLINST, &inst,  -1);
-        // g_print ("filename: %s\n", value);
+
         title = g_strdup_printf ("%s - %s", APPNAME, value);
 
         gtk_window_set_title (GTK_WINDOW (app->window), title);

@@ -1,5 +1,7 @@
 #include "gtk_mainwin.h"
 
+#define NTESTFN 16
+
 /* move init to a gtk_appdata.c as keyfile will change */
 void mainwin_init (mainwin_t *app, char **argv)
 {
@@ -14,6 +16,7 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->winszsaved     = FALSE;        /* win size saved */
     app->treewidth      = 180;          /* initial treeiew width */
     app->swbordersz     = 0;            /* scrolled_window border */
+    app->nsplit         = 0;            /* no. of split editor panes shown */
 
     app->showtoolbar    = TRUE;         /* toolbar is visible */
     app->showdocwin     = TRUE;         /* document tree is visible */
@@ -79,7 +82,8 @@ GtkWidget *create_window (mainwin_t *app)
     GtkAccelGroup *mainaccel;
     GtkWidget *vbox;                /* vbox container   */
     GtkWidget *menubar;             /* menu container   */
-    GtkWidget *hpaned;              /* hpaned widget */
+    GtkWidget *hpaned;              /* hpaned widget treeview/document win */
+    GtkWidget *vpaned;              /* vpaned widget to split document win */
     GtkWidget *vboxibscroll;        /* vbox for infobar & scrolled_window */
     GtkWidget *ibarvbox;            /* infobar vbox container   */
     GtkWidget *scrolled_textview;   /* scrolled win w/text_view */
@@ -179,13 +183,23 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_box_pack_start(GTK_BOX(app->vboxtree), treescroll, TRUE, TRUE, 0);
     gtk_widget_show (app->treeview);
 
+    /* vpaned to split document window. pack original sourceview into 1,
+     * leaveing 2 empty until split, the split adding new textview to 2.
+     * pack2 hpaned with vpaned with TRUE, TRUE to expand/fill whole window.
+     */
+    vpaned = gtk_vpaned_new();
+    gtk_paned_pack2 (GTK_PANED(hpaned), vpaned, TRUE, TRUE);
+
     /* create vbox for infobar and scrolled_window */
     vboxibscroll = gtk_vbox_new (FALSE, 0);
     /* right-pane resize, shrink set TRUE, TRUE to allow right-pane to resize
      * and shrink as the main window is resized.
      */
-    gtk_paned_pack2 (GTK_PANED(hpaned), vboxibscroll, TRUE, TRUE);
+    gtk_paned_pack1 (GTK_PANED(vpaned), vboxibscroll, TRUE, TRUE);
+//     gtk_paned_pack2 (GTK_PANED(hpaned), vboxibscroll, TRUE, TRUE);
     gtk_widget_show (vboxibscroll);
+    gtk_widget_show (vpaned);
+    app->vpsplit = vpaned;
 
     /* create vbox to display infobar */
     ibarvbox = gtk_vbox_new (FALSE, 0);
@@ -197,6 +211,42 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
     gtk_widget_show (scrolled_textview);
 
+    gtk_text_buffer_insert_at_cursor (gtk_text_view_get_buffer(
+                                        GTK_TEXT_VIEW(app->view)),
+                                        "buffer_1\n", -1);
+//     /* == pack2 - split test == */
+//     /* vpaned works perfect to split editor window horizontally */
+//     /* create vbox for infobar and scrolled_window */
+//     vboxibscroll = gtk_vbox_new (FALSE, 0);
+//     /* right-pane resize, shrink set TRUE, TRUE to allow right-pane to resize
+//      * and shrink as the main window is resized.
+//      */
+//     gtk_paned_pack2 (GTK_PANED(vpaned), vboxibscroll, TRUE, TRUE);
+//     gtk_widget_show (vboxibscroll);
+//     gtk_widget_show (vpaned);
+//     // app->vpsplit = vpaned;
+//
+//     /* create vbox to display infobar */
+//     ibarvbox = gtk_vbox_new (FALSE, 0);
+//     gtk_box_pack_start(GTK_BOX(vboxibscroll), ibarvbox, FALSE, FALSE, 0);
+//     gtk_widget_show (ibarvbox);
+//
+//     /* create scrolled_window and textview */
+//     scrolled_textview = create_textview_scrolledwindow (app);
+//     gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
+//     gtk_widget_show (scrolled_textview);
+
+/* simply adding the scrolled window as second pane works as well. */
+#ifdef SPLIT
+    /* TODO coordinate currently selected inst and split using that buffer in
+     * new scrolled_textview creation. Perhaps array of pointers for textview?
+     */
+    /* create scrolled_window and textview */
+    scrolled_textview = create_textview_scrolledwindow (app);
+    // gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
+    gtk_widget_show (scrolled_textview);
+    gtk_paned_pack2 (GTK_PANED(vpaned), scrolled_textview, TRUE, TRUE);
+#endif
     /* create/pack statusbar at end within gtk_alignment */
     sbalign = gtk_alignment_new (0, .5, 1, 1);
     gtk_alignment_get_padding (GTK_ALIGNMENT (sbalign), &ptop, &pbot, &pleft, &pright);
@@ -238,15 +288,18 @@ GtkWidget *create_window (mainwin_t *app)
     // gtkwrite_window_set_title (NULL, app);
     gtk_widget_show (app->window);
 
-    /* append 8 files to tree - temp */
-    for (gint i = 1; i < 9; i++) {
-        gchar *name = g_strdup_printf ("%s_%02d", "NewFile", i);
-        // doctree_append (app->treeview, name);
-        doctree_newfile (app, name);
+    /* append NTESTFN files to tree - temp */
+    for (gint i = 1; i < NTESTFN; i++) {
+        gchar *name = NULL;
+        if (i & 1)  /* test odd/even set extension/path */
+            name = g_strdup_printf ("/a-path/%s_%02d.txt", "NewFile", i);
+        else
+            name = g_strdup_printf ("../path/%s_%02d.cpp", "NewFile", i);
+        treeview_append (app, name);
         g_free (name);
     }
-    doctree_newfile (app, NULL);
-    doctree_newfile (app, NULL);
+    treeview_append (app, NULL);
+    treeview_append (app, NULL);
 
     /* showall widgets */
     gtk_widget_show_all (app->window);

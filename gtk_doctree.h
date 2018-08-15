@@ -6,8 +6,10 @@
 #include "gtk_appdata.h"
 
 /** function prototypes */
+void treeview_append (mainwin_t *app, const gchar *filename);
 void doctree_append (GtkWidget *view, const gchar *filename);
 GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv);
+// GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv);
 GtkTreeModel *create_and_fill_model (mainwin_t *app);
 GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv);
 kinst_t *inst_get_selected (gpointer data);

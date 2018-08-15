@@ -36,9 +36,30 @@ GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
     /* create text_view */
     // app->view = gtk_source_view_new_with_buffer (app->buffer);
     app->view = gtk_source_view_new ();
-    if (inst)
+    if (inst) {
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view),
                                     GTK_TEXT_BUFFER(inst->buf));
+        // g_print ("text_view_set_buffer\n");
+    }
+    else {
+        // g_print ("using default buffer\n");
+        gchar *str;
+        GtkTreeIter iter;
+        gboolean valid;
+        // g_print ("  before valid\n");
+        valid = gtk_tree_model_get_iter_first (app->treemodel, &iter);
+        if (valid) {
+            // g_print ("  valid\n");
+            gtk_tree_model_get (app->treemodel, &iter,
+                                COLNAME, &str, COLINST, &inst, -1);
+            gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view),
+                                        GTK_TEXT_BUFFER(inst->buf));
+            g_free (str);
+        }
+        else
+            g_print ("  now valid tree model iter first\n");
+    }
+    // else set instance
 
     /*      app set show line numbers */
     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW(app->view), app->lineno);
