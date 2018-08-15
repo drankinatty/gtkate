@@ -88,8 +88,10 @@ GtkWidget *create_window (mainwin_t *app)
     /* create icon filename and set icon */
     if ((iconfile = g_strdup_printf ("%s/%s", app->imgdir, ICON))) {
         GdkPixbuf *pixbuf = create_pixbuf_from_file (iconfile);
-        gtk_window_set_icon(GTK_WINDOW(app->window), pixbuf);
-        g_object_unref (pixbuf);
+        if (pixbuf) {
+            gtk_window_set_icon(GTK_WINDOW(app->window), pixbuf);
+            g_object_unref (pixbuf);
+        }
         g_free (iconfile);
     }
 
@@ -258,7 +260,7 @@ GtkWidget *create_window (mainwin_t *app)
     */
 
     /* set window title */
-    gtk_window_set_title (GTK_WINDOW (app->window), "New GtkWrite Layout");
+    // gtk_window_set_title (GTK_WINDOW (app->window), "New GtkWrite Layout");
     // gtkwrite_window_set_title (NULL, app);
     gtk_widget_show (app->window);
 
