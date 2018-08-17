@@ -18,7 +18,10 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->window         = NULL;         /* main window pointer */
     app->toolbar        = NULL;         /* toolbar widget */
     app->vboxtree       = NULL;         /* vbox for treeview show/hide */
-    app->view           = NULL;         /* sourceview widget */
+    (app->view)[0]      = NULL;         /* sourceview widget */
+    (app->view)[1]      = NULL;         /* sourceview widget */
+    // app->splitview      = NULL;         /* 2nd sourceview for split */
+    app->splitsw        = NULL;         /* scrolled_window, 2nd sourceview */
 
     app->winwidth       = 840;          /* default window width   */
     app->winheight      = 800;          /* default window height  */
@@ -119,6 +122,20 @@ kinst_t *buf_new_inst (const gchar *fn)
     }
 
     return inst;
+}
+
+/** free memory for allocated buffer instance */
+void buf_delete_inst (kinst_t *inst)
+{
+    if (!inst)
+        return;
+
+    if (inst->filename) g_free (inst->filename);
+    if (inst->fname)    g_free (inst->fname);
+    if (inst->fpath)    g_free (inst->fpath);
+    if (inst->fext)     g_free (inst->fext);
+
+    g_slice_free (kinst_t, inst);
 }
 
 /** fast strlen function */

@@ -38,23 +38,24 @@
 
 #define APPNAME "GtKate"
 
-#define VER        "0.0.1"
-#define SITE       "https://www.rankinlawfirm.com"
-#define LICENSE    "LICENSE"
-#define CFGDIR     "gtkate"
-#define CFGFILE    "gtkate.cfg"
-#define IMGDIR     "img"
-#define LOGO       "gtkate.png"
-#define ICON       "gtkate.ico"
-#define RCFILE     "gtkrc-2.0_gtkate"
+#define VER         "0.0.1"
+#define SITE        "https://www.rankinlawfirm.com"
+#define LICENSE     "LICENSE"
+#define CFGDIR      "gtkate"
+#define CFGFILE     "gtkate.cfg"
+#define HISTFILE    "gtkate_history"
+#define IMGDIR      "img"
+#define LOGO        "gtkate.png"
+#define ICON        "gtkate.ico"
+#define RCFILE      "gtkrc-2.0_gtkate"
 
 /* TODO: dynamically strip 'Program Files' from from app->exename
  * and replace with progra~1 or progra~2 below to preserve correct
  * logo display for 'portable' installs.
  */
-#define WINPRG     "c:/progra~1/gtkate"
-#define WINPRG86   "c:/progra~2/gtkate"
-#define NIXSHARE   "/usr/share/gtkate"
+#define WINPRG      "c:/progra~1/gtkate"
+#define WINPRG86    "c:/progra~2/gtkate"
+#define NIXSHARE    "/usr/share/gtkate"
 
 #define EOL_LF          "\n"
 #define EOL_CR          "\r"
@@ -71,7 +72,7 @@
 #define EOLTXT_OS       "Use OS Default"
 #define EOLTXT_NO       5
 
-#define MAXSPLIT        4
+#define MAXSPLIT        2
 
 enum eolorder { LF, CRLF, CR, FILE_EOL, OS_EOL };
 enum {  IBAR_VISIBLE = 0x1,
@@ -79,7 +80,9 @@ enum {  IBAR_VISIBLE = 0x1,
         IBAR_VIEW_SENSITIVE = 0x4 };    /* infobar flags */
 enum { LEFT, RIGHT, STKMAX  = 0x4 };    /* boolean stack constants */
 
-enum { COLNAME = 0, COLINST, NUMCOL };
+enum { COLNAME = 0, COLINST, NUMCOL };  /* GtkTreeModel constants */
+
+enum { TOP = 0, BOT };                  /* vpaned top/bottom scrolled_window */
 
 /** struct for unique buffer info with proposed additions shown commented */
 typedef struct {
@@ -87,9 +90,13 @@ typedef struct {
     gchar *filename,                    /* filename associated with buffer */
         *fname,                         /* filename only - without path */
         *fpath,                         /* file path */
-        *fext,                          /* file extension */
-        *lang_id;                       /* sourceview language ID */
+        *fext;                          /* file extension */
+
     gint line, col;                     /* line, col when switching */
+
+    guint filemode, fileuid, filegid;   /* file permissions & ownership */
+
+    const gchar     *lang_id;           /* sourceview language ID */
 
     const gchar     *comment_single;    /* single line comment */
     const gchar     *comment_blk_beg;   /* blobk comment begin */
@@ -118,7 +125,8 @@ typedef struct mainwin {
                     *treeview,          /* document tree view */
                     *vpsplit,           /* vpaned to split doc window */
                     *ibarvbox,          /* vbox for infobar */
-                    *view;              /* textview widget */
+                    *view[MAXSPLIT],    /* sourceviewview widget(s) */
+                    *splitsw;           /* scrolled_window for splitview */
 
     GtkTreeModel    *treemodel;         /* document tree model */
 
@@ -126,14 +134,17 @@ typedef struct mainwin {
     gint            winwidth,           /* main window width  */
                     winheight,          /* main window height */
                     treewidth,          /* document tree width */
-                    swbordersz,         /* scrolled_window border size */
-                    nsplit;             /* no. of split panes shown */
+                    swbordersz;         /* scrolled_window border size */
 
     /* settings flags/file information */
     gboolean        showtoolbar,        /* flag to show/hide toolbar */
                     showdocwin,         /* flag to show/hide treeview */
                     winrestore,         /* flag to restore win size */
                     winszsaved;         /* flag win size saved by user */
+
+    kinst_t        *curinst[MAXSPLIT];  /* pointers for kinst_t shown */
+    gint            nsplit,             /* no. of split panes shown */
+                    focused;            /* focused instance */
 
     gchar           *fontname;          /* pango fontname */
 
@@ -169,6 +180,7 @@ typedef struct mainwin {
 void mainwin_init (mainwin_t *app, char **argv);
 void mainwin_destroy (mainwin_t *app);
 kinst_t *buf_new_inst (const gchar *fn);
+void buf_delete_inst (kinst_t *inst);
 
 /* filename functions */
 void inst_free_filename (kinst_t *inst);

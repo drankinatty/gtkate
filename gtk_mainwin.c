@@ -119,6 +119,7 @@ GtkWidget *create_window (mainwin_t *app)
     // app->toolbar = create_toolbar (mainaccel, app);
     create_temp_toolbar (app, mainaccel);
     gtk_box_pack_start(GTK_BOX(vbox), app->toolbar, FALSE, FALSE, 0);
+    gtk_widget_show (app->toolbar);
 
     /* create hpaned to display dirtree and ibar/scrolled_window
      * allowing the divider between the dirtree and scrolled_window
@@ -213,16 +214,17 @@ GtkWidget *create_window (mainwin_t *app)
 //     gtk_widget_show (scrolled_textview);
 
 /* simply adding the scrolled window as second pane works as well. */
-#ifdef SPLIT
+// #ifdef SPLIT
     /* TODO coordinate currently selected inst and split using that buffer in
      * new scrolled_textview creation. Perhaps array of pointers for textview?
      */
     /* create scrolled_window and textview */
-    scrolled_textview = create_textview_scrolledwindow (app);
+    app->splitsw = create_textview_scrolledwindow (app);
     // gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
-    gtk_widget_show (scrolled_textview);
-    gtk_paned_pack2 (GTK_PANED(vpaned), scrolled_textview, TRUE, TRUE);
-#endif
+    gtk_widget_show (app->splitsw);
+    gtk_paned_pack2 (GTK_PANED(vpaned), app->splitsw, TRUE, TRUE);
+    gtk_widget_set_visible (app->splitsw, FALSE);
+// #endif
     /* create/pack statusbar at end within gtk_alignment */
     sbalign = gtk_alignment_new (0, .5, 1, 1);
     gtk_alignment_get_padding (GTK_ALIGNMENT (sbalign), &ptop, &pbot, &pleft, &pright);
@@ -235,6 +237,7 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_box_pack_end (GTK_BOX (vbox), sbalign, FALSE, FALSE, 0);
 
     gtk_widget_show (statusbar);
+    gtk_widget_show (sbalign);
     gtk_widget_show (vbox);
 
     /* connect all signals */
@@ -278,7 +281,7 @@ GtkWidget *create_window (mainwin_t *app)
     treeview_append (app, NULL);
 
     /* showall widgets */
-    gtk_widget_show_all (app->window);
+//     gtk_widget_show_all (app->window);
 
     return app->window;
 }

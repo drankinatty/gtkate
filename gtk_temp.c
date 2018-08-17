@@ -28,6 +28,15 @@ void menu_showdoc_activate (GtkMenuItem *menuitem, gpointer data)
     if (menuitem) {}
 }
 
+void menu_splitview_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    mainwin_t *app = data;
+    gboolean splitvisible = gtk_widget_get_visible (app->splitsw) ? FALSE : TRUE;
+    gtk_widget_set_visible (app->splitsw, splitvisible);
+
+    if (menuitem) {}
+}
+
 GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
 {
     GtkWidget *menubar;             /* menu container   */
@@ -38,9 +47,10 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     GtkWidget *quitMi;
     GtkWidget *showtbMi;
     GtkWidget *showdocMi;
+    GtkWidget *showsplitMi;
 
     menubar = gtk_menu_bar_new ();
-    gtk_widget_show (menubar);
+    // gtk_widget_show (menubar);
 
     fileMenu = gtk_menu_new ();
     fileMi = gtk_menu_item_new_with_mnemonic ("_File");
@@ -53,6 +63,10 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     showdocMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_DIRECTORY,
                                                    NULL);
     gtk_menu_item_set_label (GTK_MENU_ITEM (showdocMi), "Show/Hide _Documents");
+    showsplitMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_DIRECTORY,
+                                                   NULL);
+    gtk_menu_item_set_label (GTK_MENU_ITEM (showsplitMi), "Split Editor _Window");
+
     /* create entries under 'File' then add to menubar */
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (fileMi), fileMenu);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
@@ -61,6 +75,7 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), showtbMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), showdocMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), showsplitMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
     gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
                                 GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -69,6 +84,9 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
                                 GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (showdocMi, "activate", mainaccel,
                                 GDK_KEY_d, GDK_CONTROL_MASK,
+                                GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (showsplitMi, "activate", mainaccel,
+                                GDK_KEY_s, GDK_CONTROL_MASK,
                                 GTK_ACCEL_VISIBLE);
 
     /* File Menu */
@@ -81,6 +99,11 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     g_signal_connect (G_OBJECT (showdocMi), "activate",      /* show toolbar */
                       G_CALLBACK (menu_showdoc_activate), app);
 
+    g_signal_connect (G_OBJECT (showsplitMi), "activate",      /* show toolbar */
+                      G_CALLBACK (menu_splitview_activate), app);
+
+    gtk_widget_show_all (menubar);
+
     return menubar;
 }
 
@@ -90,7 +113,7 @@ GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
     GtkToolItem *info;
 
     app->toolbar = gtk_toolbar_new ();
-    gtk_widget_show (app->toolbar);
+    // gtk_widget_show (app->toolbar);
 
     gtk_container_set_border_width(GTK_CONTAINER(app->toolbar), 2);
     gtk_toolbar_set_show_arrow (GTK_TOOLBAR(app->toolbar), TRUE);
@@ -112,6 +135,8 @@ GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
 
     g_signal_connect (G_OBJECT (info), "clicked",          /* info btn      */
                       G_CALLBACK (doctree_for_each), app);
+
+    gtk_widget_show_all (app->toolbar);
 
     return app->toolbar;
 

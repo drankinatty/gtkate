@@ -1,19 +1,5 @@
 #include "gtk_doctree.h"
 
-/** free memory for allocated buffer instance */
-void buf_delete_inst (kinst_t *inst)
-{
-    if (!inst)
-        return;
-
-    if (inst->filename) g_free (inst->filename);
-    if (inst->fname)    g_free (inst->fname);
-    if (inst->fpath)    g_free (inst->fpath);
-    if (inst->fext)     g_free (inst->fext);
-
-    g_slice_free (kinst_t, inst);
-}
-
 /** given kinst_t instance, set treeview name for entry to Untitled(n)
  *  if inst is NULL, update app->nuntitled, or set name to inst->fname.
  */
@@ -271,7 +257,7 @@ void doctree_activate (GtkWidget *widget, gpointer data)
 
         gtk_window_set_title (GTK_WINDOW (app->window), title);
 
-        gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view),
+        gtk_text_view_set_buffer (GTK_TEXT_VIEW((app->view)[0]),
                                     GTK_TEXT_BUFFER(inst->buf));
 
         g_free (value); /* values with type G_TYPE_STRING or G_TYPE_BOXED */
