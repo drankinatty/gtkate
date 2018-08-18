@@ -31,8 +31,11 @@ void menu_showdoc_activate (GtkMenuItem *menuitem, gpointer data)
 void menu_splitview_activate (GtkMenuItem *menuitem, gpointer data)
 {
     mainwin_t *app = data;
-    gboolean splitvisible = gtk_widget_get_visible (app->splitsw) ? FALSE : TRUE;
-    gtk_widget_set_visible (app->splitsw, splitvisible);
+
+    if (app->splitsw) {
+        gboolean splitvisible = gtk_widget_get_visible (app->splitsw) ? FALSE : TRUE;
+        gtk_widget_set_visible (app->splitsw, splitvisible);
+    }
 
     if (menuitem) {}
 }

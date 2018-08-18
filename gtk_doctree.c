@@ -256,8 +256,9 @@ void doctree_activate (GtkWidget *widget, gpointer data)
         title = g_strdup_printf ("%s - %s", APPNAME, value);
 
         gtk_window_set_title (GTK_WINDOW (app->window), title);
-
-        gtk_text_view_set_buffer (GTK_TEXT_VIEW((app->view)[0]),
+/* the reason textview2 never focused - hardcoded - needed to set var */
+        gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view[app->focused]),
+//         gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view[0]),
                                     GTK_TEXT_BUFFER(inst->buf));
 
         g_free (value); /* values with type G_TYPE_STRING or G_TYPE_BOXED */

@@ -18,8 +18,8 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->window         = NULL;         /* main window pointer */
     app->toolbar        = NULL;         /* toolbar widget */
     app->vboxtree       = NULL;         /* vbox for treeview show/hide */
-    (app->view)[0]      = NULL;         /* sourceview widget */
-    (app->view)[1]      = NULL;         /* sourceview widget */
+    app->view[0]        = NULL;         /* sourceview widget */
+    app->view[1]        = NULL;         /* sourceview widget */
     // app->splitview      = NULL;         /* 2nd sourceview for split */
     app->splitsw        = NULL;         /* scrolled_window, 2nd sourceview */
 
@@ -30,6 +30,7 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->treewidth      = 180;          /* initial treeiew width */
     app->swbordersz     = 0;            /* scrolled_window border */
     app->nsplit         = 0;            /* no. of split editor panes shown */
+    app->focused        = 0;            /* top pane focused */
 
     app->showtoolbar    = TRUE;         /* toolbar is visible */
     app->showdocwin     = TRUE;         /* document tree is visible */

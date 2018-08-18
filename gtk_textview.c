@@ -31,6 +31,29 @@ void set_tab_size (PangoFontDescription *font_desc, mainwin_t *app, gint sz)
     }
 }
 
+gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+    mainwin_t *app = data;
+
+    if (widget == app->view[0]) {
+        g_print ("focus-in-event: app->view[0] '%s'\n", gtk_widget_get_name (widget));
+        app->focused = 0;
+    }
+    else if (widget == app->view[1]) {
+        g_print ("focus-in-event: app->view[1] '%s'\n", gtk_widget_get_name (widget));
+        app->focused = 1;
+    }
+    else {
+        app->focused = 1;
+        app->view[app->focused] = widget;
+        g_print ("focus-in-event: unknown '%s'\n", gtk_widget_get_name (widget));
+    }
+
+    return TRUE;
+
+    if (widget || event || data) {}
+}
+
 /** create source_view, set font and tab size */
 GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
 {
@@ -43,12 +66,9 @@ GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
 
     /* create text_view */
     // app->view = gtk_source_view_new_with_buffer (app->buffer);
-    view = gtk_source_view_new ();
-    if ((app->view)[0])
-        (app->view)[1] = view;
-    else
-        (app->view)[0] = view;
-
+    view = app->view[app->nsplit++] = gtk_source_view_new ();
+//     if (app->nsplit > 1)
+//         app->nsplit = 1;
     if (inst) {
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
@@ -118,6 +138,11 @@ GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
     gtk_container_add (GTK_CONTAINER (scrolled_window), view);
     gtk_container_set_border_width (GTK_CONTAINER (scrolled_window),
                                     app->swbordersz);
+    /* causes focus to hide textview cursor until moved with key or mouse
+     * in textview.
+     */
+    g_signal_connect (view, "focus-in-event",
+                      G_CALLBACK (text_view_focus_in), app);
 
     return scrolled_window;
 }

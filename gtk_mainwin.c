@@ -158,6 +158,7 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_container_add (GTK_CONTAINER (treescroll), app->treeview);
     gtk_box_pack_start(GTK_BOX(app->vboxtree), treescroll, TRUE, TRUE, 0);
     gtk_widget_show (app->treeview);
+//     gtk_widget_show_all (app->treeview);
 
     /* vpaned to split document window. pack original sourceview into 1,
      * leaveing 2 empty until split, the split adding new textview to 2.
@@ -279,6 +280,10 @@ GtkWidget *create_window (mainwin_t *app)
     }
     treeview_append (app, NULL);
     treeview_append (app, NULL);
+
+    gtk_widget_grab_focus (app->treeview);
+    gtk_widget_grab_focus (app->view[0]);
+//     app->focused = 0;
 
     /* showall widgets */
 //     gtk_widget_show_all (app->window);

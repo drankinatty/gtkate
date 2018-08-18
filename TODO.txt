@@ -16,4 +16,6 @@ buffer
 
   * write file data out containing line, col and sourceview lang_id to restore view on file open. Use GFile and GHashtable to hash pointer to info to use in kinst_t instance initialization, replace contents of file on close, write serialized binary format similar to 'line col szfilenm szlangid filename lang_id' (4 int, 2 strings). Add to hashtable on open/save/close/close-all. remainder of kinst_t information can be derived from this.
 
+  * rework app->view[0/1] approach to split window (note: current hardcoded values for testing)
+
 
