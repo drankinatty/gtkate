@@ -5,14 +5,8 @@ void set_tab_size (PangoFontDescription *font_desc, mainwin_t *app, gint sz)
 {
     PangoTabArray *tab_array;
     PangoLayout *layout;
-    GtkWidget *view;                            /* sourceview widget */
+    GtkWidget *view = app->view[app->nsplit];
     gint width, i;
-
-    view = gtk_source_view_new ();
-    if ((app->view)[0])
-        (app->view)[1] = view;
-    else
-        (app->view)[0] = view;
 
     if (app->tabstring)
         g_free (app->tabstring);
@@ -66,7 +60,7 @@ GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
 
     /* create text_view */
     // app->view = gtk_source_view_new_with_buffer (app->buffer);
-    view = app->view[app->nsplit++] = gtk_source_view_new ();
+    view = app->view[app->nsplit] = gtk_source_view_new ();
 //     if (app->nsplit > 1)
 //         app->nsplit = 1;
     if (inst) {

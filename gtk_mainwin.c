@@ -186,6 +186,7 @@ GtkWidget *create_window (mainwin_t *app)
     /* create scrolled_window and textview */
     scrolled_textview = create_textview_scrolledwindow (app);
     gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
+    app->nsplit++;
     gtk_widget_show (scrolled_textview);
 
 //     gtk_text_buffer_insert_at_cursor (gtk_text_view_get_buffer(
@@ -224,6 +225,7 @@ GtkWidget *create_window (mainwin_t *app)
     // gtk_box_pack_start (GTK_BOX (vboxibscroll), scrolled_textview, TRUE, TRUE, 0);
     gtk_widget_show (app->splitsw);
     gtk_paned_pack2 (GTK_PANED(vpaned), app->splitsw, TRUE, TRUE);
+    app->nsplit++;
     gtk_widget_set_visible (app->splitsw, FALSE);
 // #endif
     /* create/pack statusbar at end within gtk_alignment */

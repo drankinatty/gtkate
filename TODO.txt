@@ -18,4 +18,6 @@ buffer
 
   * rework app->view[0/1] approach to split window (note: current hardcoded values for testing)
 
+  * replace vpaned with full vboxibscroll -> statusbar for each split instance and just pack each into the surrouding vbox for split. Can use an array of pointers to struct for each with initial 4 allocated and a limit of 4. Pack onto stack to track splits.
+
 
