@@ -20,10 +20,6 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->vboxtree       = NULL;         /* vbox for treeview show/hide */
     app->treeview       = NULL;         /* treeview widget */
     app->vboxedit       = NULL;         /* vbox inside hpaned2 for ewin */
-    // app->view[0]        = NULL;         /* sourceview widget */
-    // app->view[1]        = NULL;         /* sourceview widget */
-    // app->splitview      = NULL;         /* 2nd sourceview for split */
-    app->splitsw        = NULL;         /* scrolled_window, 2nd sourceview */
 
     /* allocate MAXSPLIT edit window instances */
     for (gint i = 0; i < MAXVIEW; i++) {
@@ -43,7 +39,6 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->treewidth      = 180;          /* initial treeiew width */
     app->swbordersz     = 0;            /* scrolled_window border */
 
-    app->nsplit         = 0;            /* no. of split editor panes shown */
     app->nview          = 0;            /* no. of editor panes shown */
     app->focused        = 0;            /* top pane focused */
 

@@ -83,9 +83,7 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
 {
     GtkWidget *view;
     PangoFontDescription *font_desc;            /* font description */
-    /* FIXME split/view */
-//     einst_t *ewin = app->einst[app->nsplit];    /* editor window instance */
-    einst_t *ewin = app->einst[app->nview];    /* editor window instance */
+    einst_t *ewin = app->einst[app->nview];     /* editor window instance */
     kinst_t *inst = inst_get_selected (app);    /* inst w/buf from treeview */
 
     /* create vbox for infobar, scrolled_window, and statusbar */
@@ -113,17 +111,13 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
     if (inst) { /* if so, set sourceview buffer to inst->buf */
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
-        // g_print ("text_view_set_buffer\n");
     }
     else {  /* otherwise get instance from first file in treemodel */
-        // g_print ("using default buffer\n");
         gchar *str;
         GtkTreeIter iter;
-        gboolean valid;
-        // g_print ("  before valid\n");
-        valid = gtk_tree_model_get_iter_first (app->treemodel, &iter);
+        gboolean valid = gtk_tree_model_get_iter_first (app->treemodel, &iter);
+
         if (valid) {
-            // g_print ("  valid\n");
             gtk_tree_model_get (app->treemodel, &iter,
                                 COLNAME, &str, COLINST, &inst, -1);
             gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
@@ -188,10 +182,6 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
 }
 
 /** create new editor split */
-/* FIXME return when nsplit is 0 returns current of 0, fix and
- * remove nsplit++ in gtk_mainwin.c then go over diagram to finish,
- * and remove current altogether here.
- */
 einst_t *ewin_create_split (gpointer data)
 {
     mainwin_t *app = data;

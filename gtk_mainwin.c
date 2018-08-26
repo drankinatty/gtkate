@@ -5,10 +5,6 @@
 /*
  * window callbacks
  */
-/** on_window_delete_event called first when WM_CLOSE button clicked.
- *  if return is FALSE, on_window_destroy is called, if TRUE, control
- *  is returned to gtk_main and you are responsible for gtk_main_quit.
- */
 /** on_window_destroy called after on_window_delete_event processed
  *  if the return from on_window_delete_event is FALSE.
  */
@@ -19,6 +15,10 @@ void on_window_destroy (GtkWidget *widget, gpointer data)
     if (data) {}
 }
 
+/** on_window_delete_event called first when WM_CLOSE button clicked.
+ *  if return is FALSE, on_window_destroy is called, if TRUE, control
+ *  is returned to gtk_main and you are responsible for gtk_main_quit.
+ */
 gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
                                  gpointer data)
 {
@@ -57,7 +57,6 @@ GtkWidget *create_window (mainwin_t *app)
     GtkWidget *vbox;                /* vbox container   */
     GtkWidget *menubar;             /* menu container   */
     GtkWidget *hpaned;              /* hpaned widget treeview/document win */
-    // GtkWidget *evbox;               /* vbox for editor instances (splits) */
     GtkWidget *ewin;                /* edit scrolled window instance */
 
     /* temp vars */
@@ -151,13 +150,11 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_container_add (GTK_CONTAINER (treescroll), app->treeview);
     gtk_box_pack_start(GTK_BOX(app->vboxtree), treescroll, TRUE, TRUE, 0);
     gtk_widget_show (app->treeview);
-//     gtk_widget_show_all (app->treeview);
 
     /* vpaned to split document window. pack original sourceview into 1,
      * leaveing 2 empty until split, the split adding new textview to 2.
      * pack2 hpaned with vpaned with TRUE, TRUE to expand/fill whole window.
      */
-    // vpaned = gtk_vpaned_new();
     app->vboxedit = gtk_vbox_new (FALSE, 0);
     gtk_paned_pack2 (GTK_PANED(hpaned), app->vboxedit, TRUE, TRUE);
     // gtk_paned_pack2 (GTK_PANED(hpaned), vpaned, TRUE, TRUE);
@@ -200,7 +197,7 @@ GtkWidget *create_window (mainwin_t *app)
     */
 
     gtk_widget_show (app->window);
-
+#ifdef TESTFILES
     /* append NTESTFN files to tree - temp */
     for (gint i = 1; i < NTESTFN; i++) {
         gchar *name = NULL;
@@ -213,7 +210,7 @@ GtkWidget *create_window (mainwin_t *app)
     }
     treeview_append (app, NULL);
     treeview_append (app, NULL);
-
+#endif
     /* return focus to edit window */
     gtk_widget_grab_focus (app->treeview);
     gtk_widget_grab_focus (app->einst[0]->view);

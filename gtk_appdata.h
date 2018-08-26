@@ -137,9 +137,6 @@ typedef struct mainwin {
                     *treeview,          /* document tree view */
                     *vboxedit,          /* bounding vbox for edit windows */
                     *vpsplit;
-//                     ,           /* vpaned to split doc window */
-
-   GtkWidget        *splitsw;           /* scrolled_window for splitview */
 
     GtkTreeModel    *treemodel;         /* document tree model */
 
