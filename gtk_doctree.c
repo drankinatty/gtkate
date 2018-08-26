@@ -245,6 +245,7 @@ void doctree_activate (GtkWidget *widget, gpointer data)
     GtkTreeIter iter;
     GtkTreeModel *model;
     mainwin_t *app = data;
+    GtkWidget *view = app->einst[app->focused]->view;
     char *value, *title;
     kinst_t *inst;
 
@@ -257,7 +258,7 @@ void doctree_activate (GtkWidget *widget, gpointer data)
 
         gtk_window_set_title (GTK_WINDOW (app->window), title);
 /* the reason textview2 never focused - hardcoded - needed to set var */
-        gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view[app->focused]),
+        gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
 //         gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view[0]),
                                     GTK_TEXT_BUFFER(inst->buf));
 

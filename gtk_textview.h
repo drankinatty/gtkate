@@ -5,6 +5,8 @@
 #include "gtk_doctree.h"
 // #include "gtk_completionsv.h"
 
-GtkWidget *create_textview_scrolledwindow (mainwin_t *app);
+GtkWidget *create_scrolled_view (mainwin_t *app);
+einst_t *ewin_create_split (gpointer data);
+void ewin_remove_split (gpointer data);
 
 #endif

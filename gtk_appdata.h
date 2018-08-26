@@ -72,7 +72,7 @@
 #define EOLTXT_OS       "Use OS Default"
 #define EOLTXT_NO       5
 
-#define MAXSPLIT        2
+#define MAXVIEW         4
 
 enum eolorder { LF, CRLF, CR, FILE_EOL, OS_EOL };
 enum {  IBAR_VISIBLE = 0x1,
@@ -105,6 +105,18 @@ typedef struct {
     // gboolean readonly;                  /* readonly flag */
 } kinst_t;
 
+/** struct for each sourceview instance allowing split by showing/hiding
+ *  containing pointers for the scrolled_window, sourceview and statusbar.
+ */
+typedef struct {
+    GtkWidget *ebox;    /* bounding edit window vbox container */
+    GtkWidget *ibox;    /* ibar vbox container */
+    GtkWidget *swin;    /* scrolled window holding sourceview */
+    GtkWidget *view;    /* sourceview */
+    GtkWidget *sbar;    /* statusbar */
+    kinst_t *inst;      /* pointer to current buffer inst in split */
+} einst_t;
+
 /** structure for application main window and settings */
 typedef struct mainwin {
     /* user, path and config settings */
@@ -123,10 +135,11 @@ typedef struct mainwin {
                     *toolbar,           /* applicate toolbar */
                     *vboxtree,          /* expandable document tree */
                     *treeview,          /* document tree view */
-                    *vpsplit,           /* vpaned to split doc window */
-                    *ibarvbox,          /* vbox for infobar */
-                    *view[MAXSPLIT],    /* sourceviewview widget(s) */
-                    *splitsw;           /* scrolled_window for splitview */
+                    *vboxedit,          /* bounding vbox for edit windows */
+                    *vpsplit;
+//                     ,           /* vpaned to split doc window */
+
+   GtkWidget        *splitsw;           /* scrolled_window for splitview */
 
     GtkTreeModel    *treemodel;         /* document tree model */
 
@@ -142,8 +155,9 @@ typedef struct mainwin {
                     winrestore,         /* flag to restore win size */
                     winszsaved;         /* flag win size saved by user */
 
-    kinst_t        *curinst[MAXSPLIT];  /* pointers for kinst_t shown */
-    gint            nsplit,             /* no. of split panes shown */
+    einst_t         *einst[MAXVIEW];    /* pointers to editor instances */
+
+    gint            nview,              /* no. of editor views shown */
                     focused;            /* focused instance */
 
     gchar           *fontname;          /* pango fontname */
@@ -196,6 +210,9 @@ int bstack_last (mainwin_t *app);
 
 /* date & time functions */
 gchar *get_local_datetime (void);
+
+/* temp dialog functions */
+void err_dialog (const gchar *errmsg);
 
 
 #endif

@@ -5,7 +5,7 @@ void set_tab_size (PangoFontDescription *font_desc, mainwin_t *app, gint sz)
 {
     PangoTabArray *tab_array;
     PangoLayout *layout;
-    GtkWidget *view = app->view[app->nsplit];
+    GtkWidget *view = app->einst[app->nview]->view;
     gint width, i;
 
     if (app->tabstring)
@@ -28,47 +28,94 @@ void set_tab_size (PangoFontDescription *font_desc, mainwin_t *app, gint sz)
 gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
 {
     mainwin_t *app = data;
+    gboolean found = FALSE;
 
-    if (widget == app->view[0]) {
-        g_print ("focus-in-event: app->view[0] '%s'\n", gtk_widget_get_name (widget));
-        app->focused = 0;
-    }
-    else if (widget == app->view[1]) {
-        g_print ("focus-in-event: app->view[1] '%s'\n", gtk_widget_get_name (widget));
-        app->focused = 1;
-    }
-    else {
-        app->focused = 1;
-        app->view[app->focused] = widget;
-        g_print ("focus-in-event: unknown '%s'\n", gtk_widget_get_name (widget));
+    /* iterate over sourceview widgets to determine which is focused */
+    for (gint i = 0; i < app->nview && app->einst[i]->view; i++) {
+        if (widget == app->einst[i]->view) {
+            app->focused = i;
+#ifdef DEBUG
+            g_print ("focus-in-event: app->einst[%d]->view\n", i);
+#endif
+            found = TRUE;
+            break;
+        }
     }
 
-    return TRUE;
+    if (!found) /* handle error if focused widget not found */
+        g_print ("error: focus-in-event: app->einst[n]->view not found.\n");
+
+    return TRUE;    /* TODO - validate return in caller */
 
     if (widget || event || data) {}
 }
 
-/** create source_view, set font and tab size */
-GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
+/** create statusbar instance, returns GtkWidget* */
+GtkWidget *create_statusbar (GtkWidget *vbox)
 {
-    GtkWidget *scrolled_window;                 /* container for sourceview */
-    GtkWidget *view;                            /* sourceview widget */
+    GtkWidget *sbalign;
+    GtkWidget *statusbar;
+    guint ptop;                     /* padding, top, bot, l, r  */
+    guint pbot;
+    guint pleft;
+    guint pright;
+
+    sbalign = gtk_alignment_new (0, .5, 1, 1);
+
+    gtk_alignment_get_padding (GTK_ALIGNMENT (sbalign), &ptop, &pbot,
+                                &pleft, &pright);
+    gtk_alignment_set_padding (GTK_ALIGNMENT (sbalign), ptop, pbot + 2,
+                                pleft + 5, pright);
+
+    statusbar = gtk_statusbar_new ();
+
+    gtk_container_add (GTK_CONTAINER (sbalign), statusbar);
+    gtk_box_pack_end (GTK_BOX (vbox), sbalign, FALSE, FALSE, 0);
+
+    gtk_widget_show (statusbar);
+    gtk_widget_show (sbalign);
+
+    return statusbar;
+}
+
+/** create source_view, set font and tab size */
+GtkWidget *create_scrolled_view (mainwin_t *app)
+{
+    GtkWidget *view;
     PangoFontDescription *font_desc;            /* font description */
+    /* FIXME split/view */
+//     einst_t *ewin = app->einst[app->nsplit];    /* editor window instance */
+    einst_t *ewin = app->einst[app->nview];    /* editor window instance */
     kinst_t *inst = inst_get_selected (app);    /* inst w/buf from treeview */
-    /* create buffer instance for sourceview */
-    // app->buffer = gtk_source_buffer_new (NULL);
+
+    /* create vbox for infobar, scrolled_window, and statusbar */
+    ewin->ebox = gtk_vbox_new (FALSE, 0);
+
+    /* create vbox to display infobar */
+    ewin->ibox = gtk_vbox_new (FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(ewin->ebox),
+                        ewin->ibox, FALSE, FALSE, 0);
+    gtk_widget_show (ewin->ibox);
+
+    /* create scrolled_window for view */
+    ewin->swin = gtk_scrolled_window_new (NULL, NULL);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (ewin->swin),
+                                    GTK_POLICY_AUTOMATIC,
+                                    GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start (GTK_BOX (ewin->ebox),
+                        ewin->swin, TRUE, TRUE, 0);
+    gtk_widget_show (ewin->swin);
 
     /* create text_view */
-    // app->view = gtk_source_view_new_with_buffer (app->buffer);
-    view = app->view[app->nsplit] = gtk_source_view_new ();
-//     if (app->nsplit > 1)
-//         app->nsplit = 1;
-    if (inst) {
+    view = ewin->view = gtk_source_view_new ();
+
+    /* check if treeview points to file instance */
+    if (inst) { /* if so, set sourceview buffer to inst->buf */
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
         // g_print ("text_view_set_buffer\n");
     }
-    else {
+    else {  /* otherwise get instance from first file in treemodel */
         // g_print ("using default buffer\n");
         gchar *str;
         GtkTreeIter iter;
@@ -86,7 +133,7 @@ GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
         else
             g_print ("  no valid tree model iter first\n");
     }
-    // else set instance
+    ewin->inst = inst;  /* set convenience pointer to current file instance */
 
     /*      app set show line numbers */
     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW(view), app->lineno);
@@ -123,106 +170,109 @@ GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
                                     app->softtab : app->tabstop));
     pango_font_description_free (font_desc);
 
-    /* create scrolled_window for view */
-    scrolled_window = gtk_scrolled_window_new (NULL, NULL);
-    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
-                                    GTK_POLICY_AUTOMATIC,
-                                    GTK_POLICY_AUTOMATIC);
-
-    gtk_container_add (GTK_CONTAINER (scrolled_window), view);
-    gtk_container_set_border_width (GTK_CONTAINER (scrolled_window),
+    gtk_container_add (GTK_CONTAINER (ewin->swin), view);
+    gtk_container_set_border_width (GTK_CONTAINER (ewin->swin),
                                     app->swbordersz);
+
+    ewin->sbar = create_statusbar (ewin->ebox);
+
+    gtk_widget_show (ewin->ebox);
+
     /* causes focus to hide textview cursor until moved with key or mouse
      * in textview.
      */
     g_signal_connect (view, "focus-in-event",
                       G_CALLBACK (text_view_focus_in), app);
 
-    return scrolled_window;
+    return ewin->ebox;
 }
 
-/** create source_view, set font and tab size */
-// GtkWidget *create_textview_scrolledwindow (mainwin_t *app)
-// {
-//     GtkWidget *scrolled_window;                 /* container for sourceview */
-//     PangoFontDescription *font_desc;            /* font description */
-//     kinst_t *inst = inst_get_selected (app);    /* inst w/buf from treeview */
-//     /* create buffer instance for sourceview */
-//     // app->buffer = gtk_source_buffer_new (NULL);
-//
-//     /* create text_view */
-//     // app->view = gtk_source_view_new_with_buffer (app->buffer);
-//     app->view = gtk_source_view_new ();
-//     if (inst) {
-//         gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view),
-//                                     GTK_TEXT_BUFFER(inst->buf));
-//         // g_print ("text_view_set_buffer\n");
-//     }
-//     else {
-//         // g_print ("using default buffer\n");
-//         gchar *str;
-//         GtkTreeIter iter;
-//         gboolean valid;
-//         // g_print ("  before valid\n");
-//         valid = gtk_tree_model_get_iter_first (app->treemodel, &iter);
-//         if (valid) {
-//             // g_print ("  valid\n");
-//             gtk_tree_model_get (app->treemodel, &iter,
-//                                 COLNAME, &str, COLINST, &inst, -1);
-//             gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view),
-//                                         GTK_TEXT_BUFFER(inst->buf));
-//             g_free (str);
-//         }
-//         else
-//             g_print ("  no valid tree model iter first\n");
-//     }
-//     // else set instance
-//
-//     /*      app set show line numbers */
-//     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW(app->view), app->lineno);
-//     /*      app set highlight current line */
-//     gtk_source_view_set_highlight_current_line (GTK_SOURCE_VIEW(app->view), app->linehghlt);
-//     /*      app set auto indent */
-//     gtk_source_view_set_auto_indent (GTK_SOURCE_VIEW(app->view), app->indentauto);
-//     /*      app set/show right-margin */
-//     gtk_source_view_set_right_margin_position (GTK_SOURCE_VIEW (app->view),
-//                                                 app->marginwidth);
-//     gtk_source_view_set_show_right_margin (GTK_SOURCE_VIEW (app->view),
-//                                             app->showmargin);
-//
-//     /* set_smart_backspace available in sourceview 3 */
-//     // gtk_source_view_set_smart_backspace (GTK_SOURCE_VIEW(app->view), TRUE);
-//     gtk_source_view_set_smart_home_end (GTK_SOURCE_VIEW(app->view),
-//                                         GTK_SOURCE_SMART_HOME_END_BEFORE);
-//
-//     /* create the sourceview completion object */
-//     // if (app->enablecmplt)
-//     //     create_completion (app);
-//
-//     /* set wrap mode and show text_view */
-//     gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (app->view), GTK_WRAP_WORD);
-//     gtk_text_view_set_left_margin (GTK_TEXT_VIEW (app->view), 5);
-//     gtk_widget_show (app->view);
-//
-//     /* Change default font throughout the widget */
-//     font_desc = pango_font_description_from_string (app->fontname);
-//     gtk_widget_modify_font (app->view, font_desc);
-//
-//     /* set tab to lesser of softtab and tabstop if softtab set */
-//     set_tab_size (font_desc, app, (app->softtab && (app->softtab < app->tabstop) ?
-//                                     app->softtab : app->tabstop));
-//     pango_font_description_free (font_desc);
-//
-//     /* create scrolled_window for view */
-//     scrolled_window = gtk_scrolled_window_new (NULL, NULL);
-//     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
-//                                     GTK_POLICY_AUTOMATIC,
-//                                     GTK_POLICY_AUTOMATIC);
-//
-//     gtk_container_add (GTK_CONTAINER (scrolled_window), app->view);
-//     gtk_container_set_border_width (GTK_CONTAINER (scrolled_window),
-//                                     app->swbordersz);
-//
-//     return scrolled_window;
-// }
+/** create new editor split */
+/* FIXME return when nsplit is 0 returns current of 0, fix and
+ * remove nsplit++ in gtk_mainwin.c then go over diagram to finish,
+ * and remove current altogether here.
+ */
+einst_t *ewin_create_split (gpointer data)
+{
+    mainwin_t *app = data;
+    GtkWidget *ewin;
+    gint current = app->nview;
 
+    if (app->nview >= MAXVIEW) {    /* validate max views not reached */
+        char *msg = g_strdup_printf ("MAXVIEW '%d' reached.", MAXVIEW);
+
+        err_dialog (msg);
+        g_free (msg);
+
+        return NULL;
+    }
+
+    ewin = create_scrolled_view (app);  /* create new view/split */
+    if (!ewin) {    /* validate */
+        char *msg = g_strdup ("Failed to create split.");
+
+        err_dialog (msg);
+        g_free (msg);
+
+        return NULL;
+    }
+
+    /* pack new view into vbox within right-hpaned */
+    gtk_box_pack_start(GTK_BOX(app->vboxedit), ewin, TRUE, TRUE, 0);
+
+    app->nview++;   /* increment number of views */
+
+    /* TODO - decide whether to place focus in new instance of leave on
+     * current (present behavior). set convenience pointer kinst. decide
+     * whether to scroll new instance to match current insert.
+     */
+    // app->focused++;
+    // gtk_widget_grab_focus (app->einst[app->focused]->view);
+
+    return app->einst[current];
+}
+
+/** remove current editor split */
+void ewin_remove_split (gpointer data)
+{
+    mainwin_t *app = data;
+
+    if (app->nview == 1)
+        return;
+
+    gtk_widget_destroy (app->einst[app->focused]->ebox);
+
+    app->einst[app->focused]->ebox = NULL;  /* set removed edit window */
+    app->einst[app->focused]->ibox = NULL;  /* pointers to NULL */
+    app->einst[app->focused]->swin = NULL;
+    app->einst[app->focused]->view = NULL;
+    app->einst[app->focused]->sbar = NULL;
+    app->einst[app->focused]->inst = NULL;
+
+    /* shift elements down to replace removed instance */
+    for (gint i = app->focused, j = i + 1; j < app->nview; i++, j++) {
+        einst_t *tgt = app->einst[i],   /* target for shift */
+                *src = app->einst[j];   /* source for shift */
+
+        tgt->ebox = src->ebox;  /* shift pointers src -> tgt */
+        tgt->ibox = src->ibox;
+        tgt->swin = src->swin;
+        tgt->view = src->view;
+        tgt->sbar = src->sbar;
+        tgt->inst = src->inst;
+
+        src->ebox = NULL;       /* set src pointers null */
+        src->ibox = NULL;
+        src->swin = NULL;
+        src->view = NULL;
+        src->sbar = NULL;
+        src->inst = NULL;
+    }
+
+    if (app->focused) { /* decrement and set focus on next-lower edit window */
+        app->focused--;
+        gtk_widget_grab_focus (app->einst[app->focused]->view);
+    }
+
+    app->nview--;       /* decrement number of views shown */
+}

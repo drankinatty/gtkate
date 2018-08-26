@@ -18,10 +18,23 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->window         = NULL;         /* main window pointer */
     app->toolbar        = NULL;         /* toolbar widget */
     app->vboxtree       = NULL;         /* vbox for treeview show/hide */
-    app->view[0]        = NULL;         /* sourceview widget */
-    app->view[1]        = NULL;         /* sourceview widget */
+    app->treeview       = NULL;         /* treeview widget */
+    app->vboxedit       = NULL;         /* vbox inside hpaned2 for ewin */
+    // app->view[0]        = NULL;         /* sourceview widget */
+    // app->view[1]        = NULL;         /* sourceview widget */
     // app->splitview      = NULL;         /* 2nd sourceview for split */
     app->splitsw        = NULL;         /* scrolled_window, 2nd sourceview */
+
+    /* allocate MAXSPLIT edit window instances */
+    for (gint i = 0; i < MAXVIEW; i++) {
+        app->einst[i] = g_slice_new (einst_t);
+        app->einst[i]->ebox  = NULL;
+        app->einst[i]->ibox  = NULL;
+        app->einst[i]->swin  = NULL;
+        app->einst[i]->view  = NULL;
+        app->einst[i]->sbar  = NULL;
+        app->einst[i]->inst  = NULL;
+    }
 
     app->winwidth       = 840;          /* default window width   */
     app->winheight      = 800;          /* default window height  */
@@ -29,7 +42,9 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->winszsaved     = FALSE;        /* win size saved */
     app->treewidth      = 180;          /* initial treeiew width */
     app->swbordersz     = 0;            /* scrolled_window border */
+
     app->nsplit         = 0;            /* no. of split editor panes shown */
+    app->nview          = 0;            /* no. of editor panes shown */
     app->focused        = 0;            /* top pane focused */
 
     app->showtoolbar    = TRUE;         /* toolbar is visible */
@@ -78,6 +93,8 @@ void mainwin_destroy (mainwin_t *app)
 
     if (app->keyfile)       g_key_file_free (app->keyfile);
 
+    for (gint i = 0; i < MAXVIEW; i++)
+        g_slice_free (einst_t, app->einst[i]);
     /* free find/replace GList memory */
     // findrep_destroy (app);
 }
@@ -373,5 +390,24 @@ char *get_user_cfgfile (mainwin_t *app)
     }
 
     return NULL;
+}
+
+/** general use err_dialog, just pass errmsg. */
+void err_dialog (const gchar *errmsg)
+{
+    GtkWidget *dialog;
+
+    g_warning (errmsg); /* log to terminal window */
+
+    /* create an error dialog and display modally to the user */
+    dialog = gtk_message_dialog_new (NULL,
+                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_ERROR,
+                                    GTK_BUTTONS_OK,
+                                    errmsg);
+
+    gtk_window_set_title (GTK_WINDOW (dialog), "Error!");
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
 }
 
