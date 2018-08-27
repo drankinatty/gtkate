@@ -1,9 +1,20 @@
 #include "gtk_temp.h"
 
 /*
- * window callbacks
+ * menu callback functions
+ *
+ *  _File menu
  */
-/* simple qute menu function */
+void menu_file_new_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    mainwin_t *app = data;
+
+    treeview_append (app, NULL);
+
+    if (menuitem) {}
+}
+
+/* simple quit menu function */
 void menu_file_quit_activate (GtkMenuItem *menuitem, gpointer data)
 {
     gtk_main_quit ();
@@ -63,21 +74,45 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
 
     GtkWidget *fileMenu;            /* file menu        */
     GtkWidget *fileMi;
-    GtkWidget *sep;
+    GtkWidget *newMi;
     GtkWidget *quitMi;
+
+    GtkWidget *tempMenu;            /* temp menu        */
+    GtkWidget *tempMi;
     GtkWidget *showtbMi;
     GtkWidget *showdocMi;
     GtkWidget *addsplitMi;
     GtkWidget *rmsplitMi;
 
-    menubar = gtk_menu_bar_new ();
+    GtkWidget *sep;
+
+    menubar             = gtk_menu_bar_new ();
+        fileMenu        = gtk_menu_new ();
+        tempMenu        = gtk_menu_new ();
     // gtk_widget_show (menubar);
 
-    fileMenu = gtk_menu_new ();
     fileMi = gtk_menu_item_new_with_mnemonic ("_File");
     sep = gtk_separator_menu_item_new ();
+    newMi    = gtk_image_menu_item_new_from_stock (GTK_STOCK_NEW,
+                                                   NULL);
     quitMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT,
                                                    NULL);
+
+    /* create entries under 'File' then add to menubar */
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (fileMi), fileMenu);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), newMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), quitMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
+
+    gtk_widget_add_accelerator (newMi, "activate", mainaccel,
+                                GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
+                                GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+    /* entries under Temp working menu */
+    tempMi = gtk_menu_item_new_with_mnemonic ("_Temp");
+    sep = gtk_separator_menu_item_new ();
     showtbMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_CONVERT,
                                                    NULL);
     gtk_menu_item_set_label (GTK_MENU_ITEM (showtbMi), "_Show/Hide Toolbar");
@@ -91,19 +126,14 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
                                                    NULL);
     gtk_menu_item_set_label (GTK_MENU_ITEM (rmsplitMi), "Re_move Current Split");
 
-    /* create entries under 'File' then add to menubar */
-    gtk_menu_item_set_submenu (GTK_MENU_ITEM (fileMi), fileMenu);
-    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
-    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), quitMi);
-    sep = gtk_separator_menu_item_new ();
-    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
-    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), showtbMi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), showdocMi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), addsplitMi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), rmsplitMi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
-    gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
-                                GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (tempMi), tempMenu);
+    gtk_menu_shell_append (GTK_MENU_SHELL (tempMenu), sep);
+    gtk_menu_shell_append (GTK_MENU_SHELL (tempMenu), showtbMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (tempMenu), showdocMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (tempMenu), addsplitMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (tempMenu), rmsplitMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), tempMi);
+
     gtk_widget_add_accelerator (showtbMi, "activate", mainaccel,
                                 GDK_KEY_t, GDK_CONTROL_MASK,
                                 GTK_ACCEL_VISIBLE);
@@ -118,9 +148,13 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
                                 GTK_ACCEL_VISIBLE);
 
     /* File Menu */
+    g_signal_connect (G_OBJECT (newMi), "activate",         /* file New     */
+                      G_CALLBACK (menu_file_new_activate), app);
+
     g_signal_connect (G_OBJECT (quitMi), "activate",        /* file Quit    */
                       G_CALLBACK (menu_file_quit_activate), NULL);
 
+    /* Temp Menu */
     g_signal_connect (G_OBJECT (showtbMi), "activate",      /* show toolbar */
                       G_CALLBACK (menu_showtb_activate), app);
 
