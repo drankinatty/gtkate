@@ -174,7 +174,9 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
 
 GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
 {
-    GtkToolItem *tbexit;            /* toolbar */
+    GtkToolItem *sep;               /* toolbar */
+    GtkToolItem *new;
+    GtkToolItem *exit;
     GtkToolItem *info;
     GtkToolItem *split;
     GtkToolItem *rmsplit;
@@ -186,10 +188,18 @@ GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
     gtk_toolbar_set_show_arrow (GTK_TOOLBAR(app->toolbar), TRUE);
     gtk_toolbar_set_style(GTK_TOOLBAR(app->toolbar), GTK_TOOLBAR_ICONS);
 
-    tbexit = gtk_tool_button_new_from_stock(GTK_STOCK_QUIT);
-    gtk_tool_item_set_homogeneous (tbexit, FALSE);
-    gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), tbexit, -1);
-    gtk_widget_set_tooltip_text (GTK_WIDGET(tbexit), "Quit ");
+    new = gtk_tool_button_new_from_stock(GTK_STOCK_NEW);
+    gtk_tool_item_set_homogeneous (new, FALSE);
+    gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), new, -1);
+    gtk_widget_set_tooltip_text (GTK_WIDGET(new), "New file ");
+
+    exit = gtk_tool_button_new_from_stock(GTK_STOCK_QUIT);
+    gtk_tool_item_set_homogeneous (exit, FALSE);
+    gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), exit, -1);
+    gtk_widget_set_tooltip_text (GTK_WIDGET(exit), "Quit ");
+
+    sep = gtk_separator_tool_item_new();
+    gtk_toolbar_insert(GTK_TOOLBAR(app->toolbar), sep, -1);
 
     info = gtk_tool_button_new_from_stock(GTK_STOCK_DIALOG_INFO);
     gtk_tool_item_set_homogeneous (info, FALSE);
@@ -207,16 +217,19 @@ GtkWidget *create_temp_toolbar (mainwin_t *app, GtkAccelGroup *mainaccel)
     gtk_widget_set_tooltip_text (GTK_WIDGET(rmsplit), "Remove Current Split ");
 
     /* Toolbar uses same menu callback */
-    g_signal_connect (G_OBJECT (tbexit), "clicked",         /* file Quit    */
+    g_signal_connect (G_OBJECT (new), "clicked",            /* file New     */
+                      G_CALLBACK (menu_file_new_activate), app);
+
+    g_signal_connect (G_OBJECT (exit), "clicked",           /* file Quit    */
                       G_CALLBACK (menu_file_quit_activate), NULL);
 
-    g_signal_connect (G_OBJECT (info), "clicked",          /* info btn      */
+    g_signal_connect (G_OBJECT (info), "clicked",           /* info btn     */
                       G_CALLBACK (doctree_for_each), app);
 
-    g_signal_connect (G_OBJECT (split), "clicked",         /* split btn     */
+    g_signal_connect (G_OBJECT (split), "clicked",          /* split btn    */
                       G_CALLBACK (menu_createview_activate), app);
 
-    g_signal_connect (G_OBJECT (rmsplit), "clicked",         /* split btn     */
+    g_signal_connect (G_OBJECT (rmsplit), "clicked",        /* rmsplit btn  */
                       G_CALLBACK (menu_removeview_activate), app);
 
     gtk_widget_show_all (app->toolbar);
