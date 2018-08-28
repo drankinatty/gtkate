@@ -1,7 +1,7 @@
 #include "gtk_doctree.h"
 
 /** given inst use tree iter to set focus on current view
- *  (widget is textview assiciated with window clicked inside)
+ *  (widget is textview associated with window clicked inside)
  */
 /* TODO - check on using app->einst[app->focused]->view instead of
  * passing widget - cleaner?
@@ -45,8 +45,8 @@ void tree_get_inst_iter (GtkWidget *widget, gpointer data)
             gtk_tree_selection_select_iter (selection, &iter);
 #ifdef DEBUG
             g_print ("focus on %s\n", str);
-            g_free (str);
 #endif
+            g_free (str);
             found = TRUE;
             break;
         }
