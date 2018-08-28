@@ -1,5 +1,59 @@
 #include "gtk_doctree.h"
 
+/** given inst use tree iter to set focus on current view
+ *  (widget is textview assiciated with window clicked inside)
+ */
+/* TODO - check on using app->einst[app->focused]->view instead of
+ * passing widget - cleaner?
+ *
+ * GtkWidget *view = app->einst[app->focused]->view;
+ * gpointer buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(view));
+ */
+void tree_get_inst_iter (GtkWidget *widget, gpointer data)
+{
+    mainwin_t *app = data;
+    GtkTreeModel *model = NULL;
+    GtkTreeIter iter;
+    gpointer buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(widget));
+    // GtkWidget *view = app->einst[app->focused]->view;
+    // gpointer buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(view));
+    gboolean valid, found = FALSE;
+
+    /* get treemodel, validate */
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->treeview));
+    if (!model) {
+        g_print ("error: tree_view_get_model - failed.\n");
+        return;
+    }
+
+    /* get first iter, return in validate */
+    valid = gtk_tree_model_get_iter_first (model, &iter);
+    while (valid) {         /* loop over each entry in model */
+        gchar *str = NULL;
+        kinst_t *inst = NULL;
+
+        gtk_tree_model_get (model, &iter,   /* get name & inst */
+                            COLNAME, &str, COLINST, &inst, -1);
+
+        /* compare pointer to sourceview with buf from textview (widget) */
+        if ((gpointer)(inst->buf) == buf) {
+            /* found inst & iter set selection */
+            g_print ("focus on %s\n", str);
+            g_free (str);
+            found = TRUE;
+            break;
+        }
+        g_free (str);
+
+        valid = gtk_tree_model_iter_next (model, &iter);
+    }
+
+    if (!found)
+        g_warning ("tree_get_inst_iter inst not found.");
+
+    if (widget) {}
+}
+
 /** given kinst_t instance, set treeview name for entry to Untitled(n)
  *  if inst is NULL, update app->nuntitled, or set name to inst->fname.
  */

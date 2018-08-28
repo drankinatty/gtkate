@@ -38,6 +38,8 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
             g_print ("focus-in-event: app->einst[%d]->view\n", i);
 #endif
             found = TRUE;
+            /* TODO - use app->einst[i]->inst to set highlight in tree */
+            tree_get_inst_iter (widget, app);
             break;
         }
     }
@@ -127,7 +129,7 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
         else
             g_print ("  no valid tree model iter first\n");
     }
-    ewin->inst = inst;  /* set convenience pointer to current file instance */
+    ewin->inst = inst;  /* set pointer to current file instance */
 
     /*      app set show line numbers */
     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW(view), app->lineno);
