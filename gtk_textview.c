@@ -38,8 +38,9 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
             g_print ("focus-in-event: app->einst[%d]->view\n", i);
 #endif
             found = TRUE;
-            /* TODO - use app->einst[i]->inst to set highlight in tree */
-            tree_get_inst_iter (widget, app);
+            /* TODO - use app->einst[i]->inst->buf to set highlight in tree */
+            if (app->nview > 1)
+                tree_get_inst_iter (widget, app);
             break;
         }
     }

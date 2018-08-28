@@ -13,11 +13,15 @@ void tree_get_inst_iter (GtkWidget *widget, gpointer data)
 {
     mainwin_t *app = data;
     GtkTreeModel *model = NULL;
+    GtkTreeSelection *selection;
     GtkTreeIter iter;
     gpointer buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(widget));
     // GtkWidget *view = app->einst[app->focused]->view;
     // gpointer buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(view));
     gboolean valid, found = FALSE;
+
+    /* initialize selection to current */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
 
     /* get treemodel, validate */
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->treeview));
@@ -32,14 +36,17 @@ void tree_get_inst_iter (GtkWidget *widget, gpointer data)
         gchar *str = NULL;
         kinst_t *inst = NULL;
 
+        /* TODO - remove COLNAME & str after debugging done */
         gtk_tree_model_get (model, &iter,   /* get name & inst */
                             COLNAME, &str, COLINST, &inst, -1);
 
         /* compare pointer to sourceview with buf from textview (widget) */
         if ((gpointer)(inst->buf) == buf) {
-            /* found inst & iter set selection */
+            gtk_tree_selection_select_iter (selection, &iter);
+#ifdef DEBUG
             g_print ("focus on %s\n", str);
             g_free (str);
+#endif
             found = TRUE;
             break;
         }
