@@ -12,3 +12,5 @@ The initial code here and concept is to provide a menu, toolbar, hpaned region f
 
 
 Basically all widgets are just placeholders at the moment, but the initial interface is encouraging. Both toolbar and document tree can be hidden/shown with current accelerators `[Ctrl+t]` and `[Ctrl+d]`, respectively for temporary testing. Document views (splits) can be added with the obviously temporary `[Ctrl+s]` and removed with `[Ctrl+r]`.
+
+Branches, the katedev branch will be the development branch for major changes leaving master in compilable state tracking more settled decisions regarding the interface and later for the full editor.
