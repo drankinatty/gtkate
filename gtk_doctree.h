@@ -2,6 +2,7 @@
 #define __gtk_doctree_h__  1
 
 #include <gtk/gtk.h>
+#include <errno.h>
 
 #include "gtk_appdata.h"
 

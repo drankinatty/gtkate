@@ -387,6 +387,38 @@ kinst_t *inst_get_selected (gpointer data)
     return inst;
 }
 
+/** parse number 'n' from "Untitled(n)" to allows untitled bitfield update */
+gint untitled_get_no (const gchar *name)
+{
+    gchar *p, *endptr;
+    const gchar *u = "Untitled";
+    gint i;
+    gint64 tmp;
+
+    for (i = 0; u[i]; i++)  /* validate name begins "Untitled" */
+        if (name[i] != u[i])
+            return -1;
+
+    if (!name[i])       /* if at name end, name is "Untitled" */
+        return 0;
+
+    p = (gchar *)(name + i);
+    while (*p && (*p < '0' || '9' < *p))
+        p++;
+
+    // g_print ("converting: '%s'\n", p);
+    errno = 0;
+    tmp = g_ascii_strtoll (p, &endptr, 0);
+
+    if (endptr == p || errno || tmp < G_MININT || G_MAXINT < tmp)
+        return -1;
+
+    return (gint)tmp;
+}
+
+/* updated and working.
+ * TODO - set window title on removal and clear contents of buffer
+ */
 gboolean doctree_remove_selected (gpointer data)
 {
     GtkTreeModel *model;
@@ -397,10 +429,15 @@ gboolean doctree_remove_selected (gpointer data)
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
     if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
         if (app->nfiles > 1) {  /* only remove entry if > 1 file */
-            /* FIXME - add gtk_tree_model_get to test inst->filename = NULL
-             * and the remove untitled, untitled_remove (app, n), need to
-             * determine (n) - which "Untitled(n)" is it?
-             */
+            gchar *name;
+            gint n;
+
+            gtk_tree_model_get (model, &iter, COLNAME, &name, -1);
+            n = untitled_get_no (name);
+            // g_print ("nuntitled: %d\n", n);
+            if (n >= 0)
+                untitled_remove (app, n);
+
             if (gtk_tree_store_remove (GTK_TREE_STORE(model), &iter)) {
                 app->nfiles--;  /* decrement file count */
                 return TRUE;
@@ -436,10 +473,11 @@ void doctree_activate (GtkWidget *widget, gpointer data)
 
         title = g_strdup_printf ("%s - %s", APPNAME, value);
 
+        /* set window title */
         gtk_window_set_title (GTK_WINDOW (app->window), title);
-/* the reason textview2 never focused - hardcoded - needed to set var */
+
+        /* set buffer in active textview */
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
-//         gtk_text_view_set_buffer (GTK_TEXT_VIEW(app->view[0]),
                                     GTK_TEXT_BUFFER(inst->buf));
 
         g_free (value); /* values with type G_TYPE_STRING or G_TYPE_BOXED */

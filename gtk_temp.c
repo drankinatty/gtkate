@@ -117,7 +117,7 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
                            gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), closeMi);
     /* temp disabled until logic completed */
-    gtk_widget_set_sensitive (closeMi, FALSE);
+    // gtk_widget_set_sensitive (closeMi, FALSE);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), quitMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
 
