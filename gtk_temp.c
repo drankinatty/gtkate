@@ -14,6 +14,14 @@ void menu_file_new_activate (GtkMenuItem *menuitem, gpointer data)
     if (menuitem) {}
 }
 
+void menu_file_close_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    mainwin_t *app = data;
+    file_close (app);
+
+    if (menuitem) {}
+}
+
 /* simple quit menu function */
 void menu_file_quit_activate (GtkMenuItem *menuitem, gpointer data)
 {
@@ -75,6 +83,7 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     GtkWidget *fileMenu;            /* file menu        */
     GtkWidget *fileMi;
     GtkWidget *newMi;
+    GtkWidget *closeMi;
     GtkWidget *quitMi;
 
     GtkWidget *tempMenu;            /* temp menu        */
@@ -95,6 +104,8 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     sep = gtk_separator_menu_item_new ();
     newMi    = gtk_image_menu_item_new_from_stock (GTK_STOCK_NEW,
                                                    NULL);
+    closeMi  = gtk_image_menu_item_new_from_stock (GTK_STOCK_CLOSE,
+                                                   NULL);
     quitMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT,
                                                    NULL);
 
@@ -102,11 +113,18 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (fileMi), fileMenu);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), newMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu),
+                           gtk_separator_menu_item_new());
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), closeMi);
+    /* temp disabled until logic completed */
+    gtk_widget_set_sensitive (closeMi, FALSE);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), quitMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
 
     gtk_widget_add_accelerator (newMi, "activate", mainaccel,
                                 GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (closeMi, "activate", mainaccel,
+                                GDK_KEY_w, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
                                 GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -150,6 +168,9 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     /* File Menu */
     g_signal_connect (G_OBJECT (newMi), "activate",         /* file New     */
                       G_CALLBACK (menu_file_new_activate), app);
+
+    g_signal_connect (G_OBJECT (closeMi), "activate",        /* file Quit    */
+                      G_CALLBACK (menu_file_close_activate), app);
 
     g_signal_connect (G_OBJECT (quitMi), "activate",        /* file Quit    */
                       G_CALLBACK (menu_file_quit_activate), NULL);

@@ -33,32 +33,91 @@ void tree_get_inst_iter (GtkWidget *widget, gpointer data)
     /* get first iter, return in validate */
     valid = gtk_tree_model_get_iter_first (model, &iter);
     while (valid) {         /* loop over each entry in model */
-        gchar *str = NULL;
         kinst_t *inst = NULL;
 
-        /* TODO - remove COLNAME & str after debugging done */
+#ifdef DEBUG
+        /* add printing of COLNAME for debugging */
+        gchar *str = NULL;
+
         gtk_tree_model_get (model, &iter,   /* get name & inst */
                             COLNAME, &str, COLINST, &inst, -1);
 
         /* compare pointer to sourceview with buf from textview (widget) */
         if ((gpointer)(inst->buf) == buf) {
             gtk_tree_selection_select_iter (selection, &iter);
-#ifdef DEBUG
             g_print ("focus on %s\n", str);
-#endif
             g_free (str);
             found = TRUE;
             break;
         }
         g_free (str);
+#else
+        gtk_tree_model_get (model, &iter, COLINST, &inst, -1);  /* get inst */
+
+        /* compare pointer to sourceview with buf from textview (widget) */
+        if ((gpointer)(inst->buf) == buf) {
+            gtk_tree_selection_select_iter (selection, &iter);
+            found = TRUE;
+            break;
+        }
+#endif
 
         valid = gtk_tree_model_iter_next (model, &iter);
     }
 
-    if (!found)
+    if (!found) /* validate buffer found or warn */
         g_warning ("tree_get_inst_iter inst not found.");
+}
 
-    if (widget) {}
+/** get GtkTreeIter from app struct corresponding to focused textview
+ *  caller is responsible for calling g_slice_free() on returned iter.
+ */
+GtkTreeIter *tree_get_iter_from_view (gpointer data)
+{
+    mainwin_t *app = data;
+    GtkTreeModel *model = NULL;
+    GtkTreeIter *iter = NULL;
+    GtkWidget *view = app->einst[app->focused]->view;
+    gpointer buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(view));
+    gboolean valid;
+
+    /* get treemodel, validate */
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->treeview));
+    if (!model) {
+        g_print ("error: tree_view_get_model - failed.\n");
+        return NULL;
+    }
+
+    iter = g_slice_new (GtkTreeIter);
+    if (!iter) {
+        g_warning ("g_slice_new (GtkTreeIter) failed.");
+        return NULL;
+    }
+
+    /* get first iter, return in validate */
+    valid = gtk_tree_model_get_iter_first (model, iter);
+    while (valid) {         /* loop over each entry in model */
+        gchar *str = NULL;
+        kinst_t *inst = NULL;
+
+        /* TODO - remove COLNAME & str after debugging done */
+        gtk_tree_model_get (model, iter,   /* get name & inst */
+                            COLNAME, &str, COLINST, &inst, -1);
+
+        /* compare pointer to sourceview with buf from textview (widget) */
+        if ((gpointer)(inst->buf) == buf) {
+            g_print ("focus on %s\n", str);
+            g_free (str);
+            return iter;
+        }
+        g_free (str);
+
+        valid = gtk_tree_model_iter_next (model, iter);
+    }
+
+    g_warning ("tree_get_inst_iter inst not found.");
+
+    return NULL;
 }
 
 /** given kinst_t instance, set treeview name for entry to Untitled(n)
@@ -68,11 +127,16 @@ gchar *treeview_setname (mainwin_t *app, kinst_t *inst)
 {
     gchar *name;
     if (inst->filename == NULL) {
-        if (app->nuntitled)
-            name = g_strdup_printf ("Untitled(%d)", app->nuntitled);
+        gint n = untitled_get_next (app);
+        if (n)
+            name = g_strdup_printf ("Untitled(%d)", n);
         else
             name = g_strdup ("Untitled");
-        app->nuntitled++;
+//         if (app->nuntitled)
+//             name = g_strdup_printf ("Untitled(%d)", app->nuntitled);
+//         else
+//             name = g_strdup ("Untitled");
+//         app->nuntitled++;
     }
     else
         name = g_strdup (inst->fname);
@@ -116,7 +180,13 @@ void treeview_append (mainwin_t *app, const gchar *filename)
     gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
     gtk_tree_store_set (treestore, &toplevel, COLINST, inst, -1);
 
+    app->nfiles++;  /* update file count */
+
     g_free (name);  /* free name */
+
+    /* temp test */
+    // g_print ("model contains %d rows (nfiles: %d)\n",
+    //        doctree_get_count (app->treeview), app->nfiles);
 }
 
 /** create tree model and initialize treestore with filenames provided in
@@ -128,7 +198,7 @@ GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv)
 
     /* create model with string and pointer to inst.
      * TODO - consider just using pointer to inst and change render to
-     *        render name from inst->fname
+     *        render name from inst->fname (but fname is NULL when Untitled)
      */
     treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
     if (!treestore) {
@@ -274,6 +344,28 @@ void doctree_for_each (GtkWidget *widget, mainwin_t *app)
     if (widget) {}
 }
 
+gint doctree_get_count (GtkWidget *treeview)
+{
+    GtkTreeModel *model = NULL;
+    GtkTreeIter iter;
+    gboolean valid;
+    gint nrows = 0;
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
+    if (!model) {
+        g_print ("error: tree_view_get_model - failed.\n");
+        return 0;
+    }
+
+    valid = gtk_tree_model_get_iter_first (model, &iter);
+    while (valid) {
+        nrows++;
+        valid = gtk_tree_model_iter_next (model, &iter);
+    }
+
+    return nrows;
+}
+
 /** returns buffer instance of selected document, which includes sourceview
  *  buffer, associate filename (or NULL if "Untitled"), and current line and
  *  column for insert mark in buffer so view can be restored.
@@ -295,6 +387,33 @@ kinst_t *inst_get_selected (gpointer data)
     return inst;
 }
 
+gboolean doctree_remove_selected (gpointer data)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreeSelection *selection;
+    mainwin_t *app = data;
+
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
+    if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
+        if (app->nfiles > 1) {  /* only remove entry if > 1 file */
+            /* FIXME - add gtk_tree_model_get to test inst->filename = NULL
+             * and the remove untitled, untitled_remove (app, n), need to
+             * determine (n) - which "Untitled(n)" is it?
+             */
+            if (gtk_tree_store_remove (GTK_TREE_STORE(model), &iter)) {
+                app->nfiles--;  /* decrement file count */
+                return TRUE;
+            }
+        }
+    }
+    /* get view and close scrolled window (app->einst[app->focused])
+     * if (app->nview > 1) in separate funciton in gtk_textview.
+     */
+    return FALSE;
+}
+
+
 /* TODO
  * void inst_set_selected (kinst_t inst)
  */
@@ -307,7 +426,7 @@ void doctree_activate (GtkWidget *widget, gpointer data)
     GtkTreeModel *model;
     mainwin_t *app = data;
     GtkWidget *view = app->einst[app->focused]->view;
-    char *value, *title;
+    gchar *value, *title;
     kinst_t *inst;
 
     if (gtk_tree_selection_get_selected (GTK_TREE_SELECTION(widget),

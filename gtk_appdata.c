@@ -40,7 +40,8 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->swbordersz     = 0;            /* scrolled_window border */
 
     app->nview          = 0;            /* no. of editor panes shown */
-    app->focused        = 0;            /* top pane focused */
+    app->nfiles         = 0;            /* no. of open files */
+    app->focused        = 0;            /* focused einst index */
 
     app->showtoolbar    = TRUE;         /* toolbar is visible */
     app->showdocwin     = TRUE;         /* document tree is visible */
@@ -143,10 +144,14 @@ void buf_delete_inst (kinst_t *inst)
     if (!inst)
         return;
 
+    inst_free_filename (inst);
+
+    /*
     if (inst->filename) g_free (inst->filename);
     if (inst->fname)    g_free (inst->fname);
     if (inst->fpath)    g_free (inst->fpath);
     if (inst->fext)     g_free (inst->fext);
+    */
 
     g_slice_free (kinst_t, inst);
 }
@@ -176,6 +181,19 @@ void inst_free_filename (kinst_t *inst)
     inst->fname = NULL;
     inst->fext = NULL;
     inst->fpath = NULL;
+}
+
+void inst_reset_state (kinst_t *inst)
+{
+    inst_free_filename (inst);
+
+    inst->line = inst->col = 0;
+
+    inst->lang_id = NULL;
+
+    inst->comment_single = NULL;
+    inst->comment_blk_beg = NULL;
+    inst->comment_blk_end = NULL;
 }
 
 /** split app->filename into path, filename, extension.
@@ -343,6 +361,27 @@ int bstack_last (mainwin_t *app)
 
     /* get bit at bindex */
     return (app->bstack[arridx] >> ((app->bindex - 1) % elebits)) & 1;
+}
+
+/** Untitled(n) bitfield management */
+gint bit_check (guint *bf, gint n) { return (*bf >> n) & 1; }
+
+gint untitled_get_next (mainwin_t *app)
+{
+    for (gint i = 0; i < (gint)(sizeof app->nuntitled * CHAR_BIT); i++)
+        if (!bit_check (&app->nuntitled, i)) {
+            app->nuntitled |= (1u << i);
+            return i;
+        }
+
+    g_warning ("untitled_get_next() error: max untitled files reached.");
+
+    return -1;
+}
+
+void untitled_remove (mainwin_t *app, gint n)
+{
+    app->nuntitled &= ~(1u << n);
 }
 
 /** date & time functions */

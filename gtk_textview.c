@@ -41,6 +41,11 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
             /* TODO - use app->einst[i]->inst->buf to set highlight in tree */
             if (app->nview > 1)
                 tree_get_inst_iter (widget, app);
+                /* test with tree_get_iter_from_view () - passed
+                GtkTreeIter *iter = tree_get_iter_from_view (app);
+                if (iter)
+                    g_slice_free (GtkTreeIter, iter);
+                */
             break;
         }
     }
@@ -215,7 +220,7 @@ einst_t *ewin_create_split (gpointer data)
 
     app->nview++;   /* increment number of views */
 
-    /* TODO - decide whether to place focus in new instance of leave on
+    /* TODO - decide whether to place focus in new instance or leave on
      * current (present behavior). set convenience pointer kinst. decide
      * whether to scroll new instance to match current insert.
      */
@@ -226,12 +231,12 @@ einst_t *ewin_create_split (gpointer data)
 }
 
 /** remove current editor split */
-void ewin_remove_split (gpointer data)
+gboolean ewin_remove_split (gpointer data)
 {
     mainwin_t *app = data;
 
     if (app->nview == 1)
-        return;
+        return FALSE;
 
     gtk_widget_destroy (app->einst[app->focused]->ebox);
 
@@ -240,7 +245,9 @@ void ewin_remove_split (gpointer data)
     app->einst[app->focused]->swin = NULL;
     app->einst[app->focused]->view = NULL;
     app->einst[app->focused]->sbar = NULL;
-    app->einst[app->focused]->inst = NULL;
+    if (app->einst[app->focused]->inst->filename)   /* if filename not NULL */
+        buf_delete_inst (app->einst[app->focused]->inst);   /* free inst */
+    app->einst[app->focused]->inst = NULL;  /* set pointer NULL */
 
     /* shift elements down to replace removed instance */
     for (gint i = app->focused, j = i + 1; j < app->nview; i++, j++) {
@@ -268,4 +275,57 @@ void ewin_remove_split (gpointer data)
     }
 
     app->nview--;       /* decrement number of views shown */
+
+    return TRUE;
+}
+
+/* FIXME - nuntitled not decremented when Untitled(n) closed */
+void file_close (gpointer data)
+{
+    mainwin_t *app = data;
+
+    if (doctree_remove_selected (data)) {
+        /* buffer set to next lower */
+        ewin_remove_split (data);
+    }
+    else {
+        /* if app->einst[app->focused]->inst->fname, buf_delete_inst, buffer
+         * new, set for view.
+         */
+        GtkTreeModel *model = app->treemodel;
+        GtkTreeIter iter;
+        kinst_t *inst = app->einst[app->focused]->inst;
+        GtkSourceBuffer *buf = inst->buf;
+        gchar *name = NULL, *title = NULL;
+        gboolean valid;
+
+        inst_reset_state (inst);
+        name = treeview_setname (app, inst);
+
+//         model = gtk_tree_view_get_model (GTK_TREE_VIEW(app->treeview));
+//         if (!model) {
+//             /* handle no model error */
+//             g_warning ("file_close() error: !model.");
+//             g_free (name);
+//             return;
+//         }
+
+        valid = gtk_tree_model_get_iter_first (model, &iter);
+        if (!valid) {
+            g_warning ("file_close() error: !valid.");
+            return;
+        }
+
+        gtk_tree_store_set (GTK_TREE_STORE(model), &iter, COLNAME, name, -1);
+
+        /* TODO move to buffer_clear() funciton */
+        gtk_text_buffer_set_text (GTK_TEXT_BUFFER(buf), "", -1);
+        gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(buf), FALSE);
+
+        title = g_strdup_printf ("%s - %s", APPNAME, name);
+        gtk_window_set_title (GTK_WINDOW (app->window), title);
+
+        g_free (title);
+        g_free (name);
+    }
 }

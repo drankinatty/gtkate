@@ -7,6 +7,7 @@
 
 GtkWidget *create_scrolled_view (mainwin_t *app);
 einst_t *ewin_create_split (gpointer data);
-void ewin_remove_split (gpointer data);
+gboolean ewin_remove_split (gpointer data);
+void file_close (gpointer data);
 
 #endif

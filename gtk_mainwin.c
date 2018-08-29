@@ -168,7 +168,8 @@ GtkWidget *create_window (mainwin_t *app)
      */
     ewin = create_scrolled_view (app);
     gtk_box_pack_start(GTK_BOX(app->vboxedit), ewin, TRUE, TRUE, 0);
-    app->nview++;
+    app->nview++;   /* initialize one view, one open file */
+    // app->nfiles++;  (handled in doctree_append)
 
     gtk_widget_show (app->vboxedit);
 

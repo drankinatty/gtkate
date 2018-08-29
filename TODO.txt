@@ -14,7 +14,7 @@ treeview/model
 
   * consider (app->treeview)[n] to allow multiple views for showing files grouped by directory, or sorted based on opening or ascending/descending alphabetical sort.
 
-  * finish app->nuntitled logic. bit array with set/unset to replace current gint to handle save of "Untitled(n)" files.
+  * finish app->nuntitled logic. bit array with set/unset to replace current gint to handle save/close of "Untitled(n)" files.
 
 multiview edit pane
 

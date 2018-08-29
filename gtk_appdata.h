@@ -24,6 +24,10 @@
  #include <glib-object.h>
 #endif
 
+#ifndef CHAR_BIT
+ #define CHAR_BIT 8
+#endif
+
 /* build with GTKSOURCEVIEW2 by default */
 #if defined (WGTKSOURCEVIEW3) || defined (WGTKSOURCEVIEW4)
  #include <gtksourceview/gtksource.h>
@@ -155,7 +159,8 @@ typedef struct mainwin {
     einst_t         *einst[MAXVIEW];    /* pointers to editor instances */
 
     gint            nview,              /* no. of editor views shown */
-                    focused;            /* focused instance */
+                    nfiles,             /* no. of open files */
+                    focused;            /* focused einst index */
 
     gchar           *fontname;          /* pango fontname */
 
@@ -176,7 +181,7 @@ typedef struct mainwin {
     gint            nrecent;            /* no. of recent files in chooser */
 
     /* treeview display parameters */
-    gint            nuntitled;          /* next "Untitled(n) in tree */
+    guint           nuntitled;          /* bitfield "Untitled(n) in tree */
 
     /* boolean stack implementation
      * to provide keypress history.
@@ -195,6 +200,7 @@ void buf_delete_inst (kinst_t *inst);
 
 /* filename functions */
 void inst_free_filename (kinst_t *inst);
+void inst_reset_state (kinst_t *inst);
 void split_fname (kinst_t *inst);
 gchar *uri_to_filename (const gchar *uri);
 gchar *get_posix_filename (const gchar *fn);
@@ -204,6 +210,11 @@ void bstack_clear (mainwin_t *app);
 int bstack_push (mainwin_t *app, int v);
 int bstack_pop (mainwin_t *app);
 int bstack_last (mainwin_t *app);
+
+/* Untitled(n) bitfield management */
+gint bit_check (guint *bf, gint n);
+gint untitled_get_next (mainwin_t *app);
+void untitled_remove (mainwin_t *app, gint n);
 
 /* date & time functions */
 gchar *get_local_datetime (void);
