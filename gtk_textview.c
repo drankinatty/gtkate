@@ -273,59 +273,43 @@ gboolean ewin_remove_split (gpointer data)
         app->focused--;
         gtk_widget_grab_focus (app->einst[app->focused]->view);
     }
+    else {
+        /* need else clause to handle removal of einst[0] when multiple
+         * views are shown. neither app->focused or focus should change.
+         */
+    }
 
     app->nview--;       /* decrement number of views shown */
 
     return TRUE;
 }
 
-/* FIXME - nuntitled not decremented when Untitled(n) closed */
+/** file_close - close the currently focused file.
+ *  if file shown in multiple editor views, close all associated views,
+ *  if only file in tree, clear buffer, set "Untitled".
+ */
+/* FIXME - warning: "tree_get_inst_iter inst not found." when closing one
+ * file in multiple view with more than 1 file in tree. Need to set buffer
+ * for remaining view to file that remains in tree. lines 69 or 118 in
+ * gtk_doctree.c
+ */
 void file_close (gpointer data)
 {
     mainwin_t *app = data;
 
     if (doctree_remove_selected (data)) {
         /* buffer set to next lower */
-        ewin_remove_split (data);
+        /* TODO - if top (einst[0]), then set to next higher */
+        g_print ("doctree_remove_selected - TRUE\n");
+        ewin_remove_split (data);   /* need to remove all splits with that file
+                                     * (iterate einst[app->focused] to app->nview)
+                                     * checking if inst->buf is same and close view
+                                     */
     }
     else {
-        /* if app->einst[app->focused]->inst->fname, buf_delete_inst, buffer
-         * new, set for view.
-         */
-        GtkTreeModel *model = app->treemodel;
-        GtkTreeIter iter;
-        kinst_t *inst = app->einst[app->focused]->inst;
-        GtkSourceBuffer *buf = inst->buf;
-        gchar *name = NULL, *title = NULL;
-        gboolean valid;
-
-        inst_reset_state (inst);
-        name = treeview_setname (app, inst);
-
-//         model = gtk_tree_view_get_model (GTK_TREE_VIEW(app->treeview));
-//         if (!model) {
-//             /* handle no model error */
-//             g_warning ("file_close() error: !model.");
-//             g_free (name);
-//             return;
-//         }
-
-        valid = gtk_tree_model_get_iter_first (model, &iter);
-        if (!valid) {
-            g_warning ("file_close() error: !valid.");
-            return;
-        }
-
-        gtk_tree_store_set (GTK_TREE_STORE(model), &iter, COLNAME, name, -1);
-
-        /* TODO move to buffer_clear() funciton */
-        gtk_text_buffer_set_text (GTK_TEXT_BUFFER(buf), "", -1);
-        gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(buf), FALSE);
-
-        title = g_strdup_printf ("%s - %s", APPNAME, name);
-        gtk_window_set_title (GTK_WINDOW (app->window), title);
-
-        g_free (title);
-        g_free (name);
+        /* single file remove all splits */
+        while (app->nview > 1)     /* handle multi-view, single file */
+            ewin_remove_split (data); /* works but results in Untitled(1) */
+        g_print ("doctree_remove_selected - FALSE\n");
     }
 }

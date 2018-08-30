@@ -428,21 +428,46 @@ gboolean doctree_remove_selected (gpointer data)
 
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
     if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
+        gchar *name;
+        gint n;
+
+        gtk_tree_model_get (model, &iter, COLNAME, &name, -1);
+
+        n = untitled_get_no (name);
+        // g_print ("nuntitled: %d\n", n);
+        if (n >= 0)
+            untitled_remove (app, n);
+        g_print ("doctree_remove_selected() app->nfiles: %d\n", app->nfiles);
         if (app->nfiles > 1) {  /* only remove entry if > 1 file */
-            gchar *name;
-            gint n;
-
-            gtk_tree_model_get (model, &iter, COLNAME, &name, -1);
-            n = untitled_get_no (name);
-            // g_print ("nuntitled: %d\n", n);
-            if (n >= 0)
-                untitled_remove (app, n);
-
-            if (gtk_tree_store_remove (GTK_TREE_STORE(model), &iter)) {
-                app->nfiles--;  /* decrement file count */
-                return TRUE;
-            }
+            /* gtk_tree_store_remove ()
+             * returns TRUE if not on last entry, (iter remains valid),
+             * otherwise iter is invalidated, and return is FALSE
+             */
+            gtk_tree_store_remove (GTK_TREE_STORE(model), &iter);
+            app->nfiles--;  /* decrement file count */
+            return TRUE;
         }
+        else {  /* otherwise, handle single file, clear buffer */
+            gchar *uname, *title;
+            kinst_t *inst;
+
+            gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
+            inst_reset_state (inst);
+            uname = treeview_setname (app, inst);
+            gtk_tree_store_set (GTK_TREE_STORE(model), &iter, COLNAME, uname, -1);
+
+            /* TODO move to buffer_clear() funciton */
+            gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
+            gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
+
+            title = g_strdup_printf ("%s - %s", APPNAME, uname);
+            gtk_window_set_title (GTK_WINDOW (app->window), title);
+
+            g_free (title);
+            g_free (uname);
+        }
+
+        g_free (name);
     }
     /* get view and close scrolled window (app->einst[app->focused])
      * if (app->nview > 1) in separate funciton in gtk_textview.
