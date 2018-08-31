@@ -14,6 +14,30 @@ void menu_file_new_activate (GtkMenuItem *menuitem, gpointer data)
     if (menuitem) {}
 }
 
+void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    /* get new filename */
+    gchar *newfile = get_open_filename (data);
+
+    g_print ("open filename: %s\n", newfile);
+
+    /* open newfile in current or new editor instance */
+    // file_open (app, newfile);
+
+    if (menuitem) {}
+}
+
+void menu_file_save_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    // buffer_save_file (app, NULL);
+    // gtk_widget_grab_focus (app->view);
+
+    gchar *savefile = get_save_filename (data);
+    g_print ("save filename: %s\n", savefile);
+
+    if (menuitem) {}
+}
+
 void menu_file_close_activate (GtkMenuItem *menuitem, gpointer data)
 {
     mainwin_t *app = data;
@@ -201,6 +225,8 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     GtkWidget *fileMenu;            /* file menu */
     GtkWidget *fileMi;
     GtkWidget *newMi;
+    GtkWidget *openMi;
+    GtkWidget *saveMi;
     GtkWidget *closeMi;
     GtkWidget *quitMi;
 
@@ -227,6 +253,10 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     sep = gtk_separator_menu_item_new ();
     newMi    = gtk_image_menu_item_new_from_stock (GTK_STOCK_NEW,
                                                    NULL);
+    openMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_OPEN,
+                                                   NULL);
+    saveMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_SAVE,
+                                                   NULL);
     closeMi  = gtk_image_menu_item_new_from_stock (GTK_STOCK_CLOSE,
                                                    NULL);
     quitMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT,
@@ -236,6 +266,8 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (fileMi), fileMenu);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), sep);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), newMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), openMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), saveMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu),
                            gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), closeMi);
@@ -246,6 +278,10 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
 
     gtk_widget_add_accelerator (newMi, "activate", mainaccel,
                                 GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (openMi, "activate", mainaccel,
+                                GDK_KEY_o, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (saveMi, "activate", mainaccel,
+                                GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (closeMi, "activate", mainaccel,
                                 GDK_KEY_w, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
@@ -282,10 +318,10 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
                                 GDK_KEY_d, GDK_CONTROL_MASK,
                                 GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (addsplitMi, "activate", mainaccel,
-                                GDK_KEY_s, GDK_CONTROL_MASK,
+                                GDK_KEY_s, GDK_CONTROL_MASK | GDK_SHIFT_MASK,
                                 GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (rmsplitMi, "activate", mainaccel,
-                                GDK_KEY_r, GDK_CONTROL_MASK,
+                                GDK_KEY_r, GDK_CONTROL_MASK | GDK_SHIFT_MASK,
                                 GTK_ACCEL_VISIBLE);
 
     /*define help menu */
@@ -307,6 +343,12 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     /* File Menu */
     g_signal_connect (G_OBJECT (newMi), "activate",         /* file New     */
                       G_CALLBACK (menu_file_new_activate), app);
+
+    g_signal_connect (G_OBJECT (openMi), "activate",        /* file Open    */
+                      G_CALLBACK (menu_file_open_activate), app);
+
+    g_signal_connect (G_OBJECT (saveMi), "activate",        /* file Save    */
+                      G_CALLBACK (menu_file_save_activate), app);
 
     g_signal_connect (G_OBJECT (closeMi), "activate",        /* file Quit    */
                       G_CALLBACK (menu_file_close_activate), app);
