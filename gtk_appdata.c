@@ -107,6 +107,10 @@ static kinst_t *kinst_init (kinst_t *inst)
     inst->fpath = NULL;
     inst->fext = NULL;
 
+    inst->filemode = 0;
+    inst->fileuid = 0;
+    inst->filegid = 0;
+
     inst->line = inst->col = 0;
 
     inst->lang_id = NULL;
@@ -188,6 +192,10 @@ void inst_reset_state (kinst_t *inst)
     inst_free_filename (inst);
 
     inst->line = inst->col = 0;
+
+    inst->filemode = 0;
+    inst->fileuid = 0;
+    inst->filegid = 0;
 
     inst->lang_id = NULL;
 

@@ -1,3 +1,7 @@
+Overall
+
+  * Rename funcitons used in multi-file/multi-view scheme. Come up with consistent and sane convention so that descriptive names describing functionality are used throughout.
+
 mainwin
 
   * pending todos done
@@ -14,19 +18,29 @@ treeview/model
 
   * consider (app->treeview)[n] to allow multiple views for showing files grouped by directory, or sorted based on opening or ascending/descending alphabetical sort.
 
-  * finish app->nuntitled logic. bit array with set/unset to replace current gint to handle save/close of "Untitled(n)" files.
-
 multiview edit pane
 
   * decide whether to place focus in new instance of leave on current (present behavior).
 
-  * set convenience pointer kinst.
+  * set convenience pointer kinst?
 
   * decide whether to scroll new instance to match current insert mark.
 
 buffer
 
   * adapt file open/save for document tree entries and check for buffer modified.
+    - get_open_filename
+    - split filename
+    - get g_stat info
+    - read file
+    - set sourceview language
+    - set gfile monitor
+    - update kinst members for app->focused view
+    - add to treemodel/treeview
+    - display file in view
+  * save will require check of NULL/filename
+
+  * close-all, handle in two parts, close all active view and then close all documents in tree, then close app.
 
   * write file data out containing line, col and sourceview lang_id to restore view on file open. Use GFile and GHashtable to hash pointer to info to use in kinst_t instance initialization, replace contents of file on close, write serialized binary format similar to 'line col szfilenm szlangid filename lang_id' (4 int, 2 strings). Add to hashtable on open/save/close/close-all. remainder of kinst_t information can be derived from this.
 

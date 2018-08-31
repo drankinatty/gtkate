@@ -221,49 +221,6 @@ GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv)
     return GTK_TREE_MODEL (treestore);
 }
 
-/* initial test create/fill with up to 100 files to test scrolling window
- * for document tree. also showns example of adding directory the filenames.
- */
-// GtkTreeModel *create_and_fill_model (mainwin_t *app)
-// {
-//     gint nfiles = 4;
-//     /* tree with directory component commented out for single list
-//      * enable toplevel/child for directory/filename struct or omit
-//      * directory and simply have a tree of filenames.
-//      */
-//     GtkTreeStore *treestore;
-//     GtkTreeIter toplevel/*, child*/;
-//
-//     treestore = gtk_tree_store_new (NUMCOL, G_TYPE_STRING, G_TYPE_POINTER);
-// #ifdef WITHDIR
-//     GtkTreeIter child;
-//
-//     gtk_tree_store_append (treestore, &toplevel, NULL);
-//     gtk_tree_store_set (treestore, &toplevel, COLNAME, "Directory1", -1);
-//     gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(NULL), -1);
-//
-//     for (gint i = 0; i < nfiles; i++) {
-//         gchar *name = g_strdup_printf ("Filename_%03d", i);
-//         gtk_tree_store_append (treestore, &child, &toplevel);
-//         gtk_tree_store_set (treestore, &child, COLNAME, name, -1);
-//         gtk_tree_store_set (treestore, &child, COLINST, buf_new_inst(name), -1);
-//         g_free (name);
-//     }
-// #else
-//     for (gint i = 0; i < nfiles; i++) {
-//         gchar *name = g_strdup_printf ("Filename_%03d", i);
-//         gtk_tree_store_append (treestore, &toplevel, NULL);
-//         gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
-//         gtk_tree_store_set (treestore, &toplevel, COLINST, buf_new_inst(name), -1);
-//         g_free (name);
-//     }
-// #endif
-//
-//     return GTK_TREE_MODEL (treestore);
-//
-//     if (app) {}
-// }
-
 /** create treeview and initialize treemodel */
 GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
 {

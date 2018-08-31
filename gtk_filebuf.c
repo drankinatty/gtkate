@@ -32,3 +32,26 @@ void file_get_stats (const gchar *filename, kinst_t *file)
     file->filegid  = sb.st_gid;
 }
 
+/** clears focused textview buffer, sets modified FALSE
+ *  gpointer expects mainwin_t type.
+ */
+void buffer_clear_focused (gpointer data)
+{
+    mainwin_t *app = data;
+    kinst_t *inst = app->einst[app->focused]->inst;
+    // GtkTextBuffer *buf = GTK_TEXT_BUFFER(inst->buf);
+
+    gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
+    gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
+}
+
+/* TODO - In work see TODO.txt outline */
+void file_open (gpointer data, gchar *name)
+{
+    mainwin_t *app = data;
+    kinst_t *inst = app->einst[app->focused]->inst;
+
+    inst_reset_state (inst);    /* reset all inst value except buf */
+
+    if (name) {}
+}

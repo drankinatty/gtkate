@@ -21,6 +21,9 @@ void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
 
     g_print ("open filename: %s\n", newfile);
 
+    /* temporary */
+    g_free (newfile);
+
     /* open newfile in current or new editor instance */
     // file_open (app, newfile);
 
@@ -34,6 +37,9 @@ void menu_file_save_activate (GtkMenuItem *menuitem, gpointer data)
 
     gchar *savefile = get_save_filename (data);
     g_print ("save filename: %s\n", savefile);
+
+    /* temporary */
+    g_free (savefile);
 
     if (menuitem) {}
 }

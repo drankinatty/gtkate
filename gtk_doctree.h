@@ -16,7 +16,7 @@ GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv);
 // GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv);
 GtkTreeModel *create_and_fill_model (mainwin_t *app);
 GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv);
-gint doctree_get_count (GtkWidget *treeview);
+// gint doctree_get_count (GtkWidget *treeview);
 kinst_t *inst_get_selected (gpointer data);
 void doctree_for_each (GtkWidget *widget, mainwin_t *app);
 void doctree_newfile (mainwin_t *app, const gchar *filename);
