@@ -238,6 +238,7 @@ gboolean ewin_remove_split (gpointer data)
     if (app->nview == 1)
         return FALSE;
 
+    /* destroy bounding vbox for edit window removing edit window */
     gtk_widget_destroy (app->einst[app->focused]->ebox);
 
     app->einst[app->focused]->ebox = NULL;  /* set removed edit window */
@@ -269,15 +270,11 @@ gboolean ewin_remove_split (gpointer data)
         src->inst = NULL;
     }
 
-    if (app->focused) { /* decrement and set focus on next-lower edit window */
+    if (app->focused)   /* decrement and set focus on next-lower edit window */
         app->focused--;
-        gtk_widget_grab_focus (app->einst[app->focused]->view);
-    }
-    else {
-        /* need else clause to handle removal of einst[0] when multiple
-         * views are shown. neither app->focused or focus should change.
-         */
-    }
+
+    /* place focus on remaining view */
+    gtk_widget_grab_focus (app->einst[app->focused]->view);
 
     app->nview--;       /* decrement number of views shown */
 
