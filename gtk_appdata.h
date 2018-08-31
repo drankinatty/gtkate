@@ -41,6 +41,7 @@
 #endif
 
 #define APPNAME "GtKate"
+#define APPSTR "GtKate Text Editor"
 
 #define VER         "0.0.1"
 #define SITE        "https://www.rankinlawfirm.com"
@@ -222,5 +223,7 @@ gchar *get_local_datetime (void);
 /* temp dialog functions */
 void err_dialog (const gchar *errmsg);
 
+/* create pixbuf function */
+GdkPixbuf *create_pixbuf_from_file (const gchar *filename);
 
 #endif

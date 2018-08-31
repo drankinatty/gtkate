@@ -76,17 +76,139 @@ void menu_removeview_activate (GtkMenuItem *menuitem, gpointer data)
     if (menuitem) {}
 }
 
-GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
+void help_about (gpointer data)
 {
-    GtkWidget *menubar;             /* menu container   */
+    mainwin_t *app = data;
+    gchar *buf, *logofn, *license;
+    gsize fsize;
+    GdkPixbuf *logo = NULL;
 
-    GtkWidget *fileMenu;            /* file menu        */
+    static const gchar *const authors[] = {
+            "David C. Rankin, J.D,P.E. <drankinatty@gmail.com>",
+            NULL
+    };
+
+    static const gchar copyright[] = \
+            "Copyright \xc2\xa9 2018 David C. Rankin";
+
+    static const gchar comments[] = APPSTR;
+
+    /* create pixbuf from logofn to pass to show_about_dialog */
+//     if ((logofn = get_logo_filename (app))) {
+    if ((logofn = g_strdup_printf ("%s/%s", app->imgdir, LOGO))) {
+        // g_print ("logofn : '%s'\n", logofn);
+        logo = create_pixbuf_from_file (logofn);
+        g_free (logofn);
+    }
+
+#ifndef HAVEMSWIN
+    /* Archlinux */
+    license = g_strdup_printf ("%s/%s/%s", "/usr/share/licenses", CFGDIR, LICENSE);
+    if (g_file_test (license, G_FILE_TEST_EXISTS))
+        goto gotnixlic;
+
+    /* openSuSE */
+    g_free (license);
+    license = NULL;
+    license = g_strdup_printf ("%s/%s/%s", "/usr/share/doc/packages", CFGDIR, LICENSE);
+    if (g_file_test (license, G_FILE_TEST_EXISTS))
+        goto gotnixlic;
+
+    /* generic */
+    g_free (license);
+    license = NULL;
+    license = g_strdup_printf ("%s/%s", app->sysdatadir, LICENSE);
+
+    gotnixlic:;
+#else
+    /* win32/win64 */
+    license = g_strdup_printf ("%s\\%s", app->sysdatadir, LICENSE);
+#endif
+
+    /* check if license read into buf */
+    if (g_file_get_contents (license, &buf, &fsize, NULL)) {
+
+        if (logo)   /* show logo */
+            gtk_show_about_dialog (GTK_WINDOW (app->window),
+                                "authors", authors,
+                                "comments", comments,
+                                "copyright", copyright,
+                                "version", VER,
+                                "website", SITE,
+                                "program-name", APPSTR,
+                                "logo", logo,
+                                "license", buf,
+                                NULL);
+        else    /* show stock GTK_STOCK_EDIT */
+            gtk_show_about_dialog (GTK_WINDOW (app->window),
+                                "authors", authors,
+                                "comments", comments,
+                                "copyright", copyright,
+                                "version", VER,
+                                "website", SITE,
+                                "program-name", APPSTR,
+                                "logo-icon-name", GTK_STOCK_EDIT,
+                                "license", buf,
+                                NULL);
+        g_free (buf);
+    }
+    else {
+#ifdef DEBUG
+        g_print ("error: load of file %s failed.\n", LICENSE);
+#endif
+        if (logo)   /* show logo */
+            gtk_show_about_dialog (GTK_WINDOW (app->window),
+                                "authors", authors,
+                                "comments", comments,
+                                "copyright", copyright,
+                                "version", VER,
+                                "website", SITE,
+                                "program-name", APPSTR,
+                                "logo", logo,
+                                NULL);
+        else    /* show stock GTK_STOCK_EDIT */
+            gtk_show_about_dialog (GTK_WINDOW (app->window),
+                                "authors", authors,
+                                "comments", comments,
+                                "copyright", copyright,
+                                "version", VER,
+                                "website", SITE,
+                                "program-name", APPSTR,
+                                "logo-icon-name", GTK_STOCK_EDIT,
+                                NULL);
+    }
+
+    if (logo)
+        g_object_unref (logo);
+    if (license)
+        g_free (license);
+}
+
+/*
+ *  _Help menu
+ */
+void menu_help_about_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    help_about (data);
+    if (menuitem) {}
+}
+
+GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
+{
+    mainwin_t *app = data;
+    GtkWidget *menubar;             /* menu container */
+
+    GtkWidget *fileMenu;            /* file menu */
     GtkWidget *fileMi;
     GtkWidget *newMi;
     GtkWidget *closeMi;
     GtkWidget *quitMi;
 
-    GtkWidget *tempMenu;            /* temp menu        */
+    GtkWidget *helpMenu;            /* help menu */
+    GtkWidget *helpMi;
+    GtkWidget *aboutMi;
+
+    GtkWidget *tempMenu;            /* temp menu */
     GtkWidget *tempMi;
     GtkWidget *showtbMi;
     GtkWidget *showdocMi;
@@ -98,6 +220,7 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
     menubar             = gtk_menu_bar_new ();
         fileMenu        = gtk_menu_new ();
         tempMenu        = gtk_menu_new ();
+        helpMenu        = gtk_menu_new ();
     // gtk_widget_show (menubar);
 
     fileMi = gtk_menu_item_new_with_mnemonic ("_File");
@@ -165,6 +288,22 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
                                 GDK_KEY_r, GDK_CONTROL_MASK,
                                 GTK_ACCEL_VISIBLE);
 
+    /*define help menu */
+    helpMi = gtk_menu_item_new_with_mnemonic ("_Help");
+    gtk_menu_item_set_right_justified ((GtkMenuItem *)helpMi, TRUE);
+    sep = gtk_separator_menu_item_new ();
+    aboutMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_ABOUT,
+                                                  NULL);
+
+    /* create entries under 'Help' then add to menubar */
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (helpMi), helpMenu);
+    gtk_menu_shell_append (GTK_MENU_SHELL (helpMenu), sep);
+    gtk_menu_shell_append (GTK_MENU_SHELL (helpMenu), aboutMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), helpMi);
+
+    gtk_widget_add_accelerator (aboutMi, "activate", mainaccel,
+                                GDK_KEY_a, GDK_MOD1_MASK, GTK_ACCEL_VISIBLE);
+
     /* File Menu */
     g_signal_connect (G_OBJECT (newMi), "activate",         /* file New     */
                       G_CALLBACK (menu_file_new_activate), app);
@@ -187,6 +326,10 @@ GtkWidget *create_temp_menu (mainwin_t *app, GtkAccelGroup *mainaccel)
 
     g_signal_connect (G_OBJECT (rmsplitMi), "activate",      /* show toolbar */
                       G_CALLBACK (menu_removeview_activate), app);
+
+    /* Help Menu */
+    g_signal_connect (G_OBJECT (aboutMi), "activate",       /* help About   */
+                      G_CALLBACK (menu_help_about_activate), app);
 
     gtk_widget_show_all (menubar);
 

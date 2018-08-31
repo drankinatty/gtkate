@@ -29,24 +29,6 @@ gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
     if (event) {}
 }
 
-/** creates a new pixbuf from filename.
- *  you are responsible for calling g_object_unref() on
- *  the pixbuf when done.
- */
-GdkPixbuf *create_pixbuf_from_file (const gchar *filename)
-{
-    GdkPixbuf *pixbuf;
-    GError *error = NULL;
-    pixbuf = gdk_pixbuf_new_from_file (filename, &error);
-
-    if (!pixbuf) {
-        g_warning (error->message); /* log to terminal window */
-        g_error_free (error);
-    }
-
-    return pixbuf;
-}
-
 /** create application window & initialize values
  *  and connect callback functions. 'app' contains
  *  widgets for window, text_view and statusbar.

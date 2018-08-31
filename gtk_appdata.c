@@ -445,3 +445,21 @@ void err_dialog (const gchar *errmsg)
     gtk_widget_destroy (dialog);
 }
 
+/** creates a new pixbuf from filename.
+ *  you are responsible for calling g_object_unref() on
+ *  the pixbuf when done.
+ */
+GdkPixbuf *create_pixbuf_from_file (const gchar *filename)
+{
+    GdkPixbuf *pixbuf;
+    GError *error = NULL;
+    pixbuf = gdk_pixbuf_new_from_file (filename, &error);
+
+    if (!pixbuf) {
+        g_warning (error->message); /* log to terminal window */
+        g_error_free (error);
+    }
+
+    return pixbuf;
+}
+
