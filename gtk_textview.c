@@ -39,8 +39,8 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
 #endif
             found = TRUE;
             /* TODO - use app->einst[i]->inst->buf to set highlight in tree */
-            if (app->nview > 1)
-                tree_get_inst_iter (widget, app);
+            // if (app->nview > 1)  /* removed -- need to focus each view */
+                tree_set_selection (widget, app);
                 /* test with tree_get_iter_from_view () - passed
                 GtkTreeIter *iter = tree_get_iter_from_view (app);
                 if (iter)
@@ -233,48 +233,59 @@ einst_t *ewin_create_split (gpointer data)
 /** remove current editor split */
 gboolean ewin_remove_split (gpointer data)
 {
-    mainwin_t *app = data;
+    mainwin_t *app = data;                      /* application data stuct */
+    einst_t *einst = app->einst[app->focused];  /* focused editor struct */
+    GtkWidget *ewin = einst->ebox;              /* bounding vbox of view */
+    gint i;
 
-    if (app->nview == 1)
+    if (app->nview == 1)                        /* if single view, return */
         return FALSE;
 
-    /* destroy bounding vbox for edit window removing edit window */
-    gtk_widget_destroy (app->einst[app->focused]->ebox);
+    gtk_widget_destroy (ewin);      /* destory bounding vbox removing view, */
+    einst_reset (einst);            /* set all struct members NULL, preserving
+                                     * stuct for buffer inst. */
 
-    app->einst[app->focused]->ebox = NULL;  /* set removed edit window */
-    app->einst[app->focused]->ibox = NULL;  /* pointers to NULL */
-    app->einst[app->focused]->swin = NULL;
-    app->einst[app->focused]->view = NULL;
-    app->einst[app->focused]->sbar = NULL;
-    if (app->einst[app->focused]->inst->filename)   /* if filename not NULL */
-        buf_delete_inst (app->einst[app->focused]->inst);   /* free inst */
-    app->einst[app->focused]->inst = NULL;  /* set pointer NULL */
+    for (i = app->focused; (i + 1) < MAXVIEW; i++)  /* shift einst down */
+        einst_move (app->einst[i], app->einst[i+1]);
 
-    /* shift elements down to replace removed instance */
-    for (gint i = app->focused, j = i + 1; j < app->nview; i++, j++) {
-        einst_t *tgt = app->einst[i],   /* target for shift */
-                *src = app->einst[j];   /* source for shift */
-
-        tgt->ebox = src->ebox;  /* shift pointers src -> tgt */
-        tgt->ibox = src->ibox;
-        tgt->swin = src->swin;
-        tgt->view = src->view;
-        tgt->sbar = src->sbar;
-        tgt->inst = src->inst;
-
-        src->ebox = NULL;       /* set src pointers null */
-        src->ibox = NULL;
-        src->swin = NULL;
-        src->view = NULL;
-        src->sbar = NULL;
-        src->inst = NULL;
-    }
-
-    if (app->focused)   /* decrement and set focus on next-lower edit window */
+    if (app->focused)  /* if nothing shifted, move focus to next view */
         app->focused--;
 
-    /* place focus on remaining view */
-    gtk_widget_grab_focus (app->einst[app->focused]->view);
+    gtk_widget_grab_focus (app->einst[app->focused]->view); /* grab focus */
+
+    app->nview--;       /* decrement number of views shown */
+
+    return TRUE;
+}
+
+void focus_prev_view (gpointer data) {
+
+    mainwin_t *app = data;                      /* application data stuct */
+
+    if (app->focused)  /* if nothing shifted, move focus to next view */
+        app->focused--;
+
+    gtk_widget_grab_focus (app->einst[app->focused]->view); /* grab focus */
+}
+
+/* remove specific instance - allows interating and removing multiple */
+gboolean ewin_remove_view (gpointer data, einst_t *einst)
+{
+    mainwin_t *app = data;                      /* application data stuct */
+    GtkWidget *ewin = einst->ebox;              /* bounding vbox of view */
+    gint i;
+
+    if (app->nview == 1)                        /* if single view, return */
+        return FALSE;
+
+    gtk_widget_destroy (ewin);      /* destory bounding vbox removing view, */
+    einst_reset (einst);            /* set all struct members NULL, preserving
+                                     * stuct for buffer inst. */
+
+    for (i = app->focused; (i + 1) < MAXVIEW; i++)  /* shift einst down */
+        einst_move (app->einst[i], app->einst[i+1]);
+
+    focus_prev_view (data);
 
     app->nview--;       /* decrement number of views shown */
 
@@ -285,28 +296,33 @@ gboolean ewin_remove_split (gpointer data)
  *  if file shown in multiple editor views, close all associated views,
  *  if only file in tree, clear buffer, set "Untitled".
  */
-/* FIXME - warning: "tree_get_inst_iter inst not found." when closing one
- * file in multiple view with more than 1 file in tree. Need to set buffer
- * for remaining view to file that remains in tree. lines 69 or 118 in
- * gtk_doctree.c
+/* Sun Sep 02 2018 01:19:20 CDT  - this is where problem is. Need to remove
+ * editor instances before removing file to prevent inst from being NULL'ed
+ * on removal of first split. Loop over splits, closing, then call
+ * doctree_remove_selected.
  */
 void file_close (gpointer data)
 {
     mainwin_t *app = data;
 
-    if (doctree_remove_selected (data)) {
-        /* buffer set to next lower */
-        /* TODO - if top (einst[0]), then set to next higher */
-        g_print ("doctree_remove_selected - TRUE\n");
-        ewin_remove_split (data);   /* need to remove all splits with that file
-                                     * (iterate einst[app->focused] to app->nview)
-                                     * checking if inst->buf is same and close view
-                                     */
+    /* Sun Sep 02 2018 01:47:42 CDT - new approach, will need rewire of ewin
+     * remove to take einst as param to remove so we can loop over instances
+     * closing all containing file to be closed. This instead of letting
+     * ewin_remove_split just close einst[app->focused].
+     */
+    gint n = app->nview;
+    kinst_t *inst = app->einst[app->focused]->inst;
+
+    /* save iter to selected here, then loop closing all instances */
+    GtkTreeIter *victim = tree_get_iter_from_view (data);
+
+    // for (n = 0; n < app->nview; n++) {
+    while (n--) {
+        if (app->einst[n]->inst && app->einst[n]->inst == inst) {
+            /* close it -- but einst can't shift down before loop done */
+            ewin_remove_view (data, app->einst[n]);
+        }
     }
-    else {
-        /* single file remove all splits */
-        while (app->nview > 1)     /* handle multi-view, single file */
-            ewin_remove_split (data); /* works but results in Untitled(1) */
-        g_print ("doctree_remove_selected - FALSE\n");
-    }
+
+    doctree_remove_iter (data, victim);
 }

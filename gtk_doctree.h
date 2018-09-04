@@ -7,7 +7,7 @@
 #include "gtk_appdata.h"
 
 /** function prototypes */
-void tree_get_inst_iter (GtkWidget *widget, gpointer data);
+void tree_set_selection (GtkWidget *widget, gpointer data);
 GtkTreeIter *tree_get_iter_from_view (gpointer data);
 gchar *treeview_setname (mainwin_t *app, kinst_t *inst);
 void treeview_append (mainwin_t *app, const gchar *filename);
@@ -21,6 +21,7 @@ kinst_t *inst_get_selected (gpointer data);
 void doctree_for_each (GtkWidget *widget, mainwin_t *app);
 void doctree_newfile (mainwin_t *app, const gchar *filename);
 gboolean doctree_remove_selected (gpointer data);
+gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter);
 
 /** doctree callbacks */
 void doctree_activate (GtkWidget *widget, gpointer data);

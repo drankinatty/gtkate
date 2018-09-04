@@ -140,8 +140,8 @@ typedef struct mainwin {
                     *toolbar,           /* applicate toolbar */
                     *vboxtree,          /* expandable document tree */
                     *treeview,          /* document tree view */
-                    *vboxedit,          /* bounding vbox for edit windows */
-                    *vpsplit;
+                    *vboxedit;          /* bounding vbox for edit windows */
+                    // *vpsplit;
 
     GtkTreeModel    *treemodel;         /* document tree model */
 
@@ -198,6 +198,8 @@ void mainwin_init (mainwin_t *app, char **argv);
 void mainwin_destroy (mainwin_t *app);
 kinst_t *buf_new_inst (const gchar *fn);
 void buf_delete_inst (kinst_t *inst);
+void einst_reset (einst_t *einst);
+void einst_move (einst_t *tgt, einst_t *src);
 
 /* filename functions */
 void inst_free_filename (kinst_t *inst);

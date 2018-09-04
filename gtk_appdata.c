@@ -148,16 +148,40 @@ void buf_delete_inst (kinst_t *inst)
     if (!inst)
         return;
 
-    inst_free_filename (inst);
+    /* free allocated members and zero remaining members */
+    inst_reset_state (inst);
 
-    /*
-    if (inst->filename) g_free (inst->filename);
-    if (inst->fname)    g_free (inst->fname);
-    if (inst->fpath)    g_free (inst->fpath);
-    if (inst->fext)     g_free (inst->fext);
-    */
+    g_slice_free (kinst_t, inst);   /* free slice */
 
-    g_slice_free (kinst_t, inst);
+    inst = NULL;    /* set pointer NULL */
+}
+
+void einst_reset (einst_t *einst)
+{
+    einst->ebox = NULL;
+    einst->ibox = NULL;
+    einst->swin = NULL;
+    einst->view = NULL;
+    einst->sbar = NULL;
+
+    /* preserve kinst_t as it may be shown in multiple views */
+}
+
+void einst_move (einst_t *tgt, einst_t *src)
+{
+        tgt->ebox = src->ebox;  /* shift pointers src -> tgt */
+        tgt->ibox = src->ibox;
+        tgt->swin = src->swin;
+        tgt->view = src->view;
+        tgt->sbar = src->sbar;
+        tgt->inst = src->inst;
+
+        src->ebox = NULL;       /* set src pointers null */
+        src->ibox = NULL;
+        src->swin = NULL;
+        src->view = NULL;
+        src->sbar = NULL;
+        src->inst = NULL;
 }
 
 /** fast strlen function */
