@@ -22,6 +22,9 @@ void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
     /* open newfile in current or new editor instance */
     file_open (data, newfile);
 
+    /* newfile copied in get_posix_filename(), so free newfile */
+    g_free (newfile);
+
     if (menuitem) {}
 }
 

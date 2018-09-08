@@ -143,7 +143,8 @@ kinst_t *buf_new_inst (const gchar *fn)
 //     gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
 
     if (fn) {
-        inst->filename = g_strdup (fn);
+        gchar *posixfn = get_posix_filename (fn);
+        inst->filename = g_strdup (posixfn);
         split_fname (inst);
         /* set GFileMonitor watch */
     }
