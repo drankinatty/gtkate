@@ -38,22 +38,20 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
             g_print ("focus-in-event: app->einst[%d]->view\n", i);
 #endif
             found = TRUE;
-            /* TODO - use app->einst[i]->inst->buf to set highlight in tree */
-            // if (app->nview > 1)  /* removed -- need to focus each view */
-                tree_set_selection (widget, app);
-                /* test with tree_get_iter_from_view () - passed
-                GtkTreeIter *iter = tree_get_iter_from_view (app);
-                if (iter)
-                    g_slice_free (GtkTreeIter, iter);
+            tree_set_selection (widget, app);
+            /* test with tree_get_iter_from_view () - passed
+            GtkTreeIter *iter = tree_get_iter_from_view (app);
+            if (iter)
+            g_slice_free (GtkTreeIter, iter);
 
-                FIXME - need to get iter and gtk_tree_model_get inst and assign
-                        app->einst[i]->inst = inst;
-                        to coordinate correct buffer inst with focused textview.
-                        we do that the other way, e.g. clicking selection changes
-                        buffer, but not here in reverse. that is messing up file
-                        open.
-                        NOTE: added to doctree_activate callback.
-                */
+            FIXME - need to get iter and gtk_tree_model_get inst and assign
+                    app->einst[i]->inst = inst;
+                    to coordinate correct buffer inst with focused textview.
+                    we do that the other way, e.g. clicking selection changes
+                    buffer, but not here in reverse. that is messing up file
+                    open.
+                    NOTE: done - added to doctree_activate callback!
+            */
             break;
         }
     }
@@ -243,39 +241,12 @@ einst_t *ewin_create_split (gpointer data)
     /* TODO - decide whether to place focus in new instance or leave on
      * current (present behavior). set convenience pointer kinst. decide
      * whether to scroll new instance to match current insert.
+     * NOTE confirm done in doctree.
      */
     // app->focused++;
     // gtk_widget_grab_focus (app->einst[app->focused]->view);
 
     return app->einst[current];
-}
-
-/** remove current editor split */
-gboolean ewin_remove_splito (gpointer data)
-{
-    mainwin_t *app = data;                      /* application data stuct */
-    einst_t *einst = app->einst[app->focused];  /* focused editor struct */
-    GtkWidget *ewin = einst->ebox;              /* bounding vbox of view */
-    gint i;
-
-    if (app->nview == 1)                        /* if single view, return */
-        return FALSE;
-
-    gtk_widget_destroy (ewin);      /* destory bounding vbox removing view, */
-    einst_reset (einst);            /* set all struct members NULL, preserving
-                                     * stuct for buffer inst. */
-
-    for (i = app->focused; (i + 1) < MAXVIEW; i++)  /* shift einst down */
-        einst_move (app->einst[i], app->einst[i+1]);
-
-    if (app->focused)  /* if nothing shifted, move focus to next view */
-        app->focused--;
-
-    gtk_widget_grab_focus (app->einst[app->focused]->view); /* grab focus */
-
-    app->nview--;       /* decrement number of views shown */
-
-    return TRUE;
 }
 
 /** remove current editor split */
@@ -339,12 +310,6 @@ gboolean ewin_remove_view (gpointer data, einst_t *einst)
 void file_close (gpointer data)
 {
     mainwin_t *app = data;
-
-    /* Sun Sep 02 2018 01:47:42 CDT - new approach, will need rewire of ewin
-     * remove to take einst as param to remove so we can loop over instances
-     * closing all containing file to be closed. This instead of letting
-     * ewin_remove_split just close einst[app->focused].
-     */
     gint n = app->nview;
     kinst_t *inst = app->einst[app->focused]->inst;
 

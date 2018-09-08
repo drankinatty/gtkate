@@ -105,35 +105,13 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
     return FALSE;
 }
 
-/* test funciton */
-void file_open_test (gpointer data, gchar *filename)
-// void file_open (gpointer data, gchar *filename)
-{
-    mainwin_t *app = data;
-
-    gchar *oldname = treeview_getname (data);
-    gchar *posixfn = get_posix_filename (filename);
-    gint oldn = app->nuntitled;
-
-    check_untitled_remove (data);
-
-    g_print ("oldname: %s\nnewname: %s\n", oldname, posixfn);
-    g_print ("nuntitled: %d -> %d\n\n", oldn, app->nuntitled);
-
-    g_free (oldname);
-    g_free (posixfn);
-}
-
-/* FIXME - file opens in top view - file 1 no name added to tree, file 2
- * name added at end of tree but empty.
+/** open file and instert into unmodified "Untitled(n)" buffer, or create
+ *  new buffer inst and add to treeview.
  */
 void file_open (gpointer data, gchar *filename)
 {
     mainwin_t *app = data;
-    kinst_t *inst = app->einst[app->focused]->inst;  /* focused->inst should work*/
-//     kinst_t *inst = inst_get_selected (data);  /* shouldn't need to find view */
-//     GtkTreeStore *treestore = GTK_TREE_STORE(app->treemodel);
-//     GtkTreeIter toplevel;
+    kinst_t *inst = app->einst[app->focused]->inst;
     gint cc;
     gboolean modified;
 
@@ -147,48 +125,50 @@ void file_open (gpointer data, gchar *filename)
         return;
     }
 
+    /* get character-count and whether buffer modified */
     cc = gtk_text_buffer_get_char_count (GTK_TEXT_BUFFER(inst->buf));
     modified = gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf));
 
-    g_print ("app->focused: %d\n"
-             "cc          : %d\n"
-             "modified    : %s\n", app->focused, cc, modified ? "true" : "false");
-
+#ifdef DEBUG
+    g_print ("file_open()\n"
+             "  app->focused: %d\n"
+             "  cc          : %d\n"
+             "  modified    : %s\n",
+             app->focused, cc, modified ? "true" : "false");
+#endif
+    /* character-count zero and buffer not modified
+     * insert file in current inst->buf
+     */
     if (cc == 0 && modified == FALSE) {
-        /* insert file in current inst->buf */
         check_untitled_remove (data);   /* if Untitled(n), clear n */
         inst_reset_state (inst);        /* reset all inst value except buf */
-        inst->filename = posixfn;
+        inst->filename = posixfn;       /* get POSIX filename */
         split_fname (inst);             /* buf_new_inst not called - split */
 
-        g_print ("filename: %s\n"
-                 "fpath   : %s\n"
-                 "fname   : %s\n"
-                 "fext    : %s\n",
+#ifdef DEBUG
+        g_print ("  filename    : %s\n"
+                 "  fpath       : %s\n"
+                 "  fname       : %s\n"
+                 "  fext        : %s\n",
                  inst->filename, inst->fpath, inst->fname, inst->fext);
-
+#endif
+        /* insert file in buffer, set name displayed in tree */
         if (buffer_insert_file (data, inst, NULL))
-            treeview_setname (data, inst);  /* set name displayed in tree */
+            treeview_setname (data, inst);
     }
-    else {  /* add new inst to tree and insert in new buffer */
+    else {  /* add new inst to tree and insert file in new buffer */
         kinst_t *newinst = treeview_append (app, filename);
         if (newinst) {
-            /* insert file in newinst->buf */
             app->nfiles++;  /* update file count */
+            buffer_insert_file (data, newinst, NULL);
         }
-
-        buffer_insert_file (data, newinst, NULL);
+        else {
+            /* TODO add error dialog or infobar */
+            g_error ("file_open() newinst NULL");
+        }
     }
+#ifdef DEBUG
     g_print ("\n");
+#endif
 }
 
-/* TODO - In work see TODO.txt outline */
-void file_openx (gpointer data, gchar *name)
-{
-    mainwin_t *app = data;
-    kinst_t *inst = app->einst[app->focused]->inst;
-
-    inst_reset_state (inst);    /* reset all inst value except buf */
-
-    if (name) {}
-}

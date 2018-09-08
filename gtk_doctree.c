@@ -4,7 +4,8 @@
  *  (widget is textview associated with window clicked inside)
  */
 /* TODO - check on using app->einst[app->focused]->view instead of
- * passing widget - cleaner?
+ * passing widget - cleaner? (no not really, getting buf from focused view or
+ *                            calling gtk_text_view_get_buffer is a wash )
  *
  * GtkWidget *view = app->einst[app->focused]->view;
  * gpointer buf = gtk_text_view_get_buffer (GTK_TEXT_VIEW(view));
@@ -549,12 +550,9 @@ gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter)
     return FALSE;
 }
 
-/* TODO
- * void inst_set_selected (kinst_t inst)
- */
-
 /** doctree callbacks */
 
+/* GtkTreeSelection "changed" signal callback */
 void doctree_activate (GtkWidget *widget, gpointer data)
 {
     GtkTreeIter iter;

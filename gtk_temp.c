@@ -19,11 +19,6 @@ void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
     /* get new filename */
     gchar *newfile = get_open_filename (data);
 
-    g_print ("open filename: %s\n", newfile);
-
-    /* temporary */
-//     g_free (newfile);
-
     /* open newfile in current or new editor instance */
     file_open (data, newfile);
 
