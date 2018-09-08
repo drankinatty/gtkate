@@ -22,10 +22,10 @@ void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
     g_print ("open filename: %s\n", newfile);
 
     /* temporary */
-    g_free (newfile);
+//     g_free (newfile);
 
     /* open newfile in current or new editor instance */
-    // file_open (app, newfile);
+    file_open (data, newfile);
 
     if (menuitem) {}
 }

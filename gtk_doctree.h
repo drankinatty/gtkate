@@ -9,9 +9,11 @@
 /** function prototypes */
 void tree_set_selection (GtkWidget *widget, gpointer data);
 GtkTreeIter *tree_get_iter_from_view (gpointer data);
-gchar *treeview_setname (mainwin_t *app, kinst_t *inst);
-void treeview_append (mainwin_t *app, const gchar *filename);
-void doctree_append (GtkWidget *view, const gchar *filename);
+gchar *treeview_getname (gpointer data);
+void treeview_setname (gpointer data, kinst_t *inst);
+void check_untitled_remove (gpointer data);
+// gchar *treeview_setname (gpointer data, kinst_t *inst);
+kinst_t *treeview_append (mainwin_t *app, const gchar *filename);
 GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv);
 // GtkTreeModel *treemodel_init (mainwin_t *app, gchar **argv);
 GtkTreeModel *create_and_fill_model (mainwin_t *app);

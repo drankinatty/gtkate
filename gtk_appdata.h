@@ -92,10 +92,14 @@ enum { TOP = 0, BOT };                  /* vpaned top/bottom scrolled_window */
 /** struct for unique buffer info with proposed additions shown commented */
 typedef struct {
     GtkSourceBuffer *buf;               /* textview buffer instance */
+    GFileMonitor *mfpmon;               /* pointer to file monitor instance */
     gchar *filename,                    /* filename associated with buffer */
         *fname,                         /* filename only - without path */
         *fpath,                         /* file path */
-        *fext;                          /* file extension */
+        *fext,                          /* file extension */
+        *mfpfn;                         /* filename monitored (for save-as) */
+
+    gulong mfphandler;                  /* holds file monitor handler ID */
 
     gint line, col;                     /* line, col when switching */
 
@@ -179,10 +183,15 @@ typedef struct mainwin {
     gboolean        showmargin;         /* show right margin */
     gint            marginwidth;        /* column width for margin */
 
+    gboolean        poscurend;          /* scroll to end of opened file */
+
     gint            nrecent;            /* no. of recent files in chooser */
 
     /* treeview display parameters */
     guint           nuntitled;          /* bitfield "Untitled(n) in tree */
+
+    /* GFileMonitor flag */
+    gboolean        savecmd;            /* set on save to disable monitoring */
 
     /* boolean stack implementation
      * to provide keypress history.
@@ -216,8 +225,8 @@ int bstack_last (mainwin_t *app);
 
 /* Untitled(n) bitfield management */
 gint bit_check (guint *bf, gint n);
-gint untitled_get_next (mainwin_t *app);
-void untitled_remove (mainwin_t *app, gint n);
+gint untitled_get_next (gpointer data);
+void untitled_remove (gpointer data, gint n);
 
 /* date & time functions */
 gchar *get_local_datetime (void);

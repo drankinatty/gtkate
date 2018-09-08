@@ -45,7 +45,6 @@ void tree_set_selection (GtkWidget *widget, gpointer data)
         /* compare pointer to sourceview with buf from textview (widget) */
         if ((gpointer)(inst->buf) == buf) {
             gtk_tree_selection_select_iter (selection, &iter);
-            g_print ("    focus on %s\n", str);
             g_free (str);
             found = TRUE;
             break;
@@ -106,7 +105,6 @@ GtkTreeIter *tree_get_iter_from_view (gpointer data)
 
         /* compare pointer to sourceview with buf from textview (widget) */
         if ((gpointer)(inst->buf) == buf) {
-            g_print ("    focus on %s\n", str);
             g_free (str);
             return iter;
         }
@@ -120,11 +118,97 @@ GtkTreeIter *tree_get_iter_from_view (gpointer data)
     return NULL;
 }
 
+/** parse number 'n' from "Untitled(n)" to allows untitled bitfield update */
+gint untitled_get_no (const gchar *name)
+{
+    gchar *p, *endptr;
+    const gchar *u = "Untitled";
+    gint i;
+    gint64 tmp;
+
+    for (i = 0; u[i]; i++)  /* validate name begins "Untitled" */
+        if (name[i] != u[i])
+            return -1;
+
+    if (!name[i])       /* if at name end, name is "Untitled" */
+        return 0;
+
+    p = (gchar *)(name + i);
+    while (*p && (*p < '0' || '9' < *p))
+        p++;
+
+    // g_print ("converting: '%s'\n", p);
+    errno = 0;
+    tmp = g_ascii_strtoll (p, &endptr, 0);
+
+    if (endptr == p || errno || tmp < G_MININT || G_MAXINT < tmp)
+        return -1;
+
+    return (gint)tmp;
+}
+
+/** get treemodel COLNAME for selected entry
+ *  (user responsible for calling g_free on allocated return)
+ */
+gchar *treeview_getname (gpointer data)
+{
+    mainwin_t *app = data;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreeSelection *selection;
+    gchar *name = NULL;
+
+    /* get selection from treeview */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
+
+    /* get model & iter from selection */
+    if (gtk_tree_selection_get_selected (selection, &model, &iter))
+        gtk_tree_model_get (model, &iter, COLNAME, &name, -1);
+
+    return name;
+}
+
+/**  given inst, iterate through tree to find inst and set COLNAME
+ *  to inst->fname
+ */
+void treeview_setname (gpointer data, kinst_t *inst)
+{
+    mainwin_t *app = data;
+    GtkTreeStore *treestore = GTK_TREE_STORE(app->treemodel);
+    GtkTreeIter *iter = tree_get_iter_from_view (data);
+
+    if (!iter) {
+        g_warning ("treeview_setname() error: iter not found.");
+        return;
+    }
+
+    gtk_tree_store_set (treestore, iter, COLNAME, inst->fname, -1);
+}
+
+/** check COLNAME entry in tree, and if "Untitled(n)" clear
+ *  bit in nuntitled bitfield. note: only used when changing
+ *  display COLNAME in treeview, otherwise bitfield will be
+ *  out of sync with names displayed in tree.
+ * (i.e. used with file open/save as)
+ */
+void check_untitled_remove (gpointer data)
+{
+    gchar *name = treeview_getname (data);
+    gint n = 0;
+
+    /* check name "Untitled(n)", parse n */
+    if ((n = untitled_get_no (name)) >= 0)
+        untitled_remove (data, n);      /* clear bit n in app->nultitled */
+
+    g_free(name);
+}
+
 /** given kinst_t instance, set treeview name for entry to Untitled(n)
  *  if inst is NULL, update app->nuntitled, or set name to inst->fname.
  */
-gchar *treeview_setname (mainwin_t *app, kinst_t *inst)
+gchar *treeview_initial_name (gpointer data, kinst_t *inst)
 {
+    mainwin_t *app = data;
     gchar *name;
     if (inst->filename == NULL) {
         gint n = untitled_get_next (app);
@@ -132,11 +216,6 @@ gchar *treeview_setname (mainwin_t *app, kinst_t *inst)
             name = g_strdup_printf ("Untitled(%d)", n);
         else
             name = g_strdup ("Untitled");
-//         if (app->nuntitled)
-//             name = g_strdup_printf ("Untitled(%d)", app->nuntitled);
-//         else
-//             name = g_strdup ("Untitled");
-//         app->nuntitled++;
     }
     else
         name = g_strdup (inst->fname);
@@ -144,27 +223,30 @@ gchar *treeview_setname (mainwin_t *app, kinst_t *inst)
     return name;
 }
 
-void treeview_append (mainwin_t *app, const gchar *filename)
+kinst_t *treeview_append (mainwin_t *app, const gchar *filename)
 {
     GtkTreeStore *treestore;
     GtkTreeIter toplevel;
+    GtkTreeSelection *selection;
     kinst_t *inst = buf_new_inst (filename);  /* new instance split filename */
     gchar *name = NULL;
 
     if (!inst) {    /* validate instance allocated */
         /* handle error */
         g_print ("treeview_append() error : !inst\n");
-        return;
+        return NULL;
     }
 
-    name = treeview_setname (app, inst);    /* get treeview name */
+    name = treeview_initial_name (app, inst);    /* get treeview name */
     if (!name) {
         /* handle error */
         g_print ("treeview_append() error: !name\n");
-        return;
+        return NULL;
     }
-    gtk_text_buffer_insert_at_cursor (GTK_TEXT_BUFFER(inst->buf),
-                                        name, -1);
+    /* TEMP - initial name in buffer & set modified FALSE */
+//     gtk_text_buffer_insert_at_cursor (GTK_TEXT_BUFFER(inst->buf),
+//                                         name, -1);
+//     gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
 
     treestore = GTK_TREE_STORE(gtk_tree_view_get_model (
                                 GTK_TREE_VIEW(app->treeview)));
@@ -172,7 +254,7 @@ void treeview_append (mainwin_t *app, const gchar *filename)
         /* handle no model error */
         g_print ("treeview_append() error: !treestore\n");
         g_free (name);
-        return;
+        return NULL;
     }
 
     /* appeand name and pointer to inst as entry in treeview */
@@ -180,10 +262,15 @@ void treeview_append (mainwin_t *app, const gchar *filename)
     gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
     gtk_tree_store_set (treestore, &toplevel, COLINST, inst, -1);
 
+    /* initialize selection to current, set focus on new tree element */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
+    gtk_tree_selection_select_iter (selection, &toplevel);
+
     app->nfiles++;  /* update file count */
 
     g_free (name);  /* free name */
 
+    return inst;
     /* temp test */
     // g_print ("model contains %d rows (nfiles: %d)\n",
     //        doctree_get_count (app->treeview), app->nfiles);
@@ -344,35 +431,6 @@ kinst_t *inst_get_selected (gpointer data)
     return inst;
 }
 
-/** parse number 'n' from "Untitled(n)" to allows untitled bitfield update */
-gint untitled_get_no (const gchar *name)
-{
-    gchar *p, *endptr;
-    const gchar *u = "Untitled";
-    gint i;
-    gint64 tmp;
-
-    for (i = 0; u[i]; i++)  /* validate name begins "Untitled" */
-        if (name[i] != u[i])
-            return -1;
-
-    if (!name[i])       /* if at name end, name is "Untitled" */
-        return 0;
-
-    p = (gchar *)(name + i);
-    while (*p && (*p < '0' || '9' < *p))
-        p++;
-
-    // g_print ("converting: '%s'\n", p);
-    errno = 0;
-    tmp = g_ascii_strtoll (p, &endptr, 0);
-
-    if (endptr == p || errno || tmp < G_MININT || G_MAXINT < tmp)
-        return -1;
-
-    return (gint)tmp;
-}
-
 /* updated and working.
  * TODO - set window title on removal and clear contents of buffer
  *
@@ -416,7 +474,7 @@ gboolean doctree_remove_selected (gpointer data)
 
             gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
             inst_reset_state (inst);
-            uname = treeview_setname (app, inst);
+            uname = treeview_initial_name (app, inst);
             gtk_tree_store_set (GTK_TREE_STORE(model), &iter, COLNAME, uname, -1);
 
             /* TODO move to buffer_clear() funciton */
@@ -448,6 +506,7 @@ gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter)
     gchar *name = NULL;
     gint n;
 
+    /* get COLNAME from tree */
     gtk_tree_model_get (app->treemodel, iter, COLNAME, &name, -1);
 
     if (!name) {
@@ -455,29 +514,27 @@ gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter)
         return FALSE;
     }
 
-    n = untitled_get_no (name);
+    n = untitled_get_no (name); /* parse "Untitled(n)" for n */
     g_free (name);
 
     if (n >= 0)
-        untitled_remove (app, n);
+        untitled_remove (app, n);   /* clear bit in app->nuntitled */
 
     if (app->nfiles > 1) {  /* only remove entry if > 1 file */
         gtk_tree_store_remove (GTK_TREE_STORE(app->treemodel), iter);
-      g_print ("    nfiles %d -> ", app->nfiles);
         app->nfiles--;  /* decrement file count */
-      g_print ("%d\n", app->nfiles);
-        /* focus should be handled here - auto? */
         return TRUE;
     }
     else {  /* otherwise, handle single file, clear buffer */
         gchar *uname, *title;
         kinst_t *inst;
 
+        /* get kinst_t inst from tree */
         gtk_tree_model_get (app->treemodel, iter, COLINST, &inst, -1);
-        inst_reset_state (inst);
-        uname = treeview_setname (app, inst);
+        inst_reset_state (inst);                    /* set values 0/NULL */
+        uname = treeview_initial_name (app, inst);       /* get Untitled(n) name */
         gtk_tree_store_set (GTK_TREE_STORE(app->treemodel), iter,
-                            COLNAME, uname, -1);
+                            COLNAME, uname, -1);    /* set COLNAME in tree */
 
         /* TODO move to buffer_clear() funciton */
         gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
@@ -513,7 +570,11 @@ void doctree_activate (GtkWidget *widget, gpointer data)
 
         gtk_tree_model_get (model, &iter, COLNAME, &value, COLINST, &inst,  -1);
 
-        title = g_strdup_printf ("%s - %s", APPNAME, value);
+        /* check/set modified state in window title text on selection change */
+        if (gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf)))
+            title = g_strdup_printf ("%s - %s [modified]", APPNAME, value);
+        else
+            title = g_strdup_printf ("%s - %s", APPNAME, value);
 
         /* set window title */
         gtk_window_set_title (GTK_WINDOW (app->window), title);

@@ -60,6 +60,8 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->showmargin     = TRUE;         /* show margin at specific column */
     app->marginwidth    = 80;           /* initial right margin to display */
 
+    app->poscurend      = FALSE;        /* scroll to end of file on open */
+
     app->nrecent        = 40;           /* no. of recent chooser files */
     app->nuntitled      = 0;            /* next "Untitled(n) in tree */
 
@@ -101,6 +103,9 @@ static kinst_t *kinst_init (kinst_t *inst)
         return NULL;
 
     inst->buf = NULL;
+    inst->mfpmon = NULL;
+    inst->mfpfn = NULL;
+    inst->mfphandler = 0;
 
     inst->filename = NULL;
     inst->fname = NULL;
@@ -134,9 +139,13 @@ kinst_t *buf_new_inst (const gchar *fn)
 
     inst->buf = gtk_source_buffer_new (NULL);
 
+//     gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
+//     gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
+
     if (fn) {
         inst->filename = g_strdup (fn);
         split_fname (inst);
+        /* set GFileMonitor watch */
     }
 
     return inst;
@@ -214,7 +223,7 @@ void inst_free_filename (kinst_t *inst)
 void inst_reset_state (kinst_t *inst)
 {
     inst_free_filename (inst);
-
+    /* TODO add GFileMonitor var reset */
     inst->line = inst->col = 0;
 
     inst->filemode = 0;
@@ -398,8 +407,11 @@ int bstack_last (mainwin_t *app)
 /** Untitled(n) bitfield management */
 gint bit_check (guint *bf, gint n) { return (*bf >> n) & 1; }
 
-gint untitled_get_next (mainwin_t *app)
+/* get next available 'n' for "Untitled(n)", set bit in nuntitled bitfield */
+gint untitled_get_next (gpointer data)
 {
+    mainwin_t *app = data;
+
     for (gint i = 0; i < (gint)(sizeof app->nuntitled * CHAR_BIT); i++)
         if (!bit_check (&app->nuntitled, i)) {
             app->nuntitled |= (1u << i);
@@ -411,8 +423,11 @@ gint untitled_get_next (mainwin_t *app)
     return -1;
 }
 
-void untitled_remove (mainwin_t *app, gint n)
+/* clear bit 'n' in nuntitled bitfield */
+void untitled_remove (gpointer data, gint n)
 {
+    mainwin_t *app = data;
+
     app->nuntitled &= ~(1u << n);
 }
 

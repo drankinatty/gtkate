@@ -10,6 +10,7 @@
 #include "gtk_appdata.h"
 // #include "gtk_charset.h"
 #include "gtk_common_dlg.h"
+#include "gtk_doctree.h"
 // #include "gtk_sourceview.h"
 // #include "gtk_statusbar.h"
 
@@ -18,6 +19,7 @@
 /** function prototypes */
 void file_get_stats (const gchar *filename, kinst_t *file);
 void buffer_clear_focused (gpointer data);
-void file_open (gpointer data, gchar *name);
+gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename);
+void file_open (gpointer data, gchar *filename);
 
 #endif

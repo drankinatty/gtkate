@@ -189,6 +189,18 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
     return ewin->ebox;
 }
 
+void focus_prev_view (gpointer data) {
+
+    mainwin_t *app = data;                      /* application data stuct */
+
+    if (app->focused)  /* if nothing shifted, move focus to next view */
+        app->focused--;
+
+    /* TODO need to select remaining entry in tree view */
+
+    gtk_widget_grab_focus (app->einst[app->focused]->view); /* grab focus */
+}
+
 /** create new editor split */
 einst_t *ewin_create_split (gpointer data)
 {
@@ -231,7 +243,7 @@ einst_t *ewin_create_split (gpointer data)
 }
 
 /** remove current editor split */
-gboolean ewin_remove_split (gpointer data)
+gboolean ewin_remove_splito (gpointer data)
 {
     mainwin_t *app = data;                      /* application data stuct */
     einst_t *einst = app->einst[app->focused];  /* focused editor struct */
@@ -258,14 +270,29 @@ gboolean ewin_remove_split (gpointer data)
     return TRUE;
 }
 
-void focus_prev_view (gpointer data) {
-
+/** remove current editor split */
+gboolean ewin_remove_split (gpointer data)
+{
     mainwin_t *app = data;                      /* application data stuct */
+    einst_t *einst = app->einst[app->focused];  /* focused editor struct */
+    GtkWidget *ewin = einst->ebox;              /* bounding vbox of view */
+    gint i;
 
-    if (app->focused)  /* if nothing shifted, move focus to next view */
-        app->focused--;
+    if (app->nview == 1)                        /* if single view, return */
+        return FALSE;
 
-    gtk_widget_grab_focus (app->einst[app->focused]->view); /* grab focus */
+    gtk_widget_destroy (ewin);      /* destory bounding vbox removing view, */
+    einst_reset (einst);            /* set all struct members NULL, preserving
+                                     * stuct for buffer inst. */
+
+    for (i = app->focused; (i + 1) < MAXVIEW; i++)  /* shift einst down */
+        einst_move (app->einst[i], app->einst[i+1]);
+
+    focus_prev_view (data);
+
+    app->nview--;       /* decrement number of views shown */
+
+    return TRUE;
 }
 
 /* remove specific instance - allows interating and removing multiple */
