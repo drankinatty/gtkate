@@ -130,7 +130,8 @@ void file_open_test (gpointer data, gchar *filename)
 void file_open (gpointer data, gchar *filename)
 {
     mainwin_t *app = data;
-    kinst_t *inst = app->einst[app->focused]->inst;
+    kinst_t *inst = app->einst[app->focused]->inst;  /* focused->inst should work*/
+//     kinst_t *inst = inst_get_selected (data);  /* shouldn't need to find view */
 //     GtkTreeStore *treestore = GTK_TREE_STORE(app->treemodel);
 //     GtkTreeIter toplevel;
     gint cc;
@@ -157,7 +158,6 @@ void file_open (gpointer data, gchar *filename)
         /* insert file in current inst->buf */
         check_untitled_remove (data);   /* if Untitled(n), clear n */
         inst_reset_state (inst);        /* reset all inst value except buf */
-        /* FIXME handle untitled(n) removal and bitfield update */
         inst->filename = posixfn;
         split_fname (inst);             /* buf_new_inst not called - split */
 
@@ -179,6 +179,7 @@ void file_open (gpointer data, gchar *filename)
 
         buffer_insert_file (data, newinst, NULL);
     }
+    g_print ("\n");
 }
 
 /* TODO - In work see TODO.txt outline */

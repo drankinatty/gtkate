@@ -45,6 +45,14 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
                 GtkTreeIter *iter = tree_get_iter_from_view (app);
                 if (iter)
                     g_slice_free (GtkTreeIter, iter);
+
+                FIXME - need to get iter and gtk_tree_model_get inst and assign
+                        app->einst[i]->inst = inst;
+                        to coordinate correct buffer inst with focused textview.
+                        we do that the other way, e.g. clicking selection changes
+                        buffer, but not here in reverse. that is messing up file
+                        open.
+                        NOTE: added to doctree_activate callback.
                 */
             break;
         }

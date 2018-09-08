@@ -411,7 +411,7 @@ gint doctree_get_count (GtkWidget *treeview)
 }
 
 /** returns buffer instance of selected document, which includes sourceview
- *  buffer, associate filename (or NULL if "Untitled"), and current line and
+ *  buffer, associated filename (or NULL if "Untitled"), and current line and
  *  column for insert mark in buffer so view can be restored.
  */
 kinst_t *inst_get_selected (gpointer data)
@@ -420,12 +420,11 @@ kinst_t *inst_get_selected (gpointer data)
     GtkTreeIter iter;
     GtkTreeModel *model;
     mainwin_t *app = data;
-    char *value;
     kinst_t *inst = NULL;
 
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
     if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
-        gtk_tree_model_get (model, &iter, COLNAME, &value, COLINST, &inst, -1);
+        gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
     }
 
     return inst;
@@ -582,6 +581,9 @@ void doctree_activate (GtkWidget *widget, gpointer data)
         /* set buffer in active textview */
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
+
+        /* set app->einst[app->focused]->inst to point to buffer inst */
+        app->einst[app->focused]->inst = inst;
 
         g_free (value); /* values with type G_TYPE_STRING or G_TYPE_BOXED */
                         /* have to be freed, G_TYPE_POINTER does not */
