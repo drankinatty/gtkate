@@ -1,4 +1,4 @@
-#include "gtk_doctree.h"
+#include "gtk_treeview.h"
 
 /** given inst use tree iter to set focus on current view
  *  (widget is textview associated with window clicked inside)

@@ -10,9 +10,9 @@
 #include "gtk_appdata.h"
 // #include "gtk_charset.h"
 #include "gtk_common_dlg.h"
-#include "gtk_doctree.h"
 // #include "gtk_sourceview.h"
 // #include "gtk_statusbar.h"
+#include "gtk_treeview.h"
 
 // #include "gtk_filemon.h"
 

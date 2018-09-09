@@ -5,8 +5,8 @@
 #include <gdk/gdkkeysyms.h>  /* for GDK key values */
 
 #include "gtk_appdata.h"
-#include "gtk_doctree.h"
 #include "gtk_textview.h"
+#include "gtk_treeview.h"
 #include "gtk_temp.h"
 
 GtkWidget *create_window (mainwin_t *app);

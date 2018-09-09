@@ -5,9 +5,9 @@
 
 #include "gtk_appdata.h"
 #include "gtk_common_dlg.h"
-#include "gtk_doctree.h"
 #include "gtk_filebuf.h"
 #include "gtk_textview.h"
+#include "gtk_treeview.h"
 
 void menu_file_new_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_file_close_activate (GtkMenuItem *menuitem, gpointer data);
