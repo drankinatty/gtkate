@@ -307,22 +307,22 @@ gboolean ewin_remove_view (gpointer data, einst_t *einst)
  * on removal of first split. Loop over splits, closing, then call
  * doctree_remove_selected.
  */
-void file_close (gpointer data)
-{
-    mainwin_t *app = data;
-    gint n = app->nview;
-    kinst_t *inst = app->einst[app->focused]->inst;
-
-    /* save iter to selected here, then loop closing all instances */
-    GtkTreeIter *victim = tree_get_iter_from_view (data);
-
-    // for (n = 0; n < app->nview; n++) {
-    while (n--) {
-        if (app->einst[n]->inst && app->einst[n]->inst == inst) {
-            /* close it -- but einst can't shift down before loop done */
-            ewin_remove_view (data, app->einst[n]);
-        }
-    }
-
-    doctree_remove_iter (data, victim);
-}
+// void file_close (gpointer data)
+// {
+//     mainwin_t *app = data;
+//     gint n = app->nview;
+//     kinst_t *inst = app->einst[app->focused]->inst;
+//
+//     /* save iter to selected here, then loop closing all instances */
+//     GtkTreeIter *victim = tree_get_iter_from_view (data);
+//
+//     // for (n = 0; n < app->nview; n++) {
+//     while (n--) {
+//         if (app->einst[n]->inst && app->einst[n]->inst == inst) {
+//             /* close it -- but einst can't shift down before loop done */
+//             ewin_remove_view (data, app->einst[n]);
+//         }
+//     }
+//
+//     doctree_remove_iter (data, victim);
+// }

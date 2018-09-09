@@ -172,3 +172,31 @@ void file_open (gpointer data, gchar *filename)
 #endif
 }
 
+/** file_close - close the currently focused file.
+ *  if file shown in multiple editor views, close all associated views,
+ *  if only file in tree, clear buffer, set "Untitled".
+ */
+/* Sun Sep 02 2018 01:19:20 CDT  - this is where problem is. Need to remove
+ * editor instances before removing file to prevent inst from being NULL'ed
+ * on removal of first split. Loop over splits, closing, then call
+ * doctree_remove_selected.
+ */
+void file_close (gpointer data)
+{
+    mainwin_t *app = data;
+    gint n = app->nview;
+    kinst_t *inst = app->einst[app->focused]->inst;
+
+    /* save iter to selected here, then loop closing all instances */
+    GtkTreeIter *victim = tree_get_iter_from_view (data);
+
+    // for (n = 0; n < app->nview; n++) {
+    while (n--) {
+        if (app->einst[n]->inst && app->einst[n]->inst == inst) {
+            /* close it -- but einst can't shift down before loop done */
+            ewin_remove_view (data, app->einst[n]);
+        }
+    }
+
+    doctree_remove_iter (data, victim);
+}
