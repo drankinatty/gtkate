@@ -22,11 +22,11 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv);
 kinst_t *inst_get_selected (gpointer data);
 void doctree_for_each (GtkWidget *widget, mainwin_t *app);
 void doctree_newfile (mainwin_t *app, const gchar *filename);
-gboolean doctree_remove_selected (gpointer data);
 gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter);
+gboolean treeview_remove_selected (gpointer data);
 
 /** doctree callbacks */
-void doctree_activate (GtkWidget *widget, gpointer data);
+void treeview_changed (GtkWidget *widget, gpointer data);
 
 #endif
 

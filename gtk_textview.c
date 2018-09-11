@@ -50,7 +50,7 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
                     we do that the other way, e.g. clicking selection changes
                     buffer, but not here in reverse. that is messing up file
                     open.
-                    NOTE: done - added to doctree_activate callback!
+                    NOTE: done - added to treeview_changed callback!
             */
             break;
         }
@@ -288,10 +288,11 @@ gboolean ewin_remove_view (gpointer data, einst_t *einst)
     einst_reset (einst);            /* set all struct members NULL, preserving
                                      * stuct for buffer inst. */
 
-    for (i = app->focused; (i + 1) < MAXVIEW; i++)  /* shift einst down */
+//     for (i = app->focused; (i + 1) < MAXVIEW; i++)  /* shift einst down */
+    for (i = app->focused; (i + 1) < app->nview; i++)   /* shift einst down */
         einst_move (app->einst[i], app->einst[i+1]);
 
-    focus_prev_view (data);
+//     focus_prev_view (data);  /* handle focus in caller - multipe views */
 
     app->nview--;       /* decrement number of views shown */
 

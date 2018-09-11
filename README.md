@@ -10,7 +10,10 @@ The initial code here and concept is to provide a menu, toolbar, hpaned region f
 
 [GtKate Interface](http://paste.opensuse.org/52951577)
 
+**Current Development State**
 
-Basically all widgets are just placeholders at the moment, but the initial interface is encouraging. Both toolbar and document tree can be hidden/shown with current accelerators `[Ctrl+t]` and `[Ctrl+d]`, respectively for temporary testing. Document views (splits) can be added with the obviously temporary `[Ctrl+s]` and removed with `[Ctrl+r]`.
+All widgets are just placeholders at the moment, but the initial interface is developing. Both toolbar and document tree can be hidden/shown. The edit window can be split in up to 4 horizontal panes showing any combination of files in the four views (e.g. from showing 4 different view of a single file to displaying 4 separate file one in each view). New-File logic is complete keeping track of up to 32 `"Untitled(n)"` new file instances. Any number of existing files can be opened (up to the memory available) and the filenames are displayed in the treeview document tree. File-Close is operational removing a file by closing all views currently displaying the file and removing the file from the document tree. File-Save, GFileMonitor'ing and syntax highlight have not yet been implemented. You can see [TODOtxt](TODO.txt) for a few additional notes.
+
+**Branch Information**
 
 Branches, the katedev branch will be the development branch for major changes leaving master in compilable state tracking more settled decisions regarding the interface and later for the full editor.

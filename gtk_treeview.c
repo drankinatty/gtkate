@@ -31,7 +31,7 @@ void tree_set_selection (GtkWidget *widget, gpointer data)
         return;
     }
 
-    /* get first iter, return in validate */
+    /* get first iter, iterate model to locate current inst, set selection */
     valid = gtk_tree_model_get_iter_first (model, &iter);
     while (valid) {         /* loop over each entry in model */
         kinst_t *inst = NULL;
@@ -349,7 +349,7 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
 
     /* TreeView/model callbacks */
     g_signal_connect (selection, "changed",
-                        G_CALLBACK (doctree_activate), app);
+                        G_CALLBACK (treeview_changed), app);
 
     return view;
 }
@@ -431,74 +431,6 @@ kinst_t *inst_get_selected (gpointer data)
     return inst;
 }
 
-/* updated and working.
- * TODO - set window title on removal and clear contents of buffer
- *
- * write similar funciton taking GtkTreeIter* as argument so iter to selected
- * can be saved before splits removed then passed to fn allowing file to be
- * closed - regardless of the number of views it currently appears in.
- */
-gboolean doctree_remove_selected (gpointer data)
-{
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    GtkTreeSelection *selection;
-    mainwin_t *app = data;
-
-    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
-    if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
-        gchar *name;
-        gint n;
-
-        gtk_tree_model_get (model, &iter, COLNAME, &name, -1);
-
-        n = untitled_get_no (name);
-        // g_print ("nuntitled: %d\n", n);
-        if (n >= 0)
-            untitled_remove (app, n);
-#ifdef DEBUG
-        g_print ("doctree_remove_selected() app->nfiles: %d\n", app->nfiles);
-#endif
-        if (app->nfiles > 1) {  /* only remove entry if > 1 file */
-            /* gtk_tree_store_remove ()
-             * returns TRUE if not on last entry, (iter remains valid),
-             * otherwise iter is invalidated, and return is FALSE
-             */
-            gtk_tree_store_remove (GTK_TREE_STORE(model), &iter);
-            app->nfiles--;  /* decrement file count */
-            return TRUE;
-        }
-        else {  /* otherwise, handle single file, clear buffer */
-            gchar *uname, *title;
-            kinst_t *inst;
-
-            gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
-            inst_reset_state (inst);
-            uname = treeview_initial_name (app, inst);
-            gtk_tree_store_set (GTK_TREE_STORE(model), &iter, COLNAME, uname, -1);
-
-            /* TODO move to buffer_clear() funciton */
-            gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
-            gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
-
-            title = g_strdup_printf ("%s - %s", APPNAME, uname);
-            gtk_window_set_title (GTK_WINDOW (app->window), title);
-
-            g_free (title);
-            g_free (uname);
-        }
-
-        g_free (name);
-    }
-    else {
-        g_print ("doctree_remove_selected() no selection found.\n");
-    }
-    /* get view and close scrolled window (app->einst[app->focused])
-     * if (app->nview > 1) in separate funciton in gtk_textview.
-     */
-    return FALSE;
-}
-
 /** remove file identified by tree iter, clear buff if only file */
 gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter)
 {
@@ -525,12 +457,16 @@ gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter)
         app->nfiles--;  /* decrement file count */
         return TRUE;
     }
-    else {  /* otherwise, handle single file, clear buffer */
+    else {  /* no selection change, handle single file, clear buffer */
         gchar *uname, *title;
         kinst_t *inst;
 
         /* get kinst_t inst from tree */
+        /* TODO set to app->einst[app->focused]->inst (shifted) */
         gtk_tree_model_get (app->treemodel, iter, COLINST, &inst, -1);
+        /* if (newinst->fname) set COLNAME to newinst->fname and
+         * COLINST to newinst ELSE set to uname and clear!
+         */
         inst_reset_state (inst);                    /* set values 0/NULL */
         uname = treeview_initial_name (app, inst);       /* get Untitled(n) name */
         gtk_tree_store_set (GTK_TREE_STORE(app->treemodel), iter,
@@ -550,10 +486,161 @@ gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter)
     return FALSE;
 }
 
+/** gboolean treeview_remove_selected(), remove file from views and treeview.
+ *  remove selected file from all views, closing views, if multiple files
+ *  remain, set focus on previous file in tree, otherwise, reset current inst
+ *  and clear inst->buf, highlight file in treeview, free all memory
+ *  associated with removed inst filename, inst slice and allocated iter
+ *  returned from tree_get_iter_from_view(). returns true on success, false
+ *  otherwise.
+ */
+gboolean treeview_remove_selected (gpointer data)
+{
+    mainwin_t *app = data;
+    kinst_t *inst = app->einst[app->focused]->inst,
+            *colinst = NULL,
+            *lastinst = NULL;;
+    GtkTreeModel *model = app->treemodel;
+    GtkTreeIter *victim = NULL,
+                iter,
+                *last = NULL;
+    GtkWidget *view = NULL;
+    gchar *name = NULL;
+    gint n = app->nview;
+    gboolean valid = FALSE, found = FALSE;
+
+    /* save iter-to-selected here, then loop closing all instances */
+    victim = tree_get_iter_from_view (data);
+
+    /* get COLNAME from tree */
+    gtk_tree_model_get (app->treemodel, victim, COLINST, &colinst,
+                        COLNAME, &name, -1);
+
+    if (inst != colinst) {  /* validate inst matches colinst */
+        g_warning ("treeview_remove_current() - inst != colinst");
+        return FALSE;
+    }
+
+    if (!name) {    /* validate name filled */
+        g_warning ("treeview_remove_current() - gtk_tree_model_get failed.");
+        return FALSE;
+    }
+
+    /* Remove all view (einst[x]) here, that will simplify the removal from
+     * the tree. Use the logic while (app->nview > 1 & n--) to handle the
+     * VIEWs removal, and then simply remove the files. VIEW removal is the
+     * same in both cases! Git rid of view, then remove 1-file.
+     */
+    while (app->nview > 1 && n--) {
+        einst_t *einst = app->einst[n];
+
+        if (einst->inst && einst->inst == inst) {
+
+            GtkWidget *ewin = einst->ebox;  /* edit window bounding vbox */
+            gint focused = app->focused;    /* currently focused textview */
+
+            gtk_widget_destroy (ewin);      /* destroy widget */
+
+            /* shift existing higher einst down */
+            for (gint i = focused; (i + 1) < app->nview; i++)
+                einst_move (app->einst[i], app->einst[i+1]);
+
+            /* if focused and focused > 0 */
+            if (n == focused && focused > 0) {
+                /* if focus in highest number view */
+                if (focused < app->nview - 1) {
+                    app->focused--; /* move focus to previous view */
+                }   /* note: set focus on textview after loop complete */
+            }
+
+            app->nview--;       /* decrement number of views shown */
+        }
+    }
+
+    /* update nuntitled bitfield */
+    n = untitled_get_no (name);         /* check/parse "Untitled(n)" for n */
+    if (n >= 0)
+        untitled_remove (app, n);       /* clear bit in app->nuntitled */
+    g_free (name);
+
+    /* free allocated memory associated with inst (except buf)
+     * set freed values 0/NULL, in prep for reuse or deletion
+     */
+    inst_reset_state (inst);
+
+    if (app->nfiles == 1) {             /* only single file, change buffer */
+        gchar *uname, *title;           /* untitled name, window title */
+
+        uname = treeview_initial_name (app, inst);  /* get Untitled(n) */
+        gtk_tree_store_set (GTK_TREE_STORE(app->treemodel), victim,
+                            COLNAME, uname, -1);    /* set COLNAME in tree */
+
+        /* TODO move to buffer_clear() funciton */
+        gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
+        gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
+
+        /* set window title */
+        title = g_strdup_printf ("%s - %s", APPNAME, uname);
+        gtk_window_set_title (GTK_WINDOW (app->window), title);
+
+        found = TRUE;   /* set found flag indicating successful removal */
+
+        g_free (title);
+        g_free (uname);
+    }
+    else {  /* additional files remain open, just remove victim */
+        view = app->einst[app->focused]->view;  /* get current view widget */
+        inst = app->einst[app->focused]->inst;  /* update w/new app->focused */
+
+        /* get first iter, iterate model to locate current inst, set selection */
+        valid = gtk_tree_model_get_iter_first (model, &iter);
+
+        while (valid) {         /* loop over each entry in model */
+            /* get colinst from iter */
+            gtk_tree_model_get (model, &iter, COLINST, &colinst, -1);
+
+            /* compare pointer to sourceview with buf from textview (widget) */
+            if (inst == colinst) {
+                if (last) {
+                    /* if last iter set, current to last */
+                    app->einst[app->focused]->inst = lastinst;
+                    /* set buffer in active textview */
+                    gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
+                                                GTK_TEXT_BUFFER(lastinst->buf));
+                    /* set treeview selection on current buf COLNAME */
+                    tree_set_selection (view, data);
+                }
+                else    /* found colinst in tree, but last iter invalid */
+                    g_warning ("treeview_remove_selected() invalid last.\n");
+
+                found = TRUE;   /* set found colinst flag */
+                break;
+            }
+            lastinst = colinst; /* set last instance to current */
+            last = &iter;       /* set last iter to current */
+
+            /* get next tree iter */
+            valid = gtk_tree_model_iter_next (model, &iter);
+        }
+
+        /* remove victim from tree and free allocated slice */
+        gtk_tree_store_remove (GTK_TREE_STORE(app->treemodel), victim);
+        g_slice_free (kinst_t, inst);   /* free inst slice after removal */
+        app->nfiles--;                  /* decrement file count */
+    }
+
+    if (!found) /* validate inst found or warn */
+        g_warning ("tree_set_selection inst not found.");
+
+    g_slice_free (GtkTreeIter, victim);  /* free allocated iter */
+
+    return found;
+}
+
 /** doctree callbacks */
 
 /* GtkTreeSelection "changed" signal callback */
-void doctree_activate (GtkWidget *widget, gpointer data)
+void treeview_changed (GtkWidget *widget, gpointer data)
 {
     GtkTreeIter iter;
     GtkTreeModel *model;

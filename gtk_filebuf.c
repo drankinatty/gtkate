@@ -108,6 +108,9 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
 /** open file and instert into unmodified "Untitled(n)" buffer, or create
  *  new buffer inst and add to treeview.
  */
+ /* FIXME - if there is only 1 file open and it is Untitled - then replace
+  * buf only, no increment of nfiles
+  */
 void file_open (gpointer data, gchar *filename)
 {
     mainwin_t *app = data;
@@ -159,7 +162,7 @@ void file_open (gpointer data, gchar *filename)
     else {  /* add new inst to tree and insert file in new buffer */
         kinst_t *newinst = treeview_append (app, filename);
         if (newinst) {
-            app->nfiles++;  /* update file count */
+            // app->nfiles++;  /* update file count (no - done in get_new_inst) */
             buffer_insert_file (data, newinst, NULL);
         }
         else {
@@ -176,27 +179,9 @@ void file_open (gpointer data, gchar *filename)
  *  if file shown in multiple editor views, close all associated views,
  *  if only file in tree, clear buffer, set "Untitled".
  */
-/* Sun Sep 02 2018 01:19:20 CDT  - this is where problem is. Need to remove
- * editor instances before removing file to prevent inst from being NULL'ed
- * on removal of first split. Loop over splits, closing, then call
- * doctree_remove_selected.
- */
 void file_close (gpointer data)
 {
-    mainwin_t *app = data;
-    gint n = app->nview;
-    kinst_t *inst = app->einst[app->focused]->inst;
+    if (treeview_remove_selected (data) == FALSE)
+        g_error ("treeview_remove_selected() - failed\n");
 
-    /* save iter to selected here, then loop closing all instances */
-    GtkTreeIter *victim = tree_get_iter_from_view (data);
-
-    // for (n = 0; n < app->nview; n++) {
-    while (n--) {
-        if (app->einst[n]->inst && app->einst[n]->inst == inst) {
-            /* close it -- but einst can't shift down before loop done */
-            ewin_remove_view (data, app->einst[n]);
-        }
-    }
-
-    doctree_remove_iter (data, victim);
 }
