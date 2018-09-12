@@ -18,10 +18,11 @@
 // #include "gtk_filemon.h"
 
 /** function prototypes */
-void file_get_stats (const gchar *filename, kinst_t *file);
+void file_get_stats (kinst_t *file);
 void buffer_clear_focused (gpointer data);
 gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename);
 void file_open (gpointer data, gchar *filename);
+void file_save (gpointer data, gchar *filename);
 void file_close (gpointer data);
 
 #endif

@@ -28,16 +28,42 @@ void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
     if (menuitem) {}
 }
 
+// void menu_file_save_activate (GtkMenuItem *menuitem, gpointer data)
+// {
+//     // buffer_save_file (app, NULL);
+//     // gtk_widget_grab_focus (app->view);
+//
+//     gchar *savefile = get_save_filename (data);
+//     g_print ("save filename: %s\n", savefile);
+//
+//     /* temporary */
+//     g_free (savefile);
+//
+//     if (menuitem) {}
+// }
+
 void menu_file_save_activate (GtkMenuItem *menuitem, gpointer data)
 {
-    // buffer_save_file (app, NULL);
-    // gtk_widget_grab_focus (app->view);
+    mainwin_t *app = data;
+    file_save (data, NULL);
+    gtk_widget_grab_focus (app->einst[app->focused]->view);
 
-    gchar *savefile = get_save_filename (data);
-    g_print ("save filename: %s\n", savefile);
+    if (menuitem) {}
+}
 
-    /* temporary */
-    g_free (savefile);
+void menu_file_saveas_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    mainwin_t *app = data;
+    gchar *filename = NULL;
+
+    filename = get_save_filename (data);
+    if (filename)
+        file_save (data, filename);
+//     else
+//         show_info_bar_ok ("Warning: Save of File Canceled!",
+//                             GTK_MESSAGE_INFO, app);
+
+    gtk_widget_grab_focus (app->einst[app->focused]->view);
 
     if (menuitem) {}
 }
@@ -231,6 +257,7 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     GtkWidget *newMi;
     GtkWidget *openMi;
     GtkWidget *saveMi;
+    GtkWidget *saveasMi;
     GtkWidget *closeMi;
     GtkWidget *quitMi;
 
@@ -261,6 +288,8 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
                                                    NULL);
     saveMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_SAVE,
                                                    NULL);
+    saveasMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_SAVE_AS,
+                                                   NULL);
     closeMi  = gtk_image_menu_item_new_from_stock (GTK_STOCK_CLOSE,
                                                    NULL);
     quitMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT,
@@ -272,6 +301,7 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), newMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), openMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), saveMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), saveasMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu),
                            gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), closeMi);
@@ -286,6 +316,9 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
                                 GDK_KEY_o, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (saveMi, "activate", mainaccel,
                                 GDK_KEY_s, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (saveasMi, "activate", mainaccel,
+                                GDK_KEY_s, GDK_CONTROL_MASK | GDK_SHIFT_MASK,
+                                GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (closeMi, "activate", mainaccel,
                                 GDK_KEY_w, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
@@ -353,6 +386,9 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
 
     g_signal_connect (G_OBJECT (saveMi), "activate",        /* file Save    */
                       G_CALLBACK (menu_file_save_activate), app);
+
+    g_signal_connect (G_OBJECT (saveasMi), "activate",      /* file SaveAs  */
+                      G_CALLBACK (menu_file_saveas_activate), app);
 
     g_signal_connect (G_OBJECT (closeMi), "activate",        /* file Quit    */
                       G_CALLBACK (menu_file_close_activate), app);

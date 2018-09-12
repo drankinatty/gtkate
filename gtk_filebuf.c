@@ -1,15 +1,18 @@
 #include "gtk_filebuf.h"
 
 /** file to set file stat information for filename */
-void file_get_stats (const gchar *filename, kinst_t *file)
+void file_get_stats (kinst_t *inst)
 {
+    const gchar *filename = inst->filename;
     struct stat sb;
 
-    file->filemode = 0;
-    file->fileuid = 0;
-    file->filegid = 0;
+    inst->filemode = 0;
+    inst->fileuid = 0;
+    inst->filegid = 0;
 
-    if (!filename) return;  /* validate filename */
+     /* validate inst and filename */
+    if (!inst || !filename)
+        return;
 
     /* validate file exists */
     if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
@@ -27,9 +30,9 @@ void file_get_stats (const gchar *filename, kinst_t *file)
         return;
     }
 
-    file->filemode = sb.st_mode;
-    file->fileuid  = sb.st_uid;
-    file->filegid  = sb.st_gid;
+    inst->filemode = sb.st_mode;
+    inst->fileuid  = sb.st_uid;
+    inst->filegid  = sb.st_gid;
 }
 
 /** clears focused textview buffer, sets modified FALSE
@@ -82,7 +85,7 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
         if (fnameok)
             gtk_text_buffer_set_modified (buffer, TRUE);    /* inserted */
         else {
-            file_get_stats (filename, inst);
+            file_get_stats (inst);
             gtk_text_buffer_set_modified (buffer, FALSE);   /* opened */
 //             buffer_get_eol (inst);          /* detect EOL, LF, CRLF, CR */
 //             /* add GFileMonitor watch on file - or it buf_new_inst? */
@@ -173,6 +176,129 @@ void file_open (gpointer data, gchar *filename)
 #ifdef DEBUG
     g_print ("\n");
 #endif
+}
+
+void buffer_write_file (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+    GtkWidget *view = einst->view;
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextIter start, end;
+    GError *err = NULL;
+    gchar *text = NULL;
+    gboolean result;
+
+    while (gtk_events_pending())    /* process all pending events */
+        gtk_main_iteration();
+
+    /* disable text view and get contents of buffer */
+    gtk_widget_set_sensitive (view, FALSE);
+
+    /* get start and end iters for buffer */
+    gtk_text_buffer_get_start_iter (buffer, &start);
+    gtk_text_buffer_get_end_iter (buffer, &end);
+
+    /* get text from buffer */
+    text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+
+    /* restore test view sensitivity */
+    gtk_widget_set_sensitive (view, TRUE);
+
+    /* set the contents of the file to the text from the buffer */
+    result = g_file_set_contents (inst->filename, text, -1, &err);
+
+    if (result == FALSE) {
+        /* error saving file, show message to user */
+        err_dialog (err->message);
+        g_error_free (err);
+    }
+    else {
+        gtk_text_buffer_set_modified (buffer, FALSE);
+        // gtkwrite_window_set_title (NULL, app);
+#ifndef HAVEMSWIN
+        if (inst->filemode)     /* restore file mode, UID, GID */
+            g_chmod (inst->filename, inst->filemode);
+        if (inst->fileuid && inst->filegid)
+            chown ((const char *)inst->filename, (uid_t)inst->fileuid,
+                    (gid_t)inst->filegid);
+#endif
+    }
+
+    /* free text */
+    g_free (text);
+
+}
+
+/** file_save in new 'filename' or in existing if NULL.
+ *  if 'filename' is provided, Save-As 'filename', otherwise if
+ *  'filename' is NULL, Save in existing inst->filename or prompt
+ *  with file_save dialog. cancel and add file monitoring as
+ *  required. save file stats for existing file, update status.
+ */
+void file_save (gpointer data, gchar *filename)
+{
+    mainwin_t *app = data;
+    kinst_t *inst = app->einst[app->focused]->inst;
+    gchar *posixfn = NULL;
+
+    if (filename) {                     /* file_save_as new filename */
+        posixfn = get_posix_filename (filename);
+        if (!posixfn) {
+            g_warning ("get_posix_filename(fielname) failed");
+            g_free (filename);
+            return;
+        }
+
+        if (inst->filename) {           /* if existing file, free filename */
+            inst_free_filename (inst);
+
+            // if (!file_monitor_cancel (inst))    /* cancel existing monitor */
+            //v{ /* handle error */ }
+        }
+
+        inst->filename = posixfn;       /* assign to app->filename */
+        split_fname (inst);             /* split filename */
+        treeview_setname (data, inst);  /* set name in tree */
+        g_free (filename);
+    }
+    else {  /* regular save */
+        if (!inst->filename) {  /* check if "Untitled(n)" */
+            gchar *newname = NULL;
+            while (!(newname = get_save_filename (data))) {
+                if (dlg_yes_no_msg (data, "Error: Get save filename canceled!\n"
+                                    "Do you want to cancel save?",
+                                    "Warning - Save Canceled", FALSE))
+                    return;
+            }
+            posixfn = get_posix_filename (newname);
+            if (!posixfn) {
+                g_warning ("get_posix_filename(newname) failed");
+                g_free (newname);
+                return;
+            }
+            inst->filename = posixfn;       /* assign to app->filename */
+            split_fname (inst);             /* split filename */
+            treeview_setname (data, inst);  /* set name in tree */
+            g_free (newname);
+        }
+    }
+
+    // app->mfp_savecmd = TRUE;                /* set flag TRUE - save in progress */
+
+    /* FIXME move functionality here or rewite to just use inst filename */
+    buffer_write_file (data);               /* write to file app->filename */
+
+    // if (!app->mfp_handler)                  /* if not monitoring file */
+    //     file_monitor_add (app);             /* setup monitoring on new name */
+
+    file_get_stats (inst);                      /* check/save file stats */
+
+    // status_set_default (app);               /* restore statusbar */
+
+    // if (app->highlight)                     /* if syntax highlight enabled */
+    //     sourceview_guess_language (app);    /* guess source language */
 }
 
 /** file_close - close the currently focused file.

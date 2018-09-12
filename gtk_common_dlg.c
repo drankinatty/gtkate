@@ -1,5 +1,53 @@
 #include "gtk_common_dlg.h"
 
+/** general use err_dialog, just pass errmsg. */
+void err_dialog_win (gpointer data, const gchar *errmsg)
+{
+    mainwin_t *app = data;
+    GtkWidget *dialog;
+
+    g_warning (errmsg); /* log to terminal window */
+
+    /* create an error dialog and display modally to the user */
+    dialog = gtk_message_dialog_new (GTK_WINDOW (app->window),
+                                    GTK_DIALOG_MODAL |
+                                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_ERROR,
+                                    GTK_BUTTONS_OK,
+                                    errmsg);
+
+    gtk_window_set_title (GTK_WINDOW (dialog), "Error!");
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
+}
+
+gboolean dlg_yes_no_msg (gpointer data, const gchar *msg, const gchar *title,
+                            gboolean default_return)
+{
+    mainwin_t *app = data;
+    GtkWidget *window = data ? app->window : NULL;
+    gboolean ret = default_return ? TRUE : FALSE;
+    GtkWidget *dialog;
+
+    dialog = gtk_message_dialog_new (GTK_WINDOW (window),
+                                    GTK_DIALOG_MODAL |
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_QUESTION,
+                                    GTK_BUTTONS_YES_NO,
+                                    msg);
+
+    gtk_window_set_title (GTK_WINDOW (dialog), title);
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_NO)
+    {
+        ret = FALSE;    /* don't save */
+    }
+    else ret = TRUE;    /* save */
+
+    gtk_widget_destroy (dialog);
+
+    return ret;
+}
+
 gchar *get_open_filename (gpointer data)
 {
     mainwin_t *app = data;
