@@ -10,7 +10,7 @@
 #include "gtk_appdata.h"
 // #include "gtk_charset.h"
 #include "gtk_common_dlg.h"
-// #include "gtk_sourceview.h"
+#include "gtk_sourceview.h"
 // #include "gtk_statusbar.h"
 #include "gtk_textview.h"
 #include "gtk_treeview.h"

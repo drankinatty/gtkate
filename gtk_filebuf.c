@@ -85,11 +85,13 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
         if (fnameok)
             gtk_text_buffer_set_modified (buffer, TRUE);    /* inserted */
         else {
+            /* get file uid/gid and mode */
             file_get_stats (inst);
             gtk_text_buffer_set_modified (buffer, FALSE);   /* opened */
 //             buffer_get_eol (inst);          /* detect EOL, LF, CRLF, CR */
+
 //             /* add GFileMonitor watch on file - or it buf_new_inst? */
-//             /* TODO check passing app or inst below */
+//             /* TODO check passing app or inst below (likely app/data) */
 //             if (!inst->filemonfn) {
 //                 file_monitor_add (inst);
 //             }
@@ -97,9 +99,10 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
 //                 if (file_monitor_cancel (inst))
 //                     file_monitor_add (inst);
 //             }
-//             /* set syntax highlighting language */
-//             if (app->highlight)
-//                 sourceview_guess_language (inst);
+
+            /* set syntax highlighting language */
+            if (app->highlight)
+                sourceview_guess_language (data);
         }
 //         status_set_default (app);
 
@@ -111,9 +114,6 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
 /** open file and instert into unmodified "Untitled(n)" buffer, or create
  *  new buffer inst and add to treeview.
  */
- /* FIXME - if there is only 1 file open and it is Untitled - then replace
-  * buf only, no increment of nfiles
-  */
 void file_open (gpointer data, gchar *filename)
 {
     mainwin_t *app = data;
@@ -135,13 +135,6 @@ void file_open (gpointer data, gchar *filename)
     cc = gtk_text_buffer_get_char_count (GTK_TEXT_BUFFER(inst->buf));
     modified = gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf));
 
-#ifdef DEBUG
-    g_print ("file_open()\n"
-             "  app->focused: %d\n"
-             "  cc          : %d\n"
-             "  modified    : %s\n",
-             app->focused, cc, modified ? "true" : "false");
-#endif
     /* character-count zero and buffer not modified
      * insert file in current inst->buf
      */
@@ -151,13 +144,6 @@ void file_open (gpointer data, gchar *filename)
         inst->filename = posixfn;       /* get POSIX filename */
         split_fname (inst);             /* buf_new_inst not called - split */
 
-#ifdef DEBUG
-        g_print ("  filename    : %s\n"
-                 "  fpath       : %s\n"
-                 "  fname       : %s\n"
-                 "  fext        : %s\n",
-                 inst->filename, inst->fpath, inst->fname, inst->fext);
-#endif
         /* insert file in buffer, set name displayed in tree */
         if (buffer_insert_file (data, inst, NULL))
             treeview_setname (data, inst);
@@ -173,9 +159,6 @@ void file_open (gpointer data, gchar *filename)
             g_error ("file_open() newinst NULL");
         }
     }
-#ifdef DEBUG
-    g_print ("\n");
-#endif
 }
 
 void buffer_write_file (gpointer data)

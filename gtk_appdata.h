@@ -105,7 +105,9 @@ typedef struct {
 
     guint filemode, fileuid, filegid;   /* file permissions & ownership */
 
-    const gchar     *lang_id;           /* sourceview language ID */
+    GtkSourceLanguage *language;        /* sourceview language struct */
+    /* don't store lang_id, write to cfg/key file */
+    // const gchar     *lang_id;           /* sourceview language ID (for cfg) */
 
     const gchar     *comment_single;    /* single line comment */
     const gchar     *comment_blk_beg;   /* blobk comment begin */
@@ -149,11 +151,29 @@ typedef struct mainwin {
 
     GtkTreeModel    *treemodel;         /* document tree model */
 
+    einst_t         *einst[MAXVIEW];    /* pointers to editor instances */
+
+    gint            nview,              /* no. of editor views shown */
+                    nfiles,             /* no. of open files */
+                    focused;            /* focused einst index */
+
     /* window layout/size */
     gint            winwidth,           /* main window width  */
                     winheight,          /* main window height */
                     treewidth,          /* document tree width */
                     swbordersz;         /* scrolled_window border size */
+
+    /* sourceview variables, menus & settings */
+    GtkSourceLanguageManager    *langmgr;
+    GtkWidget       *stylelist;         /* sourceview styles menu list */
+    GtkWidget       *hghltmenu;         /* sourceview syntax highlight menu */
+    gchar           *laststyle;         /* sourceview last highlight style */
+    gboolean        highlight;          /* syntax highlight enable/disable */
+
+    /* source completion variables & settings */
+    GtkSourceCompletion         *completion;
+    gboolean        enablecmplt;        /* enable word-completion */
+    guint           cmplwordsz;         /* completion minimum-word-size */
 
     /* settings flags/file information */
     gboolean        showtoolbar,        /* flag to show/hide toolbar */
@@ -161,21 +181,21 @@ typedef struct mainwin {
                     winrestore,         /* flag to restore win size */
                     winszsaved;         /* flag win size saved by user */
 
-    einst_t         *einst[MAXVIEW];    /* pointers to editor instances */
-
-    gint            nview,              /* no. of editor views shown */
-                    nfiles,             /* no. of open files */
-                    focused;            /* focused einst index */
-
     gchar           *fontname;          /* pango fontname */
 
     gint            tabstop;            /* number of spaces in tab */
     gint            softtab;            /* number of spaced to indent */
     gchar           *tabstring;         /* chars that make up tabstring */
-
-    gchar           *laststyle;         /* sourceview last highlight style */
+    gboolean        expandtab;          /* insert spaces for tabs */
+    gboolean        showtabs;           /* show tab markers */
 
     gboolean        indentauto;         /* auto-indent on return */
+    gboolean        indentwspc;         /* indent with spaces not tabs */
+    gboolean        indentmixd;         /* EMACS mixed spaces/tabs */
+
+    gboolean        showdwrap;
+    gboolean        wraptxtcsr;
+    gboolean        pgudmvscsr;
 
     gboolean        lineno;             /* show line numbers */
     gboolean        linehghlt;          /* current line highlight */
@@ -183,7 +203,13 @@ typedef struct mainwin {
     gboolean        showmargin;         /* show right margin */
     gint            marginwidth;        /* column width for margin */
 
+    gboolean        cmtusesingle;       /* single-line instead of block comment */
+
+    gboolean        overwrite;          /* ins/overwrite mode flag */
     gboolean        poscurend;          /* scroll to end of opened file */
+
+    gboolean        posixeof;           /* enforce POSIX eof */
+    gboolean        trimendws;          /* trim ending whitespace on save */
 
     gint            nrecent;            /* no. of recent files in chooser */
 

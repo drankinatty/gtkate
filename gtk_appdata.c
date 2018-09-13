@@ -21,6 +21,8 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->treeview       = NULL;         /* treeview widget */
     app->vboxedit       = NULL;         /* vbox inside hpaned2 for ewin */
 
+    app->treemodel      = NULL;         /* treemodel for treeview */
+
     /* allocate MAXSPLIT edit window instances */
     for (gint i = 0; i < MAXVIEW; i++) {
         app->einst[i] = g_slice_new (einst_t);
@@ -32,27 +34,50 @@ void mainwin_init (mainwin_t *app, char **argv)
         app->einst[i]->inst  = NULL;
     }
 
-    app->winwidth       = 840;          /* default window width   */
-    app->winheight      = 800;          /* default window height  */
-    app->winrestore     = FALSE;        /* restore window size */
-    app->winszsaved     = FALSE;        /* win size saved */
-    app->treewidth      = 180;          /* initial treeiew width */
-    app->swbordersz     = 0;            /* scrolled_window border */
-
+    /* initial views, files and focused einst */
     app->nview          = 0;            /* no. of editor panes shown */
     app->nfiles         = 0;            /* no. of open files */
     app->focused        = 0;            /* focused einst index */
 
+    /* window layout/size */
+    app->winwidth       = 840;          /* default window width   */
+    app->winheight      = 800;          /* default window height  */
+    app->treewidth      = 180;          /* initial treeiew width */
+    app->swbordersz     = 0;            /* scrolled_window border */
+
+    /* sourceview variables, menus & settings */
+    app->langmgr        = gtk_source_language_manager_get_default();
+    app->stylelist      = NULL;         /* sourceview styles menu list */
+    app->hghltmenu      = NULL;         /* sourceview syntax highlight menu */
+    app->laststyle      = NULL;         /* sourceview last highlight style */
+    app->highlight      = TRUE;         /* show syntax highlight */
+
+    /* source completion variables & settings */
+    app->completion     = NULL;         /* completion provider object */
+    app->enablecmplt    = TRUE;         /* enable word completion */
+    app->cmplwordsz     = 3;            /* completion minimum-word-size */
+
+    /* settings flags/file information */
     app->showtoolbar    = TRUE;         /* toolbar is visible */
     app->showdocwin     = TRUE;         /* document tree is visible */
+    app->winrestore     = FALSE;        /* restore window size */
+    app->winszsaved     = FALSE;        /* win size saved */
 
     app->fontname       = g_strdup ("DejaVu Sans Mono 8");
 
     app->tabstop        = 8;            /* number of spaces per tab */
     app->softtab        = 4;            /* soft tab stop size */
     app->tabstring      = NULL;         /* tabstring for indent */
+    app->expandtab      = TRUE;         /* insert spaces for tab */
+    app->showtabs       = FALSE;        /* display tabulator markers */
 
     app->indentauto     = TRUE;         /* auto-indent on return */
+    app->indentwspc     = TRUE;         /* indent w/spaces not tabs */
+    app->indentmixd     = FALSE;        /* Emacs mode indent w/mixed spc/tabs */
+
+    app->showdwrap      = FALSE;        /* use dynamic word wrap */
+    app->wraptxtcsr     = TRUE;         /* wrap cursor to next line */
+    app->pgudmvscsr     = TRUE;         /* PgUp/PgDn keys move cursor */
 
     app->lineno         = FALSE;        /* show line numbers (sourceview) */
     app->linehghlt      = TRUE;         /* highlight current line */
@@ -60,6 +85,9 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->showmargin     = TRUE;         /* show margin at specific column */
     app->marginwidth    = 80;           /* initial right margin to display */
 
+    app->cmtusesingle   = FALSE;        /* single-line instead of block comment */
+
+    app->overwrite      = FALSE;        /* ins/overwrite mode flag */
     app->poscurend      = FALSE;        /* scroll to end of file on open */
 
     app->nrecent        = 40;           /* no. of recent chooser files */
@@ -118,7 +146,8 @@ static kinst_t *kinst_init (kinst_t *inst)
 
     inst->line = inst->col = 0;
 
-    inst->lang_id = NULL;
+    inst->language = NULL;
+    // inst->lang_id = NULL;    /* get at time keyfile is written */
 
     inst->comment_single = NULL;
     inst->comment_blk_beg = NULL;
@@ -231,7 +260,8 @@ void inst_reset_state (kinst_t *inst)
     inst->fileuid = 0;
     inst->filegid = 0;
 
-    inst->lang_id = NULL;
+    inst->language = NULL;
+    // inst->lang_id = NULL;    /* get and write to keyfile */
 
     inst->comment_single = NULL;
     inst->comment_blk_beg = NULL;
