@@ -49,7 +49,7 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->langmgr        = gtk_source_language_manager_get_default();
     app->stylelist      = NULL;         /* sourceview styles menu list */
     app->hghltmenu      = NULL;         /* sourceview syntax highlight menu */
-    app->laststyle      = NULL;         /* sourceview last highlight style */
+    app->laststyle      = g_strdup ("gtkate"); /* last highlight style */
     app->highlight      = TRUE;         /* show syntax highlight */
 
     /* source completion variables & settings */
@@ -63,7 +63,7 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->winrestore     = FALSE;        /* restore window size */
     app->winszsaved     = FALSE;        /* win size saved */
 
-    app->fontname       = g_strdup ("DejaVu Sans Mono 8");
+    app->fontname       = g_strdup ("DejaVu Sans Mono 8");  /* default font */
 
     app->tabstop        = 8;            /* number of spaces per tab */
     app->softtab        = 4;            /* soft tab stop size */
@@ -96,6 +96,12 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->cfgdir         = NULL;         /* user config dir */
     app->cfgfile        = NULL;         /* user config file */
     app->keyfile        = NULL;
+
+    /* goto dialog data */
+    app->gotowin        = NULL;     /* TODO remove what doesn't need to be */
+    // app->vscale         = NULL;     /* in this global struct. */
+    app->spinbtn        = NULL;
+    app->new_pos        = NULL;
 
     if (argv) {}
 }

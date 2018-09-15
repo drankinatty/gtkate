@@ -5,6 +5,7 @@
 
 #include "gtk_appdata.h"
 
+// void err_dialog (const gchar *errmsg);
 void err_dialog_win (gpointer data, const gchar *errmsg);
 gboolean dlg_yes_no_msg (gpointer data, const gchar *msg, const gchar *title,
                             gboolean default_return);

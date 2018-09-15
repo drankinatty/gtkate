@@ -452,7 +452,10 @@ void sourceview_set_syntax_laststyle (gpointer data)
 
     sm = gtk_source_style_scheme_manager_get_default();
     scheme = gtk_source_style_scheme_manager_get_scheme (sm, app->laststyle);
-    gtk_source_buffer_set_style_scheme (inst->buf, scheme);
+    if (scheme)
+        gtk_source_buffer_set_style_scheme (inst->buf, scheme);
+    else
+        g_warning ("sourceview_set_syntax_laststyle - scheme not found");
 }
 
 void sourceview_set_comment_syntax (gpointer data)

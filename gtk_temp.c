@@ -83,6 +83,14 @@ void menu_file_quit_activate (GtkMenuItem *menuitem, gpointer data)
 
     if (data || menuitem) {}
 }
+
+void menu_edit_goto_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    create_goto_dlg (data);
+
+    if (menuitem) {}
+}
+
 void menu_showtb_activate (GtkMenuItem *menuitem, gpointer data)
 {
     mainwin_t *app = data;
@@ -261,6 +269,10 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     GtkWidget *closeMi;
     GtkWidget *quitMi;
 
+    GtkWidget *editMenu;            /* edit menu */
+    GtkWidget *editMi;
+    GtkWidget *gotoMi;
+
     GtkWidget *helpMenu;            /* help menu */
     GtkWidget *helpMi;
     GtkWidget *aboutMi;
@@ -276,6 +288,7 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
 
     menubar             = gtk_menu_bar_new ();
         fileMenu        = gtk_menu_new ();
+        editMenu        = gtk_menu_new ();
         tempMenu        = gtk_menu_new ();
         helpMenu        = gtk_menu_new ();
     // gtk_widget_show (menubar);
@@ -310,6 +323,7 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), quitMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
 
+    /* file menu accelerators */
     gtk_widget_add_accelerator (newMi, "activate", mainaccel,
                                 GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (openMi, "activate", mainaccel,
@@ -323,6 +337,24 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
                                 GDK_KEY_w, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
                                 GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+    /* define edit menu */
+    editMi = gtk_menu_item_new_with_mnemonic ("_Edit");
+    sep = gtk_separator_menu_item_new ();
+
+    gotoMi     = gtk_image_menu_item_new_from_stock (GTK_STOCK_INDEX,
+                                                    NULL);
+    gtk_menu_item_set_label (GTK_MENU_ITEM (gotoMi), "_Go to Line");
+
+    /* create entries under 'Edit' then add to menubar */
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM (editMi), editMenu);
+    gtk_menu_shell_append (GTK_MENU_SHELL (editMenu), sep);
+    gtk_menu_shell_append (GTK_MENU_SHELL (editMenu), gotoMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), editMi);
+
+    /* edit menu accelerators */
+    gtk_widget_add_accelerator (gotoMi, "activate", mainaccel,
+                                GDK_KEY_g, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
     /* entries under Temp working menu */
     tempMi = gtk_menu_item_new_with_mnemonic ("_Temp");
@@ -395,6 +427,10 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
 
     g_signal_connect (G_OBJECT (quitMi), "activate",        /* file Quit    */
                       G_CALLBACK (menu_file_quit_activate), NULL);
+
+    /* Edit Menu */
+    g_signal_connect (G_OBJECT (gotoMi), "activate",        /* edit Goto */
+                      G_CALLBACK (menu_edit_goto_activate), app);
 
     /* Temp Menu */
     g_signal_connect (G_OBJECT (showtbMi), "activate",      /* show toolbar */
