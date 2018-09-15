@@ -97,12 +97,6 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->cfgfile        = NULL;         /* user config file */
     app->keyfile        = NULL;
 
-    /* goto dialog data */
-    app->gotowin        = NULL;     /* TODO remove what doesn't need to be */
-    // app->vscale         = NULL;     /* in this global struct. */
-    app->spinbtn        = NULL;
-    app->new_pos        = NULL;
-
     if (argv) {}
 }
 

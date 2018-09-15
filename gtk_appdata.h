@@ -219,12 +219,6 @@ typedef struct mainwin {
     /* GFileMonitor flag */
     gboolean        savecmd;            /* set on save to disable monitoring */
 
-    /* goto dialog data */
-    GtkWidget       *gotowin;           /* goto main window      */
-//     GtkWidget       *vscale;            /* vertical scale   */
-    GtkWidget       *spinbtn;           /* spin button      */
-    GtkTextMark     *new_pos;           /* goto position    */
-
     /* boolean stack implementation
      * to provide keypress history.
      */
