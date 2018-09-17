@@ -57,6 +57,33 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->enablecmplt    = TRUE;         /* enable word completion */
     app->cmplwordsz     = 3;            /* completion minimum-word-size */
 
+    /* find/replace defaults and initilization */
+    app->findtext       = g_malloc0 (MAXLE * sizeof *(app->findtext));
+    app->reptext        = g_malloc0 (MAXLE * sizeof *(app->reptext));
+    app->nfentries      = 0;
+    app->nrentries      = 0;
+    app->fmax           = MAXLE;
+    app->rmax           = MAXLE;
+    app->optregex       = TRUE;  /* initial checkbox states */
+    app->optplace       = FALSE;
+    app->optcase        = TRUE;
+    app->optwhole       = FALSE;
+    app->optfrom        = FALSE;
+    app->optback        = FALSE;
+    app->optselect      = FALSE;
+    app->optprompt      = FALSE;
+
+    app->txtfound       = FALSE;
+    app->last_pos       = NULL;
+    app->markfrom       = NULL;
+    app->selstart       = NULL;
+    app->selend         = NULL;
+
+    if (!(app->findtext && app->reptext)) {
+        g_error ("findtest/reptext allocation failure.");
+        gtk_main_quit();
+    }
+
     /* settings flags/file information */
     app->showtoolbar    = TRUE;         /* toolbar is visible */
     app->showdocwin     = TRUE;         /* document tree is visible */
@@ -223,19 +250,6 @@ void einst_move (einst_t *tgt, einst_t *src)
         src->inst = NULL;
 }
 
-/** fast strlen function */
-static gsize g_strlen (const gchar *s)
-{
-    gsize len = 0;
-    for(;;) {
-        if (s[0] == 0) return len;
-        if (s[1] == 0) return len + 1;
-        if (s[2] == 0) return len + 2;
-        if (s[3] == 0) return len + 3;
-        s += 4, len += 4;
-    }
-}
-
 /** inst_free_filename, free all filename components. */
 void inst_free_filename (kinst_t *inst)
 {
@@ -366,6 +380,96 @@ gchar *get_posix_filename (const gchar *fn)
     *wp = 0;
 
     return posixfn;
+}
+
+/** fast strlen function */
+gsize g_strlen (const gchar *s)
+{
+    gsize len = 0;
+    for(;;) {
+        if (s[0] == 0) return len;
+        if (s[1] == 0) return len + 1;
+        if (s[2] == 0) return len + 2;
+        if (s[3] == 0) return len + 3;
+        s += 4, len += 4;
+    }
+}
+
+gboolean str2lower (gchar *str)
+{
+    if (!str) return FALSE;
+
+    gchar *p = str;
+    gboolean changed = FALSE;
+
+    for (; *p; p++)
+        if ('A' <= *p && *p <= 'Z') {
+            *p ^= 32;
+            changed = TRUE;
+        }
+
+    return changed;
+}
+
+gboolean str2upper (gchar *str)
+{
+    if (!str) return FALSE;
+
+    gchar *p = str;
+    gboolean changed = FALSE;
+
+    for (; *p; p++)
+        if ('a' <= *p && *p <= 'z') {
+            *p ^= 32;
+            changed = TRUE;
+        }
+
+    return changed;
+}
+
+gboolean str2title (gchar *str)
+{
+    if (!str) return FALSE;
+
+    gchar *p = str;
+    gboolean changed = FALSE;
+
+    for (; *p; p++) {
+        if (p == str) {
+            if ('a' <= *p && *p <= 'z') {
+                *p ^= 32;
+                changed = TRUE;
+            }
+        }
+        else if (*(p - 1) == ' ') {
+            if ('a' <= *p && *p <= 'z') {
+                *p ^= 32;
+                changed = TRUE;
+            }
+        }
+        else {
+            if ('A' <= *p && *p <= 'Z') {
+                *p ^= 32;
+                changed = TRUE;
+            }
+        }
+    }
+
+    return changed;
+}
+
+/** delete the last_pos mark */
+void delete_mark_last_pos (gpointer data)
+{
+    mainwin_t *app = data;
+    kinst_t *inst = app->einst[app->focused]->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+
+    if (app->last_pos)
+        gtk_text_buffer_delete_mark (buffer, app->last_pos);
+
+    app->last_pos = NULL;
 }
 
 /** simple boolean stack function using the bits of STKMAX

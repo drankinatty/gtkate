@@ -45,4 +45,9 @@ buffer
 
   * file_open single "Untitled" need to set window-title on open.
 
+find/replace
+
+  * free app->findtext/app->reptext on gtkate close
+  * create findrep_t struct instead of the static globals in gtk_findreplace.c
+
 

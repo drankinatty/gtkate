@@ -78,6 +78,7 @@
 #define EOLTXT_NO       5
 
 #define MAXVIEW         4
+#define MAXLE          32
 
 enum eolorder { LF, CRLF, CR, FILE_EOL, OS_EOL };
 enum {  IBAR_VISIBLE = 0x1,
@@ -175,6 +176,31 @@ typedef struct mainwin {
     gboolean        enablecmplt;        /* enable word-completion */
     guint           cmplwordsz;         /* completion minimum-word-size */
 
+    /* find replace dailog data */
+    gchar           **findtext;         /* storage of search terms */
+    gchar           **reptext;          /* storage of replace terms */
+    guint           nfentries;
+    guint           nrentries;
+    guint           fmax;
+    guint           rmax;
+    gboolean        optregex;
+    gboolean        optplace;
+    gboolean        optcase;
+    gboolean        optwhole;
+    gboolean        optfrom;
+    gboolean        optback;
+    gboolean        optselect;
+    gboolean        optprompt;
+    /* find replace placeholders
+     * (TODO move to kinst_t struct) */
+    GtkTextMark     *markfrom,          /* operation from mark */
+                    *selstart,          /* selection start/end */
+                    *selend;
+    /* find replace results
+     * (TODO move to kinst_t struct) */
+    gboolean        txtfound;           /* prev search found text */
+    GtkTextMark     *last_pos;          /* position of last match in buf */
+
     /* settings flags/file information */
     gboolean        showtoolbar,        /* flag to show/hide toolbar */
                     showdocwin,         /* flag to show/hide treeview */
@@ -242,6 +268,11 @@ void inst_reset_state (kinst_t *inst);
 void split_fname (kinst_t *inst);
 gchar *uri_to_filename (const gchar *uri);
 gchar *get_posix_filename (const gchar *fn);
+gsize g_strlen (const gchar *s);
+gboolean str2lower (gchar *str);
+gboolean str2upper (gchar *str);
+gboolean str2title (gchar *str);
+void delete_mark_last_pos (gpointer data);
 
 /* boolean stack functions */
 void bstack_clear (mainwin_t *app);
