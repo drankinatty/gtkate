@@ -21,7 +21,6 @@ GtkWidget *create_find_dlg (gpointer data)
 {
     mainwin_t *app = data;
 
-//     GtkWidget *findrepwin;
     GtkWidget *vbox;
     GtkWidget *frame1;
     GtkWidget *frame2;
@@ -31,23 +30,14 @@ GtkWidget *create_find_dlg (gpointer data)
     GtkWidget *hbtweak;
     GtkWidget *hbox;
 
-//     GtkWidget *entryfind;
-//     GtkWidget *entryreplace;
-
-//     GtkWidget *btnregex;
-//     GtkWidget *btnplace;
-//     GtkWidget *btnfind;
-//     GtkWidget *btnreplace;
     GtkWidget *btnclose;
 
     GtkWidget *chkregex;
-//     GtkWidget *chkplace;
     GtkWidget *chkcase;
     GtkWidget *chkwhole;
     GtkWidget *chkfrom;
     GtkWidget *chkback;
     GtkWidget *chkselect;
-//     GtkWidget *chkprompt;
 
     guint i;
 
@@ -251,7 +241,6 @@ GtkWidget *create_replace_dlg (gpointer data)
 {
     mainwin_t *app = data;
 
-//     GtkWidget *findrepwin;
     GtkWidget *vbox;            /* vbox container   */
     GtkWidget *frame1;
     GtkWidget *framer;
@@ -262,13 +251,6 @@ GtkWidget *create_replace_dlg (gpointer data)
     GtkWidget *hbtweak;
     GtkWidget *hbox;
 
-//     GtkWidget *entryfind;
-//     GtkWidget *entryreplace;
-
-//     GtkWidget *btnregex;
-//     GtkWidget *btnplace;
-//     GtkWidget *btnfind;
-//     GtkWidget *btnreplace;
     GtkWidget *btnclose;
 
     GtkWidget *chkregex;
@@ -704,19 +686,6 @@ void chk_existing_selection (gpointer data)
         app->selstart = app->selend = NULL;
     }
 }
-
-/** delete the last_pos mark */
-/* (moved to gtk_appdata.[ch] 20170801)
-void delete_mark_last_pos (gpointer data)
-{
-    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(app->buffer);
-
-    if (app->last_pos)
-        gtk_text_buffer_delete_mark (buffer, app->last_pos);
-
-    app->last_pos = NULL;
-}
-*/
 
 /** case insensitive forward search for implementation without
  *  GtkSourceView.
@@ -1261,25 +1230,6 @@ static gboolean on_fr_keypress (GtkWidget *widget, GdkEventKey *event,
 
     return FALSE;
 }
-
-/* snip - example for text-view handling, that may be something we can do
-   for combobox
-
-static gboolean
-gtk_foo_bar_key_press_event (GtkWidget   *widget,
-                             GdkEventKey *event)
-{
-  if ((key->keyval == GDK_Return || key->keyval == GDK_KP_Enter))
-    {
-      if (gtk_text_view_im_context_filter_keypress (GTK_TEXT_VIEW (view), event))
-        return TRUE;
-    }
-    // Do some stuff
-
-  return GTK_WIDGET_CLASS (gtk_foo_bar_parent_class)->key_press_event (widget, event);
-}
-
-*/
 
 /** delete text between input/select marks, making last_pos the same as
  *  insert_mark using last_pos to create iter, then insert replacetext.
