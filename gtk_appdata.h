@@ -325,6 +325,9 @@ void untitled_remove (gpointer data, gint n);
 /* date & time functions */
 gchar *get_local_datetime (void);
 
+/* set widget (window) title */
+void gtkate_window_set_title (GtkWidget *widget, gpointer data);
+
 /* temp dialog functions */
 void err_dialog (const gchar *errmsg);
 

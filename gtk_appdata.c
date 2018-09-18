@@ -1,5 +1,8 @@
 #include "gtk_appdata.h"
 
+#define STYLE_DARK "gtkate"
+#define STYLE_LIGHT "gtkate-light"
+
 /** default values for main window before settings read from keyfile */
 void mainwin_init (mainwin_t *app, char **argv)
 {
@@ -49,9 +52,12 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->langmgr        = gtk_source_language_manager_get_default();
     app->stylelist      = NULL;         /* sourceview styles menu list */
     app->hghltmenu      = NULL;         /* sourceview syntax highlight menu */
-    app->laststyle      = g_strdup ("gtkate"); /* last highlight style */
+#ifdef HAVEMSWIN
+    app->laststyle      = STYLE_LIGHT;  /* default light highlight style */
+#else
+    app->laststyle      = STYLE_DARK;   /* default dark highlight style */
+#endif
     app->highlight      = TRUE;         /* show syntax highlight */
-
     /* source completion variables & settings */
     app->completion     = NULL;         /* completion provider object */
     app->enablecmplt    = TRUE;         /* enable word completion */
@@ -648,6 +654,52 @@ char *get_user_cfgfile (mainwin_t *app)
     }
 
     return NULL;
+}
+
+/** set window title from treeview displayed name and buffer modified state */
+void gtkate_window_set_title (GtkWidget *widget, gpointer data)
+{
+    /* TODO: create common set title function for all dialogs
+     * (e.g. if (widget == app->window), then window title, else dialog
+     */
+    mainwin_t *app = data;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+
+    /* set widget to main window if NULL */
+    if (!widget)
+        widget = app->window;
+
+    /* initialize selection from treeview */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
+
+    /* get treemodel and iter from selection */
+    if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
+
+        kinst_t *inst;
+        gchar *name = NULL,
+              *title = NULL;
+
+        /* get column name and buffer instance given model & iter */
+        gtk_tree_model_get (model, &iter, COLNAME, &name, COLINST, &inst,  -1);
+
+        /* check/set modified state in window title text on selection change */
+        if (gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf)))
+            title = g_strdup_printf ("%s - %s [modified]", APPNAME, name);
+        else
+            title = g_strdup_printf ("%s - %s", APPNAME, name);
+
+        /* set window title */
+        gtk_window_set_title (GTK_WINDOW (widget), title);
+
+        /* free allocated memory */
+        g_free (name);
+        g_free (title);
+    }
+    else
+        g_warning ("gtkate_window_set_title() unable to set window title.");
+
 }
 
 /** general use err_dialog, just pass errmsg. */

@@ -18,6 +18,8 @@ treeview/model
 
   * consider (app->treeview)[n] to allow multiple views for showing files grouped by directory, or sorted based on opening or ascending/descending alphabetical sort.
 
+  * set tooltip on each entry showing 'filename' (absolute path & filename)
+
 multiview edit pane
 
   * decide whether to place focus in new instance of leave on current

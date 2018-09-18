@@ -40,6 +40,85 @@ void err_dialog_win (gpointer data, const gchar *errmsg)
     gtk_widget_destroy (dialog);
 }
 
+/** font_select_dialog used to set textview font.
+ *  create a new pango font description and calls
+ *  gtk_widget_modify_font to set textview font.
+ */
+void font_select_dialog (GtkWidget *widget, gpointer data)
+{
+    mainwin_t *app = data;
+    GtkResponseType result;
+
+    GtkWidget *dialog = gtk_font_selection_dialog_new ("Select Font");
+
+    /* set initial font name if (!wanted) use default */
+    if (!gtk_font_selection_dialog_set_font_name (
+            GTK_FONT_SELECTION_DIALOG (dialog), app->fontname))
+        gtk_font_selection_dialog_set_font_name (
+            GTK_FONT_SELECTION_DIALOG (dialog), "Monospace 8");
+
+    result = gtk_dialog_run (GTK_DIALOG(dialog));
+
+    if (result == GTK_RESPONSE_OK || result == GTK_RESPONSE_APPLY) {
+
+        if (app->fontname)
+            g_free (app->fontname);
+
+        PangoFontDescription *font_desc;
+        app->fontname = gtk_font_selection_dialog_get_font_name (
+                                GTK_FONT_SELECTION_DIALOG (dialog));
+
+        if (!app->fontname) {
+            err_dialog ("error: invalid font returned.");
+            return;
+        }
+
+        font_desc = pango_font_description_from_string (app->fontname);
+
+        /* loop over each shown textview changing font */
+        for (gint i = 0; i < app->nview; i++)
+            gtk_widget_modify_font (app->einst[i]->view, font_desc);
+
+        pango_font_description_free (font_desc);
+    }
+    gtk_widget_destroy (dialog);
+
+    if (widget) {}  /* stub */
+}
+
+void dlg_info (const gchar *msg, const gchar *title)
+{
+    GtkWidget *dialog;
+
+    dialog = gtk_message_dialog_new (NULL,
+                                    GTK_DIALOG_MODAL |
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_INFO,
+                                    GTK_BUTTONS_CLOSE,
+                                    msg);
+
+    gtk_window_set_title (GTK_WINDOW (dialog), title);
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
+}
+
+void dlg_info_win (gpointer data, const gchar *msg, const gchar *title)
+{
+    mainwin_t *app = data;
+    GtkWidget *dialog;
+
+    dialog = gtk_message_dialog_new (GTK_WINDOW (app->window),
+                                    GTK_DIALOG_MODAL |
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_INFO,
+                                    GTK_BUTTONS_CLOSE,
+                                    msg);
+
+    gtk_window_set_title (GTK_WINDOW (dialog), title);
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
+}
+
 gboolean dlg_yes_no_msg (gpointer data, const gchar *msg, const gchar *title,
                             gboolean default_return)
 {
