@@ -201,11 +201,42 @@ typedef struct mainwin {
     gboolean        txtfound;           /* prev search found text */
     GtkTextMark     *last_pos;          /* position of last match in buf */
 
+    /* print data */
+    GtkPrintSettings  *printsettings;   /* print settings object */
+    GtkPageSetup    *printpgsetup;      /* page setup object */
+    gdouble         margintop;          /* top    print margin */
+    gdouble         marginbottom;       /* bottom print margin */
+    gdouble         marginleft;         /* left   print margin */
+    gdouble         marginright;        /* right  print margin */
+
+    /* eol and character set handling */
+    GtkTextMark     *cursor;
+    GtkWidget       *eolLFMi;           /* radio button references */
+    GtkWidget       *eolCRLFMi;         /*   for EOL tools-menu    */
+    GtkWidget       *eolCRMi;
+    gint            eol;                /* end-of-line */
+    gint            oeol;               /* original eol */
+    gint            eolos;              /* operating system default eol */
+    gint            eoldefault;         /* default to override OS or file eol */
+    gboolean        eolchg;             /* flag to prevent firing during UI init */
+    gchar           *eolnm[EOL_NO];     /* ptrs to eol names */
+    gchar           *eolstr[EOL_NO];    /* ptrs to eol strings */
+    gchar           *eoltxt[EOLTXT_NO]; /* ptrs to eol descriptions */
+
+    gint            bom;                /* Byte Order Mark */
+        /* UTF-8  bom:  0xEF 0xBB 0xBF     (24-bit)
+         * UTF-16 bom:  U+FEFF  FE FF      (16-bit Big Endian)
+         *                      FF FE      (14-bit Little Endian)
+         * (see definitions in gtk_appdata.c)
+         */
     /* settings flags/file information */
     gboolean        showtoolbar,        /* flag to show/hide toolbar */
                     showdocwin,         /* flag to show/hide treeview */
                     winrestore,         /* flag to restore win size */
                     winszsaved;         /* flag win size saved by user */
+
+    /* custom key handler flags */
+    gboolean        ctrl_shift_right_fix;   /* select only whitespace or char */
 
     gchar           *fontname;          /* pango fontname */
 
@@ -215,10 +246,14 @@ typedef struct mainwin {
     gboolean        expandtab;          /* insert spaces for tabs */
     gboolean        showtabs;           /* show tab markers */
 
+    gboolean        smartbs;            /* use smart backspace */
+    gboolean        smarthe;            /* use smart home & end */
+
     gboolean        indentauto;         /* auto-indent on return */
     gboolean        indentwspc;         /* indent with spaces not tabs */
     gboolean        indentmixd;         /* EMACS mixed spaces/tabs */
 
+    gboolean        dynwrap;
     gboolean        showdwrap;
     gboolean        wraptxtcsr;
     gboolean        pgudmvscsr;
@@ -229,8 +264,10 @@ typedef struct mainwin {
     gboolean        showmargin;         /* show right margin */
     gint            marginwidth;        /* column width for margin */
 
-    gboolean        cmtusesingle;       /* single-line instead of block comment */
-
+    gchar           *comment;           /* single-line comment string */
+    GtkWidget       *cmtentry;          /* single-line comment entry */
+    gboolean        cmtusesingle;       /* use single-line instead of block
+                                         * comment */
     gboolean        overwrite;          /* ins/overwrite mode flag */
     gboolean        poscurend;          /* scroll to end of opened file */
 

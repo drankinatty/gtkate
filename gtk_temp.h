@@ -6,7 +6,9 @@
 #include "gtk_appdata.h"
 #include "gtk_common_dlg.h"
 #include "gtk_filebuf.h"
+#include "gtk_findreplace.h"
 #include "gtk_goto.h"
+#include "gtk_settings.h"
 #include "gtk_textview.h"
 #include "gtk_treeview.h"
 

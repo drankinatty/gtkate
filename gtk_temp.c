@@ -84,9 +84,30 @@ void menu_file_quit_activate (GtkMenuItem *menuitem, gpointer data)
     if (data || menuitem) {}
 }
 
+void menu_edit_find_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    create_find_dlg (data);
+
+    if (menuitem) {}
+}
+
+void menu_edit_replace_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    create_replace_dlg (data);
+
+    if (menuitem) {}
+}
+
 void menu_edit_goto_activate (GtkMenuItem *menuitem, gpointer data)
 {
     create_goto_dlg (data);
+
+    if (menuitem) {}
+}
+
+void menu_edit_preferences_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    create_settings_dlg (data);
 
     if (menuitem) {}
 }
@@ -271,7 +292,10 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
 
     GtkWidget *editMenu;            /* edit menu */
     GtkWidget *editMi;
+    GtkWidget *findMi;
+    GtkWidget *replaceMi;
     GtkWidget *gotoMi;
+    GtkWidget *prefsMi;
 
     GtkWidget *helpMenu;            /* help menu */
     GtkWidget *helpMi;
@@ -342,19 +366,39 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
     editMi = gtk_menu_item_new_with_mnemonic ("_Edit");
     sep = gtk_separator_menu_item_new ();
 
+    findMi     = gtk_image_menu_item_new_from_stock (GTK_STOCK_FIND,
+                                                    NULL);
+    replaceMi  = gtk_image_menu_item_new_from_stock (GTK_STOCK_FIND_AND_REPLACE,
+                                                    NULL);
     gotoMi     = gtk_image_menu_item_new_from_stock (GTK_STOCK_INDEX,
                                                     NULL);
     gtk_menu_item_set_label (GTK_MENU_ITEM (gotoMi), "_Go to Line");
 
+    prefsMi    = gtk_image_menu_item_new_from_stock (GTK_STOCK_PREFERENCES,
+                                                    NULL);
+
     /* create entries under 'Edit' then add to menubar */
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (editMi), editMenu);
     gtk_menu_shell_append (GTK_MENU_SHELL (editMenu), sep);
+    gtk_menu_shell_append (GTK_MENU_SHELL (editMenu), findMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (editMenu), replaceMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (editMenu),
+                           gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (editMenu), gotoMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (editMenu),
+                           gtk_separator_menu_item_new());
+    gtk_menu_shell_append (GTK_MENU_SHELL (editMenu), prefsMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menubar), editMi);
 
     /* edit menu accelerators */
+    gtk_widget_add_accelerator (findMi, "activate", mainaccel,
+                                GDK_KEY_f, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (replaceMi, "activate", mainaccel,
+                                GDK_KEY_r, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (gotoMi, "activate", mainaccel,
                                 GDK_KEY_g, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (prefsMi, "activate", mainaccel,
+                                GDK_KEY_p, GDK_MOD1_MASK, GTK_ACCEL_VISIBLE);
 
     /* entries under Temp working menu */
     tempMi = gtk_menu_item_new_with_mnemonic ("_Temp");
@@ -410,39 +454,48 @@ GtkWidget *create_temp_menu (gpointer data, GtkAccelGroup *mainaccel)
                                 GDK_KEY_a, GDK_MOD1_MASK, GTK_ACCEL_VISIBLE);
 
     /* File Menu */
-    g_signal_connect (G_OBJECT (newMi), "activate",         /* file New     */
+    g_signal_connect (G_OBJECT (newMi), "activate",         /* file New */
                       G_CALLBACK (menu_file_new_activate), app);
 
-    g_signal_connect (G_OBJECT (openMi), "activate",        /* file Open    */
+    g_signal_connect (G_OBJECT (openMi), "activate",        /* file Open */
                       G_CALLBACK (menu_file_open_activate), app);
 
-    g_signal_connect (G_OBJECT (saveMi), "activate",        /* file Save    */
+    g_signal_connect (G_OBJECT (saveMi), "activate",        /* file Save */
                       G_CALLBACK (menu_file_save_activate), app);
 
-    g_signal_connect (G_OBJECT (saveasMi), "activate",      /* file SaveAs  */
+    g_signal_connect (G_OBJECT (saveasMi), "activate",      /* file SaveAs */
                       G_CALLBACK (menu_file_saveas_activate), app);
 
-    g_signal_connect (G_OBJECT (closeMi), "activate",        /* file Quit    */
+    g_signal_connect (G_OBJECT (closeMi), "activate",        /* file Close */
                       G_CALLBACK (menu_file_close_activate), app);
 
-    g_signal_connect (G_OBJECT (quitMi), "activate",        /* file Quit    */
+    g_signal_connect (G_OBJECT (quitMi), "activate",        /* file Quit */
                       G_CALLBACK (menu_file_quit_activate), NULL);
 
     /* Edit Menu */
+    g_signal_connect (G_OBJECT (findMi), "activate",        /* edit Find */
+                      G_CALLBACK (menu_edit_find_activate), app);
+
+    g_signal_connect (G_OBJECT (replaceMi), "activate",     /* edit Replace */
+                      G_CALLBACK (menu_edit_replace_activate), app);
+
     g_signal_connect (G_OBJECT (gotoMi), "activate",        /* edit Goto */
                       G_CALLBACK (menu_edit_goto_activate), app);
+
+    g_signal_connect (G_OBJECT (prefsMi), "activate",       /* edit Prefs */
+                      G_CALLBACK (menu_edit_preferences_activate), app);
 
     /* Temp Menu */
     g_signal_connect (G_OBJECT (showtbMi), "activate",      /* show toolbar */
                       G_CALLBACK (menu_showtb_activate), app);
 
-    g_signal_connect (G_OBJECT (showdocMi), "activate",      /* show toolbar */
+    g_signal_connect (G_OBJECT (showdocMi), "activate",     /* show toolbar */
                       G_CALLBACK (menu_showdoc_activate), app);
 
-    g_signal_connect (G_OBJECT (addsplitMi), "activate",      /* show toolbar */
+    g_signal_connect (G_OBJECT (addsplitMi), "activate",    /* show toolbar */
                       G_CALLBACK (menu_createview_activate), app);
 
-    g_signal_connect (G_OBJECT (rmsplitMi), "activate",      /* show toolbar */
+    g_signal_connect (G_OBJECT (rmsplitMi), "activate",     /* show toolbar */
                       G_CALLBACK (menu_removeview_activate), app);
 
     /* Help Menu */

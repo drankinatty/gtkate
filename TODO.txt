@@ -50,4 +50,7 @@ find/replace
   * free app->findtext/app->reptext on gtkate close
   * create findrep_t struct instead of the static globals in gtk_findreplace.c
 
+settings
+
+  * check app->comment free on close - settings entry currently set with either inst->comment_single if set, or app->comment otherwise.
 

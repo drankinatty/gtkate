@@ -84,11 +84,47 @@ void mainwin_init (mainwin_t *app, char **argv)
         gtk_main_quit();
     }
 
+    app->printsettings  = NULL;         /* initialize print settings */
+    app->printpgsetup   = NULL;         /* initialize page setup */
+    app->margintop      = 0.5;          /* default margins */
+    app->marginbottom   = 0.5;
+    app->marginleft     = 1.0;
+    app->marginright    = 0.5;
+
     /* settings flags/file information */
     app->showtoolbar    = TRUE;         /* toolbar is visible */
     app->showdocwin     = TRUE;         /* document tree is visible */
     app->winrestore     = FALSE;        /* restore window size */
     app->winszsaved     = FALSE;        /* win size saved */
+
+    /* eol handling */
+#ifndef HAVEMSWIN
+    app->eolos          = LF;           /* default *nix line end - LF */
+#else
+    app->eolos          = CRLF;         /* default DOS/Win line end - CRLF */
+#endif
+    app->eol            = app->eolos;   /* initially set to operating system default */
+    app->eoldefault     = OS_EOL;       /* global default for EOL, default use from file */
+    app->oeol           = app->eol;     /* original end-of-line (for conversions) */
+    app->eolchg         = FALSE;        /* no eol change until file open or user selects */
+    app->eolstr[0]      = EOL_LF;       /* eol ending strings */
+    app->eolstr[1]      = EOL_CRLF;
+    app->eolstr[2]      = EOL_CR;
+    app->eolnm[0]       = EOLNM_LF;     /* eol string names */
+    app->eolnm[1]       = EOLNM_CRLF;
+    app->eolnm[2]       = EOLNM_CR;
+    app->eoltxt[0]      = EOLTXT_LF;    /* eol descriptions */
+    app->eoltxt[1]      = EOLTXT_CRLF;
+    app->eoltxt[2]      = EOLTXT_CR;
+    app->eoltxt[3]      = EOLTXT_FILE;
+    app->eoltxt[4]      = EOLTXT_OS;
+
+    app->bom            = 0;            /* Byte Order Mark (0 none)
+                                         * (1-15 corresponds index)
+                                         */
+
+    /* custom key handler flags */
+    app->ctrl_shift_right_fix = TRUE;   /* Use custom key-handler */
 
     app->fontname       = g_strdup ("DejaVu Sans Mono 8");  /* default font */
 
@@ -98,11 +134,15 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->expandtab      = TRUE;         /* insert spaces for tab */
     app->showtabs       = FALSE;        /* display tabulator markers */
 
+    app->smartbs        = TRUE;         /* use smart backspace */
+    app->smarthe        = TRUE;         /* smart home & end cursor */
+
     app->indentauto     = TRUE;         /* auto-indent on return */
     app->indentwspc     = TRUE;         /* indent w/spaces not tabs */
     app->indentmixd     = FALSE;        /* Emacs mode indent w/mixed spc/tabs */
 
-    app->showdwrap      = FALSE;        /* use dynamic word wrap */
+    app->dynwrap        = TRUE;         /* use dynamic word wrap */
+    app->showdwrap      = FALSE;        /* show dynamic word wrap indicators */
     app->wraptxtcsr     = TRUE;         /* wrap cursor to next line */
     app->pgudmvscsr     = TRUE;         /* PgUp/PgDn keys move cursor */
 
@@ -112,6 +152,8 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->showmargin     = TRUE;         /* show margin at specific column */
     app->marginwidth    = 80;           /* initial right margin to display */
 
+    app->comment        = g_strdup ("<unset>");   /* single-line comment string */
+    app->cmtentry       = NULL;         /* single-line comment entry */
     app->cmtusesingle   = FALSE;        /* single-line instead of block comment */
 
     app->overwrite      = FALSE;        /* ins/overwrite mode flag */
