@@ -1115,18 +1115,14 @@ void menu_font_select_activate (GtkMenuItem *menuitem, gpointer data)
 
 void menu_createview_activate (GtkMenuItem *menuitem, gpointer data)
 {
-    mainwin_t *app = data;
-
-    ewin_create_split (app);
+    ewin_create_split (data);
 
     if (menuitem) {}
 }
 
 void menu_removeview_activate (GtkMenuItem *menuitem, gpointer data)
 {
-    mainwin_t *app = data;
-
-    ewin_remove_split (app);
+    ewin_remove_split (data);
 
     if (menuitem) {}
 }

@@ -151,7 +151,6 @@ GtkWidget *create_window (mainwin_t *app)
     ewin = create_scrolled_view (app);
     gtk_box_pack_start(GTK_BOX(app->vboxedit), ewin, TRUE, TRUE, 0);
     app->nview++;   /* initialize one view, one open file */
-    // app->nfiles++;  (handled in doctree_append)
 
     gtk_widget_show (app->vboxedit);
 
@@ -164,22 +163,8 @@ GtkWidget *create_window (mainwin_t *app)
     g_signal_connect (G_OBJECT (app->window), "destroy",    /* window dest  */
                       G_CALLBACK (on_window_destroy), NULL);
 
-    /* general */
-    /*
-    g_signal_connect (G_OBJECT (app->view), "key_press_event",
-                      G_CALLBACK (on_keypress), app);
-
-    g_signal_connect (app->buffer, "changed",
-                      G_CALLBACK (on_buffer_changed), app);
-
-    g_signal_connect (app->buffer, "mark_set",
-                      G_CALLBACK (on_mark_set), app);
-
-    g_signal_connect (G_OBJECT (app->view), "toggle-overwrite",
-                      G_CALLBACK (on_insmode), app);
-    */
-
     gtk_widget_show (app->window);
+
 #ifdef TESTFILES
     /* append NTESTFN files to tree - temp */
     for (gint i = 1; i < NTESTFN; i++) {
@@ -194,6 +179,7 @@ GtkWidget *create_window (mainwin_t *app)
     treeview_append (app, NULL);
     treeview_append (app, NULL);
 #endif
+
     /* return focus to edit window */
     gtk_widget_grab_focus (app->treeview);
     gtk_widget_grab_focus (app->einst[0]->view);

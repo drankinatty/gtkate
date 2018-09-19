@@ -39,6 +39,7 @@ gboolean text_view_focus_in (GtkWidget *widget, GdkEvent *event, gpointer data)
 #endif
             found = TRUE;
             tree_set_selection (widget, app);
+
             /* test with tree_get_iter_from_view () - passed
             GtkTreeIter *iter = tree_get_iter_from_view (app);
             if (iter)
@@ -340,11 +341,11 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
     gtk_container_set_border_width (GTK_CONTAINER (ewin->swin),
                                     app->swbordersz);
 
+    /* create statusbar for textview */
     ewin->sbar = create_statusbar (ewin->ebox);
     status_set_default (app);
     gtk_widget_show (ewin->sbar);
 
-    gtk_widget_show (ewin->ebox);
 
     /* causes focus to hide textview cursor until moved with key or mouse
      * in textview.
@@ -364,6 +365,9 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
 
     g_signal_connect (G_OBJECT (view), "toggle-overwrite",
                       G_CALLBACK (on_insmode), app);
+
+    gtk_widget_show (ewin->ebox);   /* show final widget */
+    gtk_widget_grab_focus (view);   /* grab focus in new view */
 
     return ewin->ebox;
 }

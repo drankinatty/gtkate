@@ -2,31 +2,6 @@ Overall
 
   * Rename funcitons used in multi-file/multi-view scheme. Come up with consistent and sane convention so that descriptive names describing functionality are used throughout.
 
-mainwin
-
-  * pending todos done
-
-menu
-
-  * adapt menu from gtkwrte, will need refactoring and many of the variables used will not be needed.
-
-toolbar
-
-  * incorporate toolbar from gtkwrite.
-
-treeview/model
-
-  * consider (app->treeview)[n] to allow multiple views for showing files grouped by directory, or sorted based on opening or ascending/descending alphabetical sort.
-
-  * set tooltip on each entry showing 'filename' (absolute path & filename)
-
-multiview edit pane
-
-  * decide whether to place focus in new instance of leave on current
-   (chose focus on new inst/view).
-
-  * decide whether to scroll new instance to match current insert mark.
-
 buffer
 
   * adapt file open/save for document tree entries and check for buffer modified.
@@ -52,7 +27,36 @@ find/replace
   * free app->findtext/app->reptext on gtkate close
   * create findrep_t struct instead of the static globals in gtk_findreplace.c
 
+mainwin
+
+  * fix update window title on file open.
+
+menu
+
+  * adapt menu from gtkwrte, will need refactoring and many of the variables used will not be needed.
+
 settings
 
   * check app->comment free on close - settings entry currently set with either inst->comment_single if set, or app->comment otherwise.
+
+statusbar
+
+  * add colname to end of info.
+
+toolbar
+
+  * incorporate toolbar from gtkwrite.
+
+textview/multiview edit pane
+
+  * decide whether to place focus in new instance of leave on current
+   (chose focus on new inst/view).
+
+  * decide whether to scroll new instance to match current insert mark.
+
+treeview/model
+
+  * consider (app->treeview)[n] to allow multiple views for showing files grouped by directory, or sorted based on opening or ascending/descending alphabetical sort.
+
+  * set tooltip on each entry showing 'filename' (absolute path & filename)
 
