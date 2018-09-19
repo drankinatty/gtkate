@@ -1,8 +1,9 @@
 #ifndef __gtk_appdata_h__
 #define __gtk_appdata_h__  1
 
-#include <glib.h>           /* g_fprintf */
+#include <glib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>     /* for GDK key values */
 
 #if GLIB_MAJOR_VERSION >= 2
 #if GLIB_MINOR_VERSION >= 46
@@ -246,6 +247,7 @@ typedef struct mainwin {
     gchar           *tabstring;         /* chars that make up tabstring */
     gboolean        expandtab;          /* insert spaces for tabs */
     gboolean        showtabs;           /* show tab markers */
+    gboolean        kphome;             /* previous keypress was home flag */
 
     gboolean        smartbs;            /* use smart backspace */
     gboolean        smarthe;            /* use smart home & end */

@@ -900,6 +900,489 @@ void buffer_uncomment_lines (gpointer data, GtkTextIter *start, GtkTextIter *end
     gtk_text_buffer_delete_mark (buffer, end_mark);
 }
 
+/** helper function for insert_eol and indent_auto actions after "mark-set".
+ *  needed because "mark-set" fires before indent and eol inserted causing
+ *  app->{line,col,lines} not to update statusbar on [Enter]
+ */
+void buffer_update_pos (gpointer data)
+{
+    /* Fri Jul 13 2018 18:52:36 CDT
+     * moved line/col update to status_set_default to avoid
+     * mark_set firing when gtk_text_view_scroll_mark_onscreen
+     * is called, causing line number to reset to 1 or jump by
+     * the number of lines scrolled in forward direction.
+     */
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextMark *ins = gtk_text_buffer_get_insert (buffer);
+
+    /* scroll text-view to keep cursor position in window */
+    gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW(einst->view), ins);
+}
+
+/** insert configured EOL at cursor position on Return/Enter. */
+gboolean buffer_insert_eol (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+
+    /* validate eolstr[x] not NULL and not empty */
+    if (!app->eolstr[app->eol] || !*app->eolstr[app->eol])
+        return FALSE;   /* fallback to default keystroke handler */
+
+    /* insert EOL at cursor */
+    gtk_text_buffer_insert_at_cursor (buffer, app->eolstr[app->eol], -1);
+
+    /* update 'line/lines col' on statusbar */
+    buffer_update_pos (data);
+
+    return TRUE;    /* keypress handled */
+}
+
+/** auto-indent on return */
+gboolean buffer_indent_auto (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextMark *ins;
+    GtkTextIter end, iter;
+    gchar *indstr = NULL;
+    gint line, nspaces = 0;
+
+    ins = gtk_text_buffer_get_insert (buffer);
+    gtk_text_buffer_get_iter_at_mark (buffer, &end, ins);
+    line = gtk_text_iter_get_line (&end);
+    gtk_text_buffer_get_iter_at_line (buffer, &iter, line);
+
+    for (;;) {
+        gunichar c;
+        c = gtk_text_iter_get_char (&iter);
+
+        if (c == '\t' || c == ' ')
+            nspaces += (c == '\t') ? app->softtab : 1;
+        else
+            break;
+
+        gtk_text_iter_forward_char (&iter);
+    }
+
+    // app->indentpl = nspaces;    /* set previous line indent */
+
+    if (nspaces) {
+        // indstr = g_strdup_printf ("\n%*s", nspaces, " ");
+        indstr = g_strdup_printf ("%s%*s", app->eolstr[app->eol], nspaces, " ");
+        gtk_text_buffer_insert_at_cursor (buffer, indstr, -1);
+        g_free (indstr);
+
+        /* update 'line/lines col' on statusbar */
+        buffer_update_pos (data);
+
+        return TRUE;
+    }
+    else
+        return buffer_insert_eol (app);
+
+    return FALSE;
+}
+
+/** remove all whitespace to prior softtab stop on backspace.
+ *  this function will only remove 'spaces', all other backspace
+ *  is handled by the default keyboard handler.
+ */
+gboolean smart_backspace (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextMark *cur;
+    GtkTextIter beg, end, iter, iter2;
+
+    gunichar c;
+    gint line = 0, col = 0, cheq = 0, ndel = 0;
+
+    /* validate no selection exists */
+    if (gtk_text_buffer_get_selection_bounds (buffer, &beg, &end))
+        return FALSE;
+
+    /* get "insert" mark, then current line/column, set end iter */
+    cur = gtk_text_buffer_get_insert (buffer);
+    gtk_text_buffer_get_iter_at_mark (buffer, &end, cur);
+    line = gtk_text_iter_get_line (&end);
+    col = gtk_text_iter_get_visible_line_offset (&end);
+
+    if (!col)   /* already at first char */
+        return FALSE;
+
+    /* initialize iterators, set 'iter' 1-char before insert */
+    gtk_text_buffer_get_iter_at_line (buffer, &beg, line);
+    iter = iter2 = beg;
+    gtk_text_iter_set_visible_line_offset (&iter, col - 1);
+
+    /* if last char not ' ', return FALSE for default handling. */
+    if ((c = gtk_text_iter_get_char (&iter)) != ' ')
+        return FALSE;
+
+    /* iter forward from beg to end and determine char equivalent
+     * number of chars in line then set number of chars to delete
+     * to next softtab stop. 'c' and 'ndel' are in *addition to*
+     * the ' ' above. (they will always be total-1 chars)
+     */
+    while (gtk_text_iter_forward_char (&iter2) &&
+            !gtk_text_iter_equal (&iter2, &end)) {
+        c = gtk_text_iter_get_char (&iter2);
+        if (c != ' ' && c != '\t')
+            return FALSE;
+        cheq += (c == '\t') ? app->softtab : 1;
+    }
+    ndel = cheq % app->softtab; /* chars from current 'iter' pos to del */
+
+    /* backup iter at most ndel spaces, setting col flag */
+    while (ndel-- && gtk_text_iter_backward_char (&iter) &&
+            (c = gtk_text_iter_get_char (&iter)) == ' ') {
+        col++;
+    }
+
+    if (col) {  /* if col, user_action to delete chars */
+
+        gtk_text_buffer_begin_user_action (buffer);
+
+        /* delete characters to prior tab stop from buffer */
+        gtk_text_buffer_delete (buffer, &iter, &end);
+
+        /* update line/col with current "insert" mark */
+        gtk_text_buffer_get_iter_at_mark (buffer, &iter, cur);
+        inst->line = gtk_text_iter_get_line (&iter);
+        inst->col = gtk_text_iter_get_visible_line_offset (&iter);
+
+        gtk_text_buffer_end_user_action (GTK_TEXT_BUFFER(buffer));
+
+        status_set_default (data);
+
+        return TRUE;    /* return without further handling */
+    }
+
+    return FALSE;   /* return FALSE for default handling */
+}
+
+gboolean smart_tab (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextMark *ins;
+    GtkTextIter beg, end, iter;
+
+    gchar *tabstr = NULL;
+    gint nspaces = 0, col;  //, line;
+
+    if (!app->expandtab)    /* default handler */
+        return FALSE;
+
+    /* validate no selection exists */
+    if (gtk_text_buffer_get_selection_bounds (buffer, &beg, &end))
+        return FALSE;
+
+    /* get "insert" mark, then current line/column, set end iter */
+    ins = gtk_text_buffer_get_insert (buffer);
+    gtk_text_buffer_get_iter_at_mark (buffer, &iter, ins);
+    col = gtk_text_iter_get_visible_line_offset (&iter);
+
+    /* TODO: iterate to beginning to insert to check if all leading
+     * whitespace, if so, if app->indontab, then call indent function
+     * for line and return TRUE
+     */
+
+    gtk_text_buffer_begin_user_action (buffer);
+
+    nspaces = app->softtab - col % app->softtab;
+    tabstr = g_strdup_printf ("%*s", nspaces, " ");
+    gtk_text_buffer_insert (buffer, &iter, tabstr, -1);
+
+    gtk_text_buffer_end_user_action (buffer);
+
+    gtk_text_buffer_get_iter_at_mark (buffer, &iter, ins);
+//     app->line = gtk_text_iter_get_line (&iter);
+//     app->col = gtk_text_iter_get_visible_line_offset (&iter);
+
+    g_free (tabstr);
+
+    return TRUE;
+}
+
+/** move cursor to beginning text on first keypress, line start on next.
+ *  sequential GDK_KEY_Home keypress events are stored in app->kphome.
+ *  if app->kphome is not set, move to text start, else move to start
+ *  of line.
+ */
+gboolean smart_home (gpointer data)
+{
+#ifdef SMARTHEDEBUG
+    g_print ("on smart_home entry, app->kphome: %s, app->smarthe: %s\n",
+            app->kphome ? "TRUE" : "FALSE", app->smarthe ? "TRUE" : "FALSE");
+#endif
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextMark *ins;
+    GtkTextIter start, insiter, iter;
+    gunichar c = 0;
+
+    if (app->kphome)
+        return ((app->kphome = FALSE));
+
+    /* get "insert" mark, then iter at beginning of line */
+    ins = gtk_text_buffer_get_insert (buffer);
+    gtk_text_buffer_get_iter_at_mark (buffer, &insiter, ins);
+    iter = insiter;
+    gtk_text_iter_set_line_offset (&iter, 0);
+    start = iter;
+
+    /* iter forward to first non-whitespace or end */
+    while (!gtk_text_iter_ends_line (&iter))
+    {
+        c = gtk_text_iter_get_char (&iter);
+
+        if (c != '\t' && c != ' ' && c != 0xFFFC)
+            break;
+
+        gtk_text_iter_forward_char (&iter);
+    }
+
+    /* place cursor */
+    if (c == ' ' || c == '\t')
+        gtk_text_buffer_place_cursor (buffer, &start);
+    else
+        gtk_text_buffer_place_cursor (buffer, &iter);
+
+    return ((app->kphome = TRUE));
+}
+
+/** remove all trailing whitespace from buffer */
+void buffer_remove_trailing_ws (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextIter iter, iter_from, iter_end;
+    gunichar c;
+    gint line_end;
+
+    if (!buffer) {
+        err_dialog ("Error: Invalid 'buffer' passed to function\n"
+                    "buffer_remove_trailing_ws (GtkTextBuffer *buffer)");
+        return;
+    }
+
+    /* get iter at start of buffer */
+    gtk_text_buffer_get_start_iter (buffer, &iter);
+    gtk_text_buffer_get_end_iter (buffer, &iter_end);
+
+    line_end =  gtk_text_iter_get_line (&iter_end);
+
+    while (gtk_text_iter_forward_to_line_end (&iter)) {
+
+        gint line;
+        iter_from = iter_end = iter;
+
+        /* iterate over all trailing whitespace */
+        while (gtk_text_iter_backward_char (&iter)) {
+
+            c = gtk_text_iter_get_char (&iter);
+
+            if ((c == ' ' || c == '\t') && c != 0xFFFC)
+                iter_from = iter;
+            else
+                break;
+        }
+
+        /* save line to re-validate iter after delete */
+        line = gtk_text_iter_get_line (&iter);
+
+        /* remove trailing whitespace up to newline or end */
+        if (!gtk_text_iter_equal (&iter_from, &iter_end))
+            gtk_text_buffer_delete (buffer, &iter_from, &iter_end);
+
+        /* re-validate iter */
+        if (line == line_end) {
+            gtk_text_buffer_get_iter_at_line (buffer, &iter, line);
+            gtk_text_iter_forward_to_line_end (&iter);
+            break;
+        }
+        gtk_text_buffer_get_iter_at_line (buffer, &iter, line + 1);
+    }
+
+    /* handle last line with trailing whitespace */
+    if (!(c = gtk_text_iter_get_char (&iter))) {
+
+        iter_from = iter_end = iter;
+
+        while (gtk_text_iter_backward_char (&iter)) {
+
+            c = gtk_text_iter_get_char (&iter);
+
+            if ((c == ' ' || c == '\t') && c != 0xFFFC)
+                iter_from = iter;
+            else
+                break;
+        }
+
+        /* remove trailing whitespace up to newline or end */
+        if (!gtk_text_iter_equal (&iter_from, &iter_end))
+            gtk_text_buffer_delete (buffer, &iter_from, &iter_end);
+    }
+}
+
+void buffer_require_posix_eof (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextIter end;
+
+    gtk_text_buffer_get_end_iter (buffer, &end);
+
+    if (gtk_text_iter_backward_char (&end)) {
+        gunichar c = gtk_text_iter_get_char (&end);
+        if (c != '\n' && c != '\r') {
+            gtk_text_iter_forward_char (&end);
+            gtk_text_buffer_insert (buffer, &end, app->eolstr[app->eol], -1);
+        }
+    }
+}
+
+/** gather buffer character, word and line statistics.
+ *  traverse the buffer, gathering buffer statistics, including the
+ *  number of whitespace and non-whitespace characters, the total,
+ *  the number of words and the number of lines. present in a simple
+ *  dialog.
+ *  TODO: present in a formatted dialog with option to save.
+ */
+// void buffer_content_stats (GtkTextBuffer *buffer)
+void buffer_content_stats (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextIter iter;
+
+    gint ws = 0, wsc = 0, nws = 0, nwrd = 0, other = 0, lines = 1;
+    gboolean ldws = FALSE, lws = FALSE, havechars = FALSE;
+    gunichar c;
+
+    if (!buffer) {
+        err_dialog ("Error: Invalid 'buffer' passed to function\n"
+                    "buffer_remove_trailing_ws (GtkTextBuffer *buffer)");
+        return;
+    }
+
+    /* get iter at start of buffer */
+    gtk_text_buffer_get_start_iter (buffer, &iter);
+
+    do {
+        c = gtk_text_iter_get_char (&iter);
+
+        /* test if iter at end of line */
+        if (gtk_text_iter_ends_line (&iter)) {
+            if (c == '\r' || c == '\n') { /* loop over all */
+                while (c == '\r' || c == '\n') {
+                    gchar current = c;
+                    wsc++;              /* increment whitespace */
+                    if (!gtk_text_iter_forward_char (&iter)) {
+                        lines++;        /* end, add line */
+                        goto wsdone;    /* goto done */
+                    }
+                    if (c == '\n')      /* if newline found */
+                        lines++;        /* increment lines */
+                    c = gtk_text_iter_get_char (&iter); /* get next char */
+                    if (current == '\r' && c != '\n')   /* if CR alone   */
+                        lines++;        /* increment lines Max (pre-OSX) */
+                }
+                /* not line-end, backup for next iteration */
+                gtk_text_iter_backward_char (&iter);
+            }
+            if (havechars)              /* if have chars in line */
+                nwrd += ws + 1;         /* number of words */
+            ws = 0;                     /* word sep per line */
+            lws = FALSE;                /* reset last was ws */
+            havechars = FALSE;          /* reset havechars */
+        }
+        else {  /* checking chars in line */
+
+            if (c == ' ' || c == '\t') {
+                wsc++;                  /* add whitespace char */
+                lws = TRUE;             /* set last ws TRUE */
+                if (!havechars)         /* if no chars */
+                    ldws = TRUE;        /* set leading whitespace */
+            }
+            else if (c == 0xFFFC)       /* other/tag char */
+                other++;
+            else {
+                havechars = TRUE;       /* chars in line */
+                nws++;                  /* add to non-whitespace */
+                if (lws) {              /* if last flag set */
+                    lws = FALSE;        /* unset */
+                    if (!ldws)          /* if not leading whitespace */
+                        ws++;           /* increment word-sep */
+                }
+                ldws = FALSE;           /* reset leading whitespace */
+            }
+        }
+
+    } while (gtk_text_iter_forward_char (&iter));
+    wsdone:;
+
+    if (havechars)
+        nwrd += ws + 1;
+
+    if (!gtk_text_iter_is_end (&iter))
+        g_print ("error: not end iter after exiting loop.\n");
+
+    gchar *stats;
+
+    stats = g_strdup_printf ("whitespace characters: %d\n"
+                            "non-whitespace chars: %d\n"
+                            "other characters : %d\n"
+                            "total characters : %d\n"
+                            "\nnumber of words: %d\n"
+                            "number of lines: %d\n",
+                            wsc, nws, other,
+                            wsc + nws + other, nwrd, --lines);
+
+    dlg_info (stats, "Buffer Content Statistics");
+    // app->ibflags = IBAR_LABEL_SELECT;
+    // show_info_bar_ok (stats, GTK_MESSAGE_INFO, app);
+
+    g_free (stats);
+
+#ifdef DEBUG
+    g_printf ("\nws  : %d\nnws : %d\noth : %d\nchr : %d\nwrd : %d\nlns : %d\n\n",
+            wsc, nws, other, wsc + nws + other, nwrd, lines);
+    g_printf ("line count: %d\n", gtk_text_buffer_get_line_count (buffer));
+    g_printf ("char count: %d\n", gtk_text_buffer_get_char_count (buffer));
+#endif
+}
+
 /** clears focused textview buffer, sets modified FALSE
  *  gpointer expects mainwin_t type.
  */

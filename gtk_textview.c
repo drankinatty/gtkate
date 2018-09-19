@@ -92,7 +92,165 @@ GtkWidget *create_statusbar (GtkWidget *vbox)
     return statusbar;
 }
 
-/** create source_view, set font and tab size */
+/** callback functions for textview */
+
+/** Insert/Overwrite handler. */
+void on_insmode (GtkWidget *widget, gpointer data)
+{
+    mainwin_t *app = data;
+
+    app->overwrite = app->overwrite ? FALSE : TRUE;
+
+    status_set_default (app);   /* update the status bar */
+
+    if (widget) {}
+}
+
+/** on_buffer_changed fires before on_mark_set with all changes.
+ *  (even undo) and fires before gtk_text_buffer_get_modified()
+ *  reflects change.
+ */
+void on_buffer_changed (GtkTextBuffer *buffer, gpointer data)
+{
+    mainwin_t *app = data;
+    gboolean modified = gtk_text_buffer_get_modified (buffer);
+
+    /* set app->eolchg if buffer changed so conversion runs on eol change */
+    if (modified && app->eol != app->oeol)
+        app->eolchg = TRUE;
+
+}
+
+/** on cursor position change (insert mark_set), update line, lines, col.
+ *  Note: on_mark_set fires after on_buffer_changed, so it will more
+ *  accurately capture buffer modification state.
+ */
+void on_mark_set (GtkTextBuffer *buffer, GtkTextIter *iter,
+                  GtkTextMark *mark, gpointer data)
+{
+    // mainwin_t *app = data;
+    // gboolean modified = gtk_text_buffer_get_modified (buffer);
+
+    /* update window title */
+    // if (!modified)
+    //     gtkwrite_window_set_title (NULL, app);
+
+    /* update status bar */
+    status_set_default (data);
+
+    if (buffer || iter || mark) {}
+}
+
+gboolean on_keypress (GtkWidget *widget, GdkEventKey *event, gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+
+    if (gtk_text_view_im_context_filter_keypress (GTK_TEXT_VIEW (einst->view),
+                                                    event)) {
+        return TRUE;
+    }
+
+    /* handle control + shift key combinations */
+    if (event->type == GDK_KEY_PRESS &&
+        event->state & GDK_CONTROL_MASK &&
+        event->state & GDK_SHIFT_MASK) {
+        switch (event->keyval) {
+            case GDK_KEY_Left:
+                if (app->ctrl_shift_right_fix) {
+                    gboolean rtn = buffer_select_to_prev_char (app);
+                    /* if no prev ctrl+shift keypress or last was to left
+                     * push another left keypress on stack.
+                     */
+                    if (!app->bindex || bstack_last (app) == LEFT)
+                        bstack_push (app, LEFT);    /* record LEFT selection */
+                    else
+                        bstack_pop (app);           /* pop left from stack */
+                    return rtn;
+                }
+                break;
+            case GDK_KEY_Right:
+                if (app->ctrl_shift_right_fix) {
+                    gboolean rtn = buffer_select_to_next_char (app);
+                    /* if no prev ctrl+shift keypress or last was to right
+                     * push another right keypress on stack.
+                     */
+                    if (!app->bindex || bstack_last (app) == RIGHT)
+                        bstack_push (app, RIGHT);   /* record RIGHT selection */
+                    else
+                        bstack_pop (app);           /* pop right from stack   */
+                    return rtn;
+                }
+                break;
+        }
+        return FALSE;   /* return - only process ctrl + shift events */
+    }
+
+    /* handle control key combinations */
+    /*
+    if (event->type == GDK_KEY_PRESS &&
+        event->state & GDK_CONTROL_MASK) {
+        switch (event->keyval) {
+            case GDK_KEY_Right:
+                g_print ("key pressed: %s\n", "ctrl + Right->Arrow");
+                break;
+        }
+        return FALSE;
+    }
+    */
+
+    /* handle shift key combinations */
+    /*
+    if (event->type == GDK_KEY_PRESS &&
+        event->state & GDK_SHIFT_MASK) {
+        switch (event->keyval) {
+            case GDK_KEY_Right:
+                g_print ("key pressed: %s\n", "shift + Right->Arrow");
+                break;
+        }
+        return FALSE;
+    }
+    */
+
+    /* handle normal keypress events */
+    if (event->type == GDK_KEY_PRESS) {
+        switch (event->keyval) {
+            case GDK_KEY_BackSpace:
+                if (app->smartbs)       /* smart_backspace in filebuf.c */
+                    return smart_backspace (app);
+                break;                  /* or just return FALSE; */
+            case GDK_KEY_Tab:;          /* catch tab, replace with softtab spaces */
+                    return smart_tab (app);
+            case GDK_KEY_Return:
+                if (app->indentauto)
+                    return buffer_indent_auto (app);
+                else
+                    return buffer_insert_eol (app);
+                break;
+            case GDK_KEY_KP_Enter:
+                if (app->indentauto)
+                    return buffer_indent_auto (app);
+                else
+                    return buffer_insert_eol (app);
+                break;
+//             case GDK_KEY_Home:
+// #ifndef HAVESOURCEVIEW
+//                 if (app->smarthe)
+//                     return ((app->kphome = smart_home (app)));
+// #endif
+//                 break;
+        }
+    }
+
+    app->kphome = FALSE;    /* reset kphome - return above protects needed TRUE */
+
+    return FALSE;
+
+    if (widget) {}
+    if (app) {}
+}
+
+/** create source_view, set font and tab size, set needed callbacks */
 GtkWidget *create_scrolled_view (mainwin_t *app)
 {
     GtkWidget *view;
@@ -193,6 +351,19 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
      */
     g_signal_connect (view, "focus-in-event",
                       G_CALLBACK (text_view_focus_in), app);
+
+    /* general event handler, modified, cursor change and insert/overwrite */
+    g_signal_connect (G_OBJECT (view), "key_press_event",
+                      G_CALLBACK (on_keypress), app);
+
+    g_signal_connect (inst->buf, "changed",
+                      G_CALLBACK (on_buffer_changed), app);
+
+    g_signal_connect (inst->buf, "mark_set",
+                      G_CALLBACK (on_mark_set), app);
+
+    g_signal_connect (G_OBJECT (view), "toggle-overwrite",
+                      G_CALLBACK (on_insmode), app);
 
     return ewin->ebox;
 }

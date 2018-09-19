@@ -11,7 +11,7 @@
 #include "gtk_charset.h"
 #include "gtk_common_dlg.h"
 #include "gtk_sourceview.h"
-// #include "gtk_statusbar.h"
+#include "gtk_statusbar.h"
 #include "gtk_textview.h"
 #include "gtk_treeview.h"
 
@@ -32,6 +32,14 @@ void buffer_unindent_lines_fixed (gpointer data, GtkTextIter *start, GtkTextIter
 
 void buffer_comment_lines (gpointer data, GtkTextIter *start, GtkTextIter *end);
 void buffer_uncomment_lines (gpointer data, GtkTextIter *start, GtkTextIter *end);
+
+gboolean buffer_insert_eol (gpointer data);
+gboolean buffer_indent_auto (gpointer data);
+gboolean smart_backspace (gpointer data);
+gboolean smart_tab (gpointer data);
+gboolean smart_home (gpointer data);
+
+void buffer_content_stats (gpointer data);
 
 void buffer_clear_focused (gpointer data);
 void file_open_recent_dlg (gpointer data);
