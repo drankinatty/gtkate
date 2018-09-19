@@ -53,10 +53,11 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->stylelist      = NULL;         /* sourceview styles menu list */
     app->hghltmenu      = NULL;         /* sourceview syntax highlight menu */
 #ifdef HAVEMSWIN
-    app->laststyle      = STYLE_LIGHT;  /* default light highlight style */
+    app->laststyle      = g_strdup(STYLE_LIGHT);  /* default light highlight style */
 #else
-    app->laststyle      = STYLE_DARK;   /* default dark highlight style */
+    app->laststyle      = g_strdup(STYLE_DARK);   /* default dark highlight style */
 #endif
+    // app->laststyle      = NULL;
     app->highlight      = TRUE;         /* show syntax highlight */
     /* source completion variables & settings */
     app->completion     = NULL;         /* completion provider object */
