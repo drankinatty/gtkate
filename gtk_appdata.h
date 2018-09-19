@@ -312,10 +312,10 @@ gboolean str2title (gchar *str);
 void delete_mark_last_pos (gpointer data);
 
 /* boolean stack functions */
-void bstack_clear (mainwin_t *app);
-int bstack_push (mainwin_t *app, int v);
-int bstack_pop (mainwin_t *app);
-int bstack_last (mainwin_t *app);
+void bstack_clear (gpointer data);
+int bstack_push (gpointer data, int v);
+int bstack_pop (gpointer data);
+int bstack_last (gpointer data);
 
 /* Untitled(n) bitfield management */
 gint bit_check (guint *bf, gint n);

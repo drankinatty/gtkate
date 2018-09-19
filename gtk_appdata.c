@@ -158,7 +158,7 @@ void mainwin_init (mainwin_t *app, char **argv)
     app->showmargin     = TRUE;         /* show margin at specific column */
     app->marginwidth    = 80;           /* initial right margin to display */
 
-    app->comment        = g_strdup ("<unset>");   /* single-line comment string */
+    app->comment        = NULL;         /* single-line comment string */
     app->cmtentry       = NULL;         /* single-line comment entry */
     app->cmtusesingle   = FALSE;        /* single-line instead of block comment */
 
@@ -524,8 +524,10 @@ void delete_mark_last_pos (gpointer data)
  *  unsigned integers to provide stack storage
  */
 /** clear stack - zero integers. */
-void bstack_clear (mainwin_t *app)
+void bstack_clear (gpointer data)
 {
+    mainwin_t *app = data;
+
     app->bindex = 0;
     for (gint i = 0; i < STKMAX; i++)
         app->bstack[i] = 0;
@@ -534,8 +536,10 @@ void bstack_clear (mainwin_t *app)
 /** stack_push set bit at bindex to 0 or 1 based on v.
  *  increment bindex after setting bit.
  */
-int bstack_push (mainwin_t *app, gint v)
+int bstack_push (gpointer data, gint v)
 {
+    mainwin_t *app = data;
+
     guint arrbits = (sizeof app->bstack) * CHAR_BIT,
         elebits = (sizeof app->bindex) * CHAR_BIT,
         arridx = app->bindex/elebits;
@@ -554,8 +558,10 @@ int bstack_push (mainwin_t *app, gint v)
 }
 
 /** stack_pop - decrement bindex, get bit at bindex, clear bit. */
-int bstack_pop (mainwin_t *app)
+int bstack_pop (gpointer data)
 {
+    mainwin_t *app = data;
+
     if (!app->bindex) {             /* check bstack empty */
         g_print ("bstack empty\n");
         return -1;
@@ -573,8 +579,10 @@ int bstack_pop (mainwin_t *app)
 }
 
 /** stack_last - get bit for last pushed value. */
-int bstack_last (mainwin_t *app)
+int bstack_last (gpointer data)
 {
+    mainwin_t *app = data;
+
     if (!app->bindex) {             /* check bstack empty */
         g_print ("bstack empty\n");
         return -1;

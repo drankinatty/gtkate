@@ -80,17 +80,17 @@ GtkWidget *create_window (mainwin_t *app)
     // gtk_box_set_spacing (GTK_BOX (vbox), 0);
 
     /* create menubar and menus to add */
-    // menubar = create_menubar (app, mainaccel);
+    menubar = create_menubar (app, mainaccel);
     // app->menubar = menubar;
-    menubar = create_temp_menu (app, mainaccel);
+    // menubar = create_temp_menu (app, mainaccel);
     gtk_box_pack_start (GTK_BOX (vbox), menubar, FALSE, FALSE, 0);
     gtk_widget_show (menubar);
 
     /* create toolbar
      * GTK_TOOLBAR_ICONS, GTK_TOOLBAR_TEXT, GTK_TOOLBAR_BOTH, GTK_TOOLBAR_BOTH_HORIZ
      */
-    // app->toolbar = create_toolbar (mainaccel, app);
-    create_temp_toolbar (app, mainaccel);
+    app->toolbar = create_toolbar (mainaccel, app);
+    // create_temp_toolbar (app, mainaccel);
     gtk_box_pack_start(GTK_BOX(vbox), app->toolbar, FALSE, FALSE, 0);
     gtk_widget_show (app->toolbar);
 

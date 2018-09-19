@@ -479,8 +479,10 @@ GtkWidget *create_settings_dlg (gpointer data)
     gtk_entry_set_inner_border (GTK_ENTRY(app->cmtentry), &brd);
     if (inst->language && inst->comment_single)
         gtk_entry_set_text (GTK_ENTRY(app->cmtentry), inst->comment_single);
-    else
-        gtk_entry_set_text (GTK_ENTRY(app->cmtentry), app->comment);
+    else {
+        gchar *comment = app->comment ? app->comment : "<unset>";
+        gtk_entry_set_text (GTK_ENTRY(app->cmtentry), comment);
+    }
     gtk_table_attach_defaults (GTK_TABLE (table), app->cmtentry, 1, 2, 1, 2);
     gtk_widget_show (app->cmtentry);
 
