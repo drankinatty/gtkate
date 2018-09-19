@@ -999,6 +999,18 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
         filename = inst->filename;
 
     if (g_file_get_contents (filename, &filebuf, &size, NULL)) {
+        if (buffer_file_get_bom (filebuf, app) > 1) {
+            extern const gchar *bomstr[];
+            gchar *name = treeview_getname (data);
+            gchar *errstr = g_strdup_printf ("'%s' contains unsupported %s.",
+                            name , bomstr[app->bom]);
+            g_free (name);
+            // status_set_default (app);
+            err_dialog_win (data, errstr);
+            g_free (errstr);
+            if (filebuf) g_free (filebuf);
+            return FALSE;
+        }
         gtk_text_buffer_insert_at_cursor (buffer, filebuf, -1);
         if (filebuf)
             g_free (filebuf);

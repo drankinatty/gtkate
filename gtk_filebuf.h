@@ -8,7 +8,7 @@
 #include <gtksourceview/gtksourcestyleschememanager.h>
 
 #include "gtk_appdata.h"
-// #include "gtk_charset.h"
+#include "gtk_charset.h"
 #include "gtk_common_dlg.h"
 #include "gtk_sourceview.h"
 // #include "gtk_statusbar.h"
