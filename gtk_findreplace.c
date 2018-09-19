@@ -1151,8 +1151,6 @@ void btnclose_activate (GtkWidget *widget, gpointer data)
 
     dlgid = 0; /* reset dialog id to default */
 
-    // status_set_default (app);  /* clear any search status messages */
-
     /* call common gtk_widget_destroy (could move all there) */
     gtk_widget_destroy (findrepwin);
     if (widget) {}

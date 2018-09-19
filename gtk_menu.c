@@ -1294,7 +1294,7 @@ void menu_tools_eol_lf (GtkMenuItem *menuitem, gpointer data)
         // tools_eol_handle_convert (menuitem, data);
     }
 
-    // status_set_default (app);
+    status_set_default (data);
 }
 
 /** set end-of-line to CRLF and convert all line-ends to CRLF */
@@ -1308,7 +1308,7 @@ void menu_tools_eol_crlf (GtkMenuItem *menuitem, gpointer data)
         // tools_eol_handle_convert (menuitem, data);
     }
 
-    // status_set_default (app);
+    status_set_default (data);
 }
 
 /** set end-of-line to CR and convert all line-ends to CR */
@@ -1322,7 +1322,7 @@ void menu_tools_eol_cr (GtkMenuItem *menuitem, gpointer data)
         // tools_eol_handle_convert (menuitem, data);
     }
 
-    // status_set_default (app);
+    status_set_default (data);
 }
 
 void menu_tools_indent_activate (GtkMenuItem *menuitem, gpointer data)

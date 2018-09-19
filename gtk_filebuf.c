@@ -1005,7 +1005,7 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
             gchar *errstr = g_strdup_printf ("'%s' contains unsupported %s.",
                             name , bomstr[app->bom]);
             g_free (name);
-            // status_set_default (app);
+            status_set_default (data);
             err_dialog_win (data, errstr);
             g_free (errstr);
             if (filebuf) g_free (filebuf);
@@ -1050,7 +1050,7 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
             if (app->highlight)
                 sourceview_guess_language (data);
         }
-//         status_set_default (app);
+        status_set_default (data);
 
         return TRUE;
     }
@@ -1250,10 +1250,10 @@ void file_save (gpointer data, gchar *filename)
 
     file_get_stats (inst);                      /* check/save file stats */
 
-    // status_set_default (app);               /* restore statusbar */
+    status_set_default (data);              /* restore statusbar */
 
-    // if (app->highlight)                     /* if syntax highlight enabled */
-    //     sourceview_guess_language (app);    /* guess source language */
+    if (app->highlight)                     /* if syntax highlight enabled */
+        sourceview_guess_language (data);   /* guess source language */
 }
 
 /** file_close - close the currently focused file.

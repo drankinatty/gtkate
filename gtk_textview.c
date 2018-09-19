@@ -183,6 +183,8 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
                                     app->swbordersz);
 
     ewin->sbar = create_statusbar (ewin->ebox);
+    status_set_default (app);
+    gtk_widget_show (ewin->sbar);
 
     gtk_widget_show (ewin->ebox);
 

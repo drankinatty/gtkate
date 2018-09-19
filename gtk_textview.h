@@ -3,6 +3,7 @@
 
 #include "gtk_appdata.h"
 // #include "gtk_completionsv.h"
+#include "gtk_statusbar.h"
 #include "gtk_treeview.h"
 
 GtkWidget *create_scrolled_view (mainwin_t *app);

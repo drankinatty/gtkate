@@ -10,7 +10,7 @@
 #include "gtk_findreplace.h"
 #include "gtk_goto.h"
 #include "gtk_print.h"
-// #include "gtk_statusbar.h"
+#include "gtk_statusbar.h"
 #include "gtk_settings.h"
 #include "gtk_sourceview.h"
 

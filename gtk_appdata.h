@@ -126,6 +126,7 @@ typedef struct {
     GtkWidget *swin;    /* scrolled window holding sourceview */
     GtkWidget *view;    /* sourceview */
     GtkWidget *sbar;    /* statusbar */
+    guint cid;          /* statusbar context_id */
     kinst_t *inst;      /* pointer to current buffer inst in split */
 } einst_t;
 
