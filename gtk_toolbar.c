@@ -110,13 +110,11 @@ GtkWidget *create_toolbar (GtkAccelGroup *mainaccel, gpointer data)
 
     undo = gtk_tool_button_new_from_stock(GTK_STOCK_UNDO);
     gtk_tool_item_set_homogeneous (undo, FALSE);
-    gtk_widget_set_sensitive (GTK_WIDGET(undo), FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), undo, -1);
     gtk_widget_set_tooltip_text (GTK_WIDGET(undo), "Undo previous edits ");
 
     redo = gtk_tool_button_new_from_stock(GTK_STOCK_REDO);
     gtk_tool_item_set_homogeneous (redo, FALSE);
-    gtk_widget_set_sensitive (GTK_WIDGET(redo), FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), redo, -1);
     gtk_widget_set_tooltip_text (GTK_WIDGET(redo), "Redo previous edits ");
 
