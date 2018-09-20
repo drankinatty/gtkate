@@ -2,6 +2,8 @@ Overall
 
   * Rename funcitons used in multi-file/multi-view scheme. Come up with consistent and sane convention so that descriptive names describing functionality are used throughout.
 
+  * app->focused (which controls which view and buffer are currently active) needs to be traced to determine when it is update in relationship to where callbacks for statusbar update and on-mark-set are fired. The current view/buffer tracking scheme seems to get behind in some instances leading to statusbar updates to only one of multiple active views.
+
 buffer
 
   * adapt file open/save for document tree entries and check for buffer modified.
@@ -22,6 +24,8 @@ buffer
 
   * file_open single "Untitled" need to set window-title on open.
 
+  * additional infobar functions need to be incorporated from gtkwrite.
+
 find/replace
 
   * free app->findtext/app->reptext on gtkate close
@@ -33,7 +37,7 @@ mainwin
 
 menu
 
-  * adapt menu from gtkwrte, will need refactoring and many of the variables used will not be needed.
+  * done.
 
 settings
 

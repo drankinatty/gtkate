@@ -38,7 +38,7 @@ void status_set_default (gpointer data)
 
     extern const gchar *bomstr[];
     const gchar *langname;
-    gchar *status;
+    gchar /**name,*/ *status;
     gint lines;
 
     /* Fri Jul 13 2018 18:57:03 CDT moved line/col update here from
@@ -57,17 +57,21 @@ void status_set_default (gpointer data)
     lines = gtk_text_buffer_get_line_count (buffer);
     inst->col = gtk_text_iter_get_line_offset (&iter);
 
+    /* get syntax language */
     if (inst->language)
         langname = gtk_source_language_get_name (inst->language);
     else
         langname = "Plain Text";
 
+    /* get displayed name from treemodel */
+    // name = treeview_getname (data);
+
     status = g_strdup_printf (" line:%5d / %d  col:%4d  |  %s  |  "
-                            "%s  |  %s  |  %s",
+                            "%s  |  %s  |  %s",/*  |  %s",*/
                             inst->line + 1, lines, inst->col + 1,
                             app->overwrite ? "OVR" : "INS",
                             app->eolnm[app->eol], bomstr[app->bom],
-                            langname);
+                            langname/*, name*/);
 
     if (einst->cid)     /* pop previous statusbar entry */
         gtk_statusbar_pop (GTK_STATUSBAR(einst->sbar), einst->cid);
@@ -77,4 +81,5 @@ void status_set_default (gpointer data)
     gtk_statusbar_push (GTK_STATUSBAR(einst->sbar), einst->cid, status);
 
     g_free (status);
+    // g_free (name);
 }

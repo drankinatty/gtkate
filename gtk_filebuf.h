@@ -33,11 +33,13 @@ void buffer_unindent_lines_fixed (gpointer data, GtkTextIter *start, GtkTextIter
 void buffer_comment_lines (gpointer data, GtkTextIter *start, GtkTextIter *end);
 void buffer_uncomment_lines (gpointer data, GtkTextIter *start, GtkTextIter *end);
 
-gboolean buffer_insert_eol (gpointer data);
 gboolean buffer_indent_auto (gpointer data);
 gboolean smart_backspace (gpointer data);
 gboolean smart_tab (gpointer data);
 gboolean smart_home (gpointer data);
+
+gboolean buffer_insert_eol (gpointer data);
+void buffer_convert_eol (gpointer data);
 
 void buffer_content_stats (gpointer data);
 

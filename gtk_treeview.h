@@ -5,6 +5,7 @@
 #include <errno.h>
 
 #include "gtk_appdata.h"
+#include "gtk_statusbar.h"
 
 /** function prototypes */
 void tree_set_selection (GtkWidget *widget, gpointer data);

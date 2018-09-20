@@ -923,28 +923,6 @@ void buffer_update_pos (gpointer data)
     gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW(einst->view), ins);
 }
 
-/** insert configured EOL at cursor position on Return/Enter. */
-gboolean buffer_insert_eol (gpointer data)
-{
-    mainwin_t *app = data;
-    einst_t *einst = app->einst[app->focused];
-    kinst_t *inst = einst->inst;
-
-    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
-
-    /* validate eolstr[x] not NULL and not empty */
-    if (!app->eolstr[app->eol] || !*app->eolstr[app->eol])
-        return FALSE;   /* fallback to default keystroke handler */
-
-    /* insert EOL at cursor */
-    gtk_text_buffer_insert_at_cursor (buffer, app->eolstr[app->eol], -1);
-
-    /* update 'line/lines col' on statusbar */
-    buffer_update_pos (data);
-
-    return TRUE;    /* keypress handled */
-}
-
 /** auto-indent on return */
 gboolean buffer_indent_auto (gpointer data)
 {
@@ -1269,6 +1247,305 @@ void buffer_require_posix_eof (gpointer data)
     }
 }
 
+/** insert configured EOL at cursor position on Return/Enter. */
+gboolean buffer_insert_eol (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+
+    /* validate eolstr[x] not NULL and not empty */
+    if (!app->eolstr[app->eol] || !*app->eolstr[app->eol])
+        return FALSE;   /* fallback to default keystroke handler */
+
+    /* insert EOL at cursor */
+    gtk_text_buffer_insert_at_cursor (buffer, app->eolstr[app->eol], -1);
+
+    /* update 'line/lines col' on statusbar */
+    buffer_update_pos (data);
+
+    return TRUE;    /* keypress handled */
+}
+
+/** callback handling eol_chk_default infobar */
+void ib_eol_chk_default (GtkInfoBar *bar, gint response_id, gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+
+    switch (response_id) {
+        case GTK_RESPONSE_NO:       /* take no action */
+            gtk_widget_hide (GTK_WIDGET(bar));
+            break;
+        case GTK_RESPONSE_YES:      /* convert eol */
+            gtk_widget_hide (GTK_WIDGET(bar));
+            if (app->eoldefault < FILE_EOL) {   /* default is LF, CRLF, or CR */
+                if (app->eoldefault == LF)
+                    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolLFMi),
+                                                    TRUE);
+                else if (app->eoldefault == CRLF)
+                    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolCRLFMi),
+                                                    TRUE);
+                else if (app->eoldefault == CR)
+                    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolCRMi),
+                                                    TRUE);
+                app->eol = app->eoldefault;
+                app->oeol = app->eol;
+            }
+            else {  /* default is OS_EOL */
+                if (app->eolos == LF)
+                    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolLFMi),
+                                                    TRUE);
+                else if (app->eolos == CRLF)
+                    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolCRLFMi),
+                                                    TRUE);
+                else
+                    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolCRMi),
+                                                    TRUE);
+                app->eol = app->eolos;
+                app->oeol = app->eol;
+            }
+            break;
+    }
+
+    /* set text_view sensitive TRUE */
+    if (!gtk_widget_get_sensitive (einst->view))
+        gtk_widget_set_sensitive (einst->view, TRUE);
+
+    /* grab focus for textview */
+    gtk_widget_grab_focus (einst->view);
+
+    /* reset flags */
+    einst->ibflags = 0;
+}
+
+/** EOL check against default setting on file open to warn of mismatch (infobar) */
+void ibar_eol_chk_default (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+
+    ibbtndef btndef[] = { { .btntext = "_Yes",    .response_id = GTK_RESPONSE_YES },
+                          { .btntext = "_No",     .response_id = GTK_RESPONSE_NO },
+                          { .btntext = "",        .response_id = 0 } };
+
+    /* make text_view insensitive on display */
+    einst->ibflags = IBAR_VIEW_SENSITIVE;
+
+    /* check against eoldefault, and if eoldefault != FILE_EOL or if
+     * it differes from OS_EOL, warn of mismatch.
+     */
+    if (app->eoldefault != FILE_EOL && app->eol != app->eoldefault) {
+        if (app->eoldefault != OS_EOL || app->eol != app->eolos) {
+            gchar *msg = g_markup_printf_escaped ("File contains <span font_weight=\"bold\">"
+                "'%s'</span> line ends.\n"
+                "Selected default line end is: <span font_weight=\"bold\">'%s'</span>\n"
+                "Operating-System default is: <span font_weight=\"bold\">'%s'</span>\n\n"
+                "<span font_weight=\"bold\">Tools->End-of-Line Selection</span> -- "
+                "to convert between line ends at any time.\n"
+                "<span font_weight=\"bold\">Settings->File Load/Save->End-of-Line "
+                "Handling</span> -- to change default setting.\n\n"
+                "<span font_weight=\"bold\">Convert File to '%s' line ends?</span>",
+                app->eolnm[app->eol], app->eoltxt[app->eoldefault],
+                app->eolnm[app->eolos], app->eolnm[app->eolos]);
+//             app->ibflags |= IBAR_VISIBLE;
+            show_info_bar_choice (msg, GTK_MESSAGE_WARNING, btndef,
+                                    ib_eol_chk_default, app);
+            g_free (msg);
+        }
+    }
+}
+
+/** determine current EOL by scanning buffer content */
+void buffer_get_eol (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    gint cnt = 0;
+
+    /* check buffer character count */
+    if (gtk_text_buffer_get_char_count (buffer) < 1)
+        return;
+
+    /* save current position */
+    GtkTextMark *ins = gtk_text_buffer_get_insert (buffer);
+    GtkTextIter iter;
+
+    /* get start iterator in buffer */
+    gtk_text_buffer_get_start_iter (buffer, &iter);
+
+    /* disable text view and during EOL detection */
+    gtk_widget_set_sensitive (einst->view, FALSE);
+
+    while (gtk_text_iter_forward_to_line_end (&iter)) {
+        gunichar c = gtk_text_iter_get_char (&iter);
+
+        if (c == '\n') {                /* do we have a linefeed */
+            if (cnt && app->eol == LF)  /* if second - confirmed */
+                break;
+            else {
+                app->eol = LF;          /* otherwise, set, check again */
+                cnt = 1;
+            }
+        }
+        else if (c == '\r') {           /* do we have a carriage-return */
+            if (!gtk_text_iter_forward_char (&iter)) {  /* advance */
+                app->eol = CR;
+                break;
+            }
+            c = gtk_text_iter_get_char (&iter); /* get next char */
+            if (c == '\n') {
+                if (cnt && app->eol == CRLF)    /* we have CRLF */
+                    break;
+                else {
+                    app->eol = CRLF;    /* set CRLF, check again */
+                    cnt = 1;
+                }
+            }
+            else if (cnt && app->eol == CR) {   /* we have a CR */
+                break;
+            }
+            else {
+                app->eol = CR;          /* set CR, check again */
+                cnt = 1;
+            }
+        }
+    }
+#ifdef DEBUGEOL
+    g_print ("buffer_get_eol() - before menu_item app->eol: '%s' (orig: '%s')\n",
+            app->eolnm[app->eol], app->eolnm[app->oeol]);
+#endif
+
+    /* update tools menu active EOL radio button
+     * (do not set app->eolchg before to prevent
+     *  firing on gtk_check_menu_item_set_active)
+     */
+    if (app->eol == LF)
+        gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolLFMi), TRUE);
+    else if (app->eol == CRLF)
+        gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolCRLFMi), TRUE);
+    else
+        gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (app->eolCRMi), TRUE);
+
+    if (app->eol != app->oeol) {
+        app->oeol = app->eol;   /* set orignal to current */
+    }
+    app->eolchg = TRUE;         /* eol changed */
+
+    /* restore original insert position */
+    gtk_text_buffer_get_iter_at_mark (buffer, &iter, ins);
+    gtk_text_buffer_place_cursor (buffer, &iter);
+
+    /* enable text view and after EOL detection */
+    gtk_widget_set_sensitive (einst->view, TRUE);
+
+}
+
+/** convert all end-of-line in file to selected app->eol.
+ *  traverse buffer from start to end converting all end-of-line
+ *  terminating characters to the user selected app->eol when
+ *  a change in the end-of-line setting occurs. (or on save)
+ */
+void buffer_convert_eol (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextIter iter;
+    gboolean modified;
+
+    modified = gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf));
+
+    /* if no change -- return */
+    if (app->eol == app->oeol || (!app->eolchg && !modified))
+        return;
+
+    if (!buffer) {  /* validate buffer */
+        err_dialog ("Error: Invalid 'buffer' passed to function\n"
+                    "buffer_remove_trailing_ws (GtkTextBuffer *buffer)");
+        return;
+    }
+
+    /* get iter at start of buffer */
+    gtk_text_buffer_get_start_iter (buffer, &iter);
+
+    if (app->last_pos) {    /* delete app->last_pos mark, if set */
+        gtk_text_buffer_delete_mark (buffer, app->last_pos);
+        app->last_pos = NULL;
+    }
+
+    /* set app->last_pos Mark to start, and move on each iteration */
+    app->last_pos = gtk_text_buffer_create_mark (buffer, "last_pos",
+                                                &iter, FALSE);
+
+    /* loop, moving to the end of each line, before the EOL chars */
+    while (gtk_text_iter_forward_to_line_end (&iter)) {
+
+        gunichar c = gtk_text_iter_get_char (&iter);
+        gtk_text_buffer_move_mark (buffer, app->last_pos, &iter);
+
+        if (c == '\n') {        /* if end-of-line begins with LF */
+            gtk_text_iter_forward_char (&iter);
+            gtk_text_buffer_backspace (buffer, &iter, FALSE, TRUE);
+            gtk_text_buffer_get_iter_at_mark (buffer, &iter, app->last_pos);
+
+            if (app->eol == CRLF)       /* handle change to CRLF */
+                gtk_text_buffer_insert (buffer, &iter, app->eolstr[CRLF], -1);
+            else if (app->eol == CR)    /* handle change to CR */
+                gtk_text_buffer_insert (buffer, &iter, app->eolstr[CR], -1);
+        }
+        else if (c == '\r') {   /* if end-of-line begins with CR */
+            if (app->eol == LF) {   /* handle change to LF */
+                gtk_text_iter_forward_char (&iter);
+                if (gtk_text_buffer_backspace (buffer, &iter, FALSE, TRUE)) {
+                    gtk_text_buffer_get_iter_at_mark (buffer, &iter, app->last_pos);
+                    if (gtk_text_iter_get_char (&iter) != '\n') {
+                        gtk_text_buffer_insert (buffer, &iter, app->eolstr[LF], -1);
+                    }
+                }
+            }
+            else if (app->eol == CRLF) {    /* handle change to CRLF */
+                gtk_text_iter_forward_char (&iter);
+                if (gtk_text_iter_get_char (&iter) != '\n') {
+                    if (gtk_text_buffer_backspace (buffer, &iter, FALSE, TRUE)) {
+                        gtk_text_buffer_get_iter_at_mark (buffer, &iter, app->last_pos);
+                        gtk_text_buffer_insert (buffer, &iter, app->eolstr[CRLF], -1);
+                    }
+                    /* CRLF a single char and can't be created? */
+                    // gtk_text_buffer_insert (buffer, &iter, app->eolstr[LF], -1);
+                }
+            }
+            else {  /* handle change to CR */
+                if (gtk_text_iter_forward_char (&iter)) {
+                    if (gtk_text_iter_get_char (&iter) == '\n') {
+                        gtk_text_iter_forward_char (&iter);
+                        gtk_text_buffer_backspace (buffer, &iter, FALSE, TRUE);
+                    }
+                }
+            }
+        }
+        else {
+            /* handle no-eol error */
+        }
+        /* revalidate interator with last_pos mark */
+        gtk_text_buffer_get_iter_at_mark (buffer, &iter, app->last_pos);
+    }
+
+    if (app->last_pos) {    /* delete app->last_pos mark, if set */
+        gtk_text_buffer_delete_mark (buffer, app->last_pos);
+        app->last_pos = NULL;
+    }
+
+    app->oeol = app->eol;   /* update original eol to current */
+}
+
 /** gather buffer character, word and line statistics.
  *  traverse the buffer, gathering buffer statistics, including the
  *  number of whitespace and non-whitespace characters, the total,
@@ -1367,7 +1644,7 @@ void buffer_content_stats (gpointer data)
                             "\nnumber of words: %d\n"
                             "number of lines: %d\n",
                             wsc, nws, other,
-                            wsc + nws + other, nwrd, --lines);
+                            wsc + nws + other, nwrd, lines);
 
     dlg_info (stats, "Buffer Content Statistics");
     // app->ibflags = IBAR_LABEL_SELECT;
@@ -1517,7 +1794,7 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
             /* get file uid/gid and mode */
             file_get_stats (inst);
             gtk_text_buffer_set_modified (buffer, FALSE);   /* opened */
-//             buffer_get_eol (inst);          /* detect EOL, LF, CRLF, CR */
+            buffer_get_eol (data);          /* detect EOL, LF, CRLF, CR */
 
 //             /* add GFileMonitor watch on file - or it buf_new_inst? */
 //             /* TODO check passing app or inst below (likely app/data) */
@@ -1602,6 +1879,8 @@ void file_open (gpointer data, gchar *filename)
         /* insert file in buffer, set name displayed in tree */
         if (buffer_insert_file (data, inst, NULL))
             treeview_setname (data, inst);
+
+        ibar_eol_chk_default (data);    /* check non-default eol */
     }
     else {  /* add new inst to tree and insert file in new buffer */
         kinst_t *newinst = treeview_append (app, filename);

@@ -557,10 +557,10 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     gtk_menu_shell_append (GTK_MENU_SHELL (toolsMenu),
                            gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (toolsMenu), joinMi);
-    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), toolsMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (toolsMenu),
                            gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (toolsMenu), propsMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menubar), toolsMi);
 
     gtk_widget_add_accelerator (indentMi, "activate", mainaccel,
                                 GDK_KEY_i, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -1234,7 +1234,7 @@ void menu_status_properties_activate (GtkMenuItem *menuitem, gpointer data)
     // propcb (GTK_WIDGET (menuitem), app);
     // dlg_info ("Currently unused test callback.", "Unused Test Callback");
     // buffer_content_stats (GTK_TEXT_BUFFER(app->buffer));
-    // buffer_content_stats (app);
+    buffer_content_stats (data);
     if (menuitem || data) {}
 }
 
@@ -1269,7 +1269,7 @@ void tools_eol_handle_convert (GtkMenuItem *menuitem, gpointer data)
         if (app->eolchg || gtk_text_buffer_get_modified (buffer)) {
 
             /* convert eol from app->oeol => app->eol */
-            // buffer_convert_eol (app);
+            buffer_convert_eol (app);
         }
 
         /* set app->oeol = app->eol; here! */
@@ -1287,7 +1287,7 @@ void menu_tools_eol_lf (GtkMenuItem *menuitem, gpointer data)
     /* if menuitem is being Activated - set eol, handle convert */
     if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM(menuitem))) {
         app->eol = LF;
-        // tools_eol_handle_convert (menuitem, data);
+        tools_eol_handle_convert (menuitem, data);
     }
 
     status_set_default (data);
@@ -1301,7 +1301,7 @@ void menu_tools_eol_crlf (GtkMenuItem *menuitem, gpointer data)
     /* if menuitem is being Activated - set eol, handle convert */
     if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM(menuitem))) {
         app->eol = CRLF;
-        // tools_eol_handle_convert (menuitem, data);
+        tools_eol_handle_convert (menuitem, data);
     }
 
     status_set_default (data);
@@ -1315,7 +1315,7 @@ void menu_tools_eol_cr (GtkMenuItem *menuitem, gpointer data)
     /* if menuitem is being Activated - set eol, handle convert */
     if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM(menuitem))) {
         app->eol = CR;
-        // tools_eol_handle_convert (menuitem, data);
+        tools_eol_handle_convert (menuitem, data);
     }
 
     status_set_default (data);

@@ -128,6 +128,7 @@ typedef struct {
     GtkWidget *view;    /* sourceview */
     GtkWidget *sbar;    /* statusbar */
     guint cid;          /* statusbar context_id */
+    guchar ibflags;     /* infobar bitfield */
     kinst_t *inst;      /* pointer to current buffer inst in split */
 } einst_t;
 
@@ -295,7 +296,7 @@ typedef struct mainwin {
 
 /** function prototypes */
 
-void mainwin_init (mainwin_t *app, char **argv);
+void mainwin_init (gpointer data, char **argv);
 void mainwin_destroy (mainwin_t *app);
 kinst_t *buf_new_inst (const gchar *fn);
 void buf_delete_inst (kinst_t *inst);

@@ -231,6 +231,9 @@ kinst_t *treeview_append (mainwin_t *app, const gchar *filename)
     GtkTreeSelection *selection;
     kinst_t *inst = buf_new_inst (filename);  /* new instance split filename */
     gchar *name = NULL;
+//     const gchar prefix[] = "Untitled";
+//     gboolean isuntitled = FALSE;
+//     gint i;
 
     if (!inst) {    /* validate instance allocated */
         /* handle error */
@@ -258,8 +261,19 @@ kinst_t *treeview_append (mainwin_t *app, const gchar *filename)
         return NULL;
     }
 
+    /* quick strncmp on name and prefix to determine whether
+     * to prepend or append (to add new "Untitled(n)" at top)
+     */
+//     for (i = 0; name[i] && prefix[i]; i++)
+//         if (name[i] != prefix[i])
+//             break;
+//     isuntitled = (i + 1 == (gint)sizeof prefix) ? TRUE : FALSE;
+
     /* appeand name and pointer to inst as entry in treeview */
-    gtk_tree_store_append (treestore, &toplevel, NULL);
+//     if (isuntitled)
+//         gtk_tree_store_prepend (treestore, &toplevel, NULL);
+//     else
+        gtk_tree_store_append (treestore, &toplevel, NULL);
     gtk_tree_store_set (treestore, &toplevel, COLNAME, name, -1);
     gtk_tree_store_set (treestore, &toplevel, COLINST, inst, -1);
 
@@ -667,8 +681,14 @@ void treeview_changed (GtkWidget *widget, gpointer data)
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
 
+    /* grab focus for textview -- cursor still not visible */
+    // gtk_widget_grab_focus (view);
+
         /* set app->einst[app->focused]->inst to point to buffer inst */
         app->einst[app->focused]->inst = inst;
+
+    /* update statusbar */
+    status_set_default (data);
 
         g_free (value); /* values with type G_TYPE_STRING or G_TYPE_BOXED */
                         /* have to be freed, G_TYPE_POINTER does not */
