@@ -30,6 +30,9 @@ void status_pop (GtkWidget *widget, gpointer data)
     if (widget) {}
 }
 
+/** FIXME cid must be associated with einst, the callback on-mark-set is a
+ *  per-buffer signal, so one callback needed per buffer.
+ */
 void status_set_default (gpointer data)
 {
     mainwin_t *app = data;

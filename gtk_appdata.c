@@ -146,7 +146,7 @@ static void mainwin_set_defaults (mainwin_t *app, char **argv)
                                          */
 
     /* custom key handler flags */
-    app->ctrl_shift_right_fix = TRUE;   /* Use custom key-handler */
+    app->ctrl_shift_right_fix = TRUE;   /* Use custom key-handler & bstack */
 
     app->fontname       = g_strdup ("DejaVu Sans Mono 8");  /* default font */
 

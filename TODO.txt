@@ -47,6 +47,8 @@ statusbar
 
   * add colname to end of info.
 
+  * when split check einst[app->focused] to insure ->inst correctly assigned,
+
 toolbar
 
   * incorporate toolbar from gtkwrite.

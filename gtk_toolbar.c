@@ -11,6 +11,7 @@ GtkWidget *create_toolbar (GtkAccelGroup *mainaccel, gpointer data)
     GtkToolItem *save;
     GtkToolItem *saveas;
     GtkToolItem *print;
+    GtkToolItem *close;
     GtkToolItem *sep;
     GtkToolItem *seprt;
     GtkToolItem *exit;
@@ -100,6 +101,11 @@ GtkWidget *create_toolbar (GtkAccelGroup *mainaccel, gpointer data)
     gtk_widget_set_tooltip_text (GTK_WIDGET(print), "Print file ");
 
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), gtk_separator_tool_item_new(), -1);
+
+    close = gtk_tool_button_new_from_stock(GTK_STOCK_CLOSE);
+    gtk_tool_item_set_homogeneous (close, FALSE);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), close, -1);
+    gtk_widget_set_tooltip_text (GTK_WIDGET(close), "Close current file ");
 
     exit = gtk_tool_button_new_from_stock(GTK_STOCK_QUIT);
     gtk_tool_item_set_homogeneous (exit, FALSE);
@@ -235,6 +241,9 @@ GtkWidget *create_toolbar (GtkAccelGroup *mainaccel, gpointer data)
 
     g_signal_connect (G_OBJECT (print), "clicked",          /* file Print   */
                       G_CALLBACK (menu_file_print_activate), data);
+
+    g_signal_connect (G_OBJECT (close), "clicked",          /* file Close    */
+                      G_CALLBACK (menu_file_close_activate), data);
 
     g_signal_connect (G_OBJECT (exit), "clicked",           /* file Quit    */
                       G_CALLBACK (menu_file_quit_activate), data);
