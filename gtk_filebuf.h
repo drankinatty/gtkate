@@ -24,6 +24,7 @@ gboolean buffer_select_all (gpointer data);
 gboolean buffer_deselect_all (gpointer data);
 gboolean buffer_select_to_next_char (gpointer data);
 gboolean buffer_select_to_prev_char (gpointer data);
+gboolean buffer_reduce_selection (gpointer data);
 
 void buffer_indent_lines (gpointer data, GtkTextIter *start, GtkTextIter *end);
 void buffer_unindent_lines (gpointer data, GtkTextIter *start, GtkTextIter *end);

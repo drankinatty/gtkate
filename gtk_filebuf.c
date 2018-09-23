@@ -311,6 +311,29 @@ gboolean buffer_select_to_prev_char (gpointer data)
     return TRUE;
 }
 
+/** buffer reduce selection bounds by 1 at end */
+gboolean buffer_reduce_selection (gpointer data)
+{
+    mainwin_t *app = data;
+    einst_t *einst = app->einst[app->focused];
+    kinst_t *inst = einst->inst;
+
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
+    GtkTextIter start, end;
+
+    /** check existing selection, bstack active and first movement RIGHT */
+    if (!gtk_text_buffer_get_selection_bounds (buffer, &start, &end) ||
+        !app->bindex || !app->bstack[0])
+        return FALSE;
+
+    gtk_text_iter_backward_char (&end);
+
+    /* select range */
+    gtk_text_buffer_select_range (buffer, &start, &end);
+
+    return TRUE;
+}
+
 /** indent current/selected lines to the next softtab stop.
  *  text will be aligned to the next softtab on indent
  *  regardless of the number of spaces before the next

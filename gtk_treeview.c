@@ -441,6 +441,8 @@ kinst_t *inst_get_selected (gpointer data)
     if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
         gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
     }
+    if (!inst)
+        g_warning ("inst_get_selected() - no selection found.");
 
     return inst;
 }

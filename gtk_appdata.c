@@ -245,6 +245,11 @@ kinst_t *buf_new_inst (const gchar *fn)
         /* set GFileMonitor watch */
     }
 
+    /* buffer changed and on-mark-set callbacks for buffer
+     * (move from gtk_textview.c create_scrolled_textview)
+     * write new status_update_inst()
+     */
+
     return inst;
 }
 

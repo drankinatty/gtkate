@@ -5,31 +5,43 @@ GtkWidget *create_toolbar (GtkAccelGroup *mainaccel, gpointer data)
     mainwin_t *app = data;
 
     GtkWidget *toolbar;
-    GtkToolItem *new;
+
+    GtkToolItem *new;           /* new, open, recent, save/saveas */
     GtkToolItem *open;
     GtkToolItem *recent;
     GtkToolItem *save;
     GtkToolItem *saveas;
-    GtkToolItem *print;
-    GtkToolItem *close;
-    GtkToolItem *sep;
-    GtkToolItem *seprt;
+
+    GtkToolItem *print;         /* print */
+
+    GtkToolItem *close;         /* close, exit */
     GtkToolItem *exit;
-    GtkToolItem *copy;
+
+    GtkToolItem *undo;          /* undo, redo */
+    GtkToolItem *redo;
+
+    GtkToolItem *copy;          /* copy, cut, paste */
     GtkToolItem *cut;
     GtkToolItem *paste;
-    GtkToolItem *undo;
-    GtkToolItem *redo;
-    GtkToolItem *find;
+
+    GtkToolItem *indent;        /* indent, unindent */
+    GtkToolItem *unindent;
+
+    GtkToolItem *find;          /* find, replace, goto-line */
     GtkToolItem *replace;
     GtkToolItem *gotoln;
-    GtkToolItem *split;
+
+    GtkToolItem *split;         /* add editor split, remove split */
     GtkToolItem *rmsplit;
-    GtkToolItem *indent;
-    GtkToolItem *unindent;
-    GtkToolItem *insdtm;
+
+    GtkToolItem *insdtm;        /* insert date/time */
+
     // GtkToolItem *style;      /* TODO: move to preferences */
-    GtkToolItem *preferences;
+
+    GtkToolItem *preferences;   /* preferences */
+
+    GtkToolItem *sep;           /* seperator & separator-right */
+    GtkToolItem *seprt;
 
     toolbar = gtk_toolbar_new ();
     gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
@@ -143,6 +155,20 @@ GtkWidget *create_toolbar (GtkAccelGroup *mainaccel, gpointer data)
 
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), gtk_separator_tool_item_new(), -1);
 
+    indent = gtk_tool_button_new_from_stock(GTK_STOCK_INDENT);
+    gtk_tool_item_set_homogeneous (indent, FALSE);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), indent, -1);
+    gtk_tool_button_set_label (GTK_TOOL_BUTTON(indent), "Indent");
+    gtk_widget_set_tooltip_text (GTK_WIDGET(indent), "Increase indent ");
+
+    unindent = gtk_tool_button_new_from_stock(GTK_STOCK_UNINDENT);
+    gtk_tool_item_set_homogeneous (unindent, FALSE);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), unindent, -1);
+    gtk_tool_button_set_label (GTK_TOOL_BUTTON(unindent), "Unindent");
+    gtk_widget_set_tooltip_text (GTK_WIDGET(unindent), "Decrease indent ");
+
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), gtk_separator_tool_item_new(), -1);
+
     find = gtk_tool_button_new_from_stock(GTK_STOCK_FIND);
     gtk_tool_item_set_homogeneous (find, FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), find, -1);
@@ -171,20 +197,6 @@ GtkWidget *create_toolbar (GtkAccelGroup *mainaccel, gpointer data)
     gtk_tool_item_set_homogeneous (rmsplit, FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), rmsplit, -1);
     gtk_widget_set_tooltip_text (GTK_WIDGET(rmsplit), "Remove Current Split ");
-
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), gtk_separator_tool_item_new(), -1);
-
-    indent = gtk_tool_button_new_from_stock(GTK_STOCK_INDENT);
-    gtk_tool_item_set_homogeneous (indent, FALSE);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), indent, -1);
-    gtk_tool_button_set_label (GTK_TOOL_BUTTON(indent), "Indent");
-    gtk_widget_set_tooltip_text (GTK_WIDGET(indent), "Increase indent ");
-
-    unindent = gtk_tool_button_new_from_stock(GTK_STOCK_UNINDENT);
-    gtk_tool_item_set_homogeneous (unindent, FALSE);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), unindent, -1);
-    gtk_tool_button_set_label (GTK_TOOL_BUTTON(unindent), "Unindent");
-    gtk_widget_set_tooltip_text (GTK_WIDGET(unindent), "Decrease indent ");
 
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), gtk_separator_tool_item_new(), -1);
 
