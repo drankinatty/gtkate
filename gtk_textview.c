@@ -265,6 +265,9 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
     GtkWidget *view;
     PangoFontDescription *font_desc;            /* font description */
     einst_t *ewin = app->einst[app->nview];     /* editor window instance */
+    /* FIXME - app->focused still on previous view and on treeview selection
+     * before create_scrolled_view is called.
+     */
     kinst_t *inst = inst_get_selected (app);    /* inst w/buf from treeview */
 
     /* create vbox for infobar, scrolled_window, and statusbar */

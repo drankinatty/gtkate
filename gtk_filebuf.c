@@ -1669,9 +1669,9 @@ void buffer_content_stats (gpointer data)
                             wsc, nws, other,
                             wsc + nws + other, nwrd, lines);
 
-    dlg_info (stats, "Buffer Content Statistics");
-    // app->ibflags = IBAR_LABEL_SELECT;
-    // show_info_bar_ok (stats, GTK_MESSAGE_INFO, app);
+    // dlg_info (stats, "Buffer Content Statistics");
+    einst->ibflags = IBAR_LABEL_SELECT;
+    show_info_bar_ok (stats, GTK_MESSAGE_INFO, app);
 
     g_free (stats);
 
