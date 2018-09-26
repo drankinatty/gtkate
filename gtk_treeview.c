@@ -229,7 +229,7 @@ kinst_t *treeview_append (mainwin_t *app, const gchar *filename)
     GtkTreeStore *treestore;
     GtkTreeIter toplevel;
     GtkTreeSelection *selection;
-    kinst_t *inst = buf_new_inst (filename);  /* new instance split filename */
+    kinst_t *inst = buf_new_inst (app, filename);  /* new instance split filename */
     gchar *name = NULL;
 //     const gchar prefix[] = "Untitled";
 //     gboolean isuntitled = FALSE;
@@ -582,7 +582,7 @@ gboolean treeview_remove_selected (gpointer data)
     /* free allocated memory associated with inst (except buf)
      * set freed values 0/NULL, in prep for reuse or deletion
      */
-    inst_reset_state (inst);
+    inst_reset_state (inst);    /* TEST - cause of status assertion */
 
     if (app->nfiles == 1) {             /* only single file, change buffer */
         gchar *uname, *title;           /* untitled name, window title */
@@ -641,6 +641,8 @@ gboolean treeview_remove_selected (gpointer data)
 
         /* remove victim from tree and free allocated slice */
         gtk_tree_store_remove (GTK_TREE_STORE(app->treemodel), victim);
+        /* TEST */
+        // buf_delete_inst (inst); /* to unregister "changed" & "mark_set" */
         g_slice_free (kinst_t, inst);   /* free inst slice after removal */
         app->nfiles--;                  /* decrement file count */
     }

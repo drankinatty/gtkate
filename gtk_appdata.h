@@ -111,6 +111,8 @@ typedef struct {
     /* don't store lang_id, write to cfg/key file */
     // const gchar     *lang_id;           /* sourceview language ID (for cfg) */
 
+    gulong changed_id, mark_set_id;     /* signal handler ids */
+
     const gchar     *comment_single;    /* single line comment */
     const gchar     *comment_blk_beg;   /* blobk comment begin */
     const gchar     *comment_blk_end;   /* block comment end */
@@ -298,7 +300,7 @@ typedef struct mainwin {
 
 void mainwin_init (gpointer data, char **argv);
 void mainwin_destroy (mainwin_t *app);
-kinst_t *buf_new_inst (const gchar *fn);
+kinst_t *buf_new_inst (mainwin_t *app, const gchar *fn);
 void buf_delete_inst (kinst_t *inst);
 void einst_reset (einst_t *einst);
 void einst_move (einst_t *tgt, einst_t *src);

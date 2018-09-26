@@ -216,6 +216,9 @@ static kinst_t *kinst_init (kinst_t *inst)
     inst->language = NULL;
     // inst->lang_id = NULL;    /* get at time keyfile is written */
 
+    inst->changed_id  = 0;      /* "changed" signal_id  */
+    inst->mark_set_id = 0;      /* "mark_set" signal_id */
+
     inst->comment_single = NULL;
     inst->comment_blk_beg = NULL;
     inst->comment_blk_end = NULL;
@@ -223,8 +226,46 @@ static kinst_t *kinst_init (kinst_t *inst)
     return inst;
 }
 
+/** on_buffer_changed fires before on_mark_set with all changes.
+ *  (even undo) and fires before gtk_text_buffer_get_modified()
+ *  reflects change.
+ */
+void on_buffer_changed (GtkTextBuffer *buffer, gpointer data)
+{
+    mainwin_t *app = data;
+    gboolean modified = gtk_text_buffer_get_modified (buffer);
+
+    /* set app->eolchg if buffer changed so conversion runs on eol change */
+    if (modified && app->eol != app->oeol)
+        app->eolchg = TRUE;
+
+}
+
+void status_set_default (gpointer data);
+
+/** on cursor position change (insert mark_set), update line, lines, col.
+ *  Note: on_mark_set fires after on_buffer_changed, so it will more
+ *  accurately capture buffer modification state.
+ */
+void on_mark_set (GtkTextBuffer *buffer, GtkTextIter *iter,
+                  GtkTextMark *mark, gpointer data)
+{
+    mainwin_t *app = data;
+    // gboolean modified = gtk_text_buffer_get_modified (buffer);
+
+    /* update window title */
+    // if (!modified)
+    //     gtkwrite_window_set_title (NULL, app);
+
+    /* update status bar */
+    if (app->nview)     /* only update after 1st view created/before quit */
+        status_set_default (data);
+
+    if (buffer || iter || mark) {}
+}
+
 /** create and initialize a new buffer instance to add to tree */
-kinst_t *buf_new_inst (const gchar *fn)
+kinst_t *buf_new_inst (mainwin_t *app, const gchar *fn)
 {
     kinst_t *inst = g_slice_new (kinst_t);
 
@@ -234,9 +275,6 @@ kinst_t *buf_new_inst (const gchar *fn)
     kinst_init (inst);
 
     inst->buf = gtk_source_buffer_new (NULL);
-
-//     gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
-//     gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
 
     if (fn) {
         gchar *posixfn = get_posix_filename (fn);
@@ -249,6 +287,11 @@ kinst_t *buf_new_inst (const gchar *fn)
      * (move from gtk_textview.c create_scrolled_textview)
      * write new status_update_inst()
      */
+    inst->changed_id = g_signal_connect (inst->buf, "changed",
+                                    G_CALLBACK (on_buffer_changed), app);
+
+    inst->mark_set_id = g_signal_connect (inst->buf, "mark_set",
+                                    G_CALLBACK (on_mark_set), app);
 
     return inst;
 }
@@ -258,6 +301,10 @@ void buf_delete_inst (kinst_t *inst)
 {
     if (!inst)
         return;
+
+    /* disconnect changed & mark_set signal handlers */
+    g_signal_handler_disconnect (inst->buf, inst->changed_id);
+    g_signal_handler_disconnect (inst->buf, inst->mark_set_id);
 
     /* free allocated members and zero remaining members */
     inst_reset_state (inst);
@@ -327,6 +374,9 @@ void inst_reset_state (kinst_t *inst)
 
     inst->language = NULL;
     // inst->lang_id = NULL;    /* get and write to keyfile */
+
+    inst->changed_id  = 0;
+    inst->mark_set_id = 0;
 
     inst->comment_single = NULL;
     inst->comment_blk_beg = NULL;
@@ -680,8 +730,26 @@ static void context_write_keyfile (gpointer data)
 
 }
 
+/** free memory allocated to find/replace on exit */
+static void findrep_destroy (gpointer data)
+{
+    mainwin_t *app = data;
+    guint i;
+
+    /* free combobox lists */
+    for (i = 0; i < app->nfentries; i++) g_free (app->findtext[i]);
+    g_free (app->findtext);
+
+    for (i = 0; i < app->nrentries; i++) g_free (app->reptext[i]);
+    g_free (app->reptext);
+
+}
+
 void mainwin_destroy (mainwin_t *app)
 {
+    app->nview = 0; /* TEST - prevent statusbar firing in on_mark_set */
+                    /* FIXME - when save_on_quit implmented */
+
     /* save settings to keyfile */
     context_write_keyfile (app);
 
@@ -701,8 +769,9 @@ void mainwin_destroy (mainwin_t *app)
 
     for (gint i = 0; i < MAXVIEW; i++)
         g_slice_free (einst_t, app->einst[i]);
+
     /* free find/replace GList memory */
-    // findrep_destroy (app);
+    findrep_destroy (app);
 }
 
 /** split app->filename into path, filename, extension.

@@ -111,36 +111,36 @@ void on_insmode (GtkWidget *widget, gpointer data)
  *  (even undo) and fires before gtk_text_buffer_get_modified()
  *  reflects change.
  */
-void on_buffer_changed (GtkTextBuffer *buffer, gpointer data)
-{
-    mainwin_t *app = data;
-    gboolean modified = gtk_text_buffer_get_modified (buffer);
-
-    /* set app->eolchg if buffer changed so conversion runs on eol change */
-    if (modified && app->eol != app->oeol)
-        app->eolchg = TRUE;
-
-}
+// void on_buffer_changed (GtkTextBuffer *buffer, gpointer data)
+// {
+//     mainwin_t *app = data;
+//     gboolean modified = gtk_text_buffer_get_modified (buffer);
+//
+//     /* set app->eolchg if buffer changed so conversion runs on eol change */
+//     if (modified && app->eol != app->oeol)
+//         app->eolchg = TRUE;
+//
+// }
 
 /** on cursor position change (insert mark_set), update line, lines, col.
  *  Note: on_mark_set fires after on_buffer_changed, so it will more
  *  accurately capture buffer modification state.
  */
-void on_mark_set (GtkTextBuffer *buffer, GtkTextIter *iter,
-                  GtkTextMark *mark, gpointer data)
-{
-    // mainwin_t *app = data;
-    // gboolean modified = gtk_text_buffer_get_modified (buffer);
-
-    /* update window title */
-    // if (!modified)
-    //     gtkwrite_window_set_title (NULL, app);
-
-    /* update status bar */
-    status_set_default (data);
-
-    if (buffer || iter || mark) {}
-}
+// void on_mark_set (GtkTextBuffer *buffer, GtkTextIter *iter,
+//                   GtkTextMark *mark, gpointer data)
+// {
+//     // mainwin_t *app = data;
+//     // gboolean modified = gtk_text_buffer_get_modified (buffer);
+//
+//     /* update window title */
+//     // if (!modified)
+//     //     gtkwrite_window_set_title (NULL, app);
+//
+//     /* update status bar */
+//     status_set_default (data);
+//
+//     if (buffer || iter || mark) {}
+// }
 
 gboolean on_keypress (GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
@@ -269,6 +269,7 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
      * before create_scrolled_view is called.
      */
     kinst_t *inst = inst_get_selected (app);    /* inst w/buf from treeview */
+    // gint focused = app->focused; /* NOTE: testing */
 
     /* create vbox for infobar, scrolled_window, and statusbar */
     ewin->ebox = gtk_vbox_new (FALSE, 0);
@@ -312,6 +313,9 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
             g_print ("  no valid tree model iter first\n");
     }
     ewin->inst = inst;  /* set pointer to current file instance */
+
+    /* NOTE - testing */
+    // app->focused = focused + 1;
 
     /*      app set show line numbers */
     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW(view), app->lineno);
@@ -368,11 +372,11 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
     g_signal_connect (G_OBJECT (view), "key_press_event",
                       G_CALLBACK (on_keypress), app);
 
-    g_signal_connect (inst->buf, "changed",
-                      G_CALLBACK (on_buffer_changed), app);
-
-    g_signal_connect (inst->buf, "mark_set",
-                      G_CALLBACK (on_mark_set), app);
+//     g_signal_connect (inst->buf, "changed",
+//                       G_CALLBACK (on_buffer_changed), app);
+//
+//     g_signal_connect (inst->buf, "mark_set",
+//                       G_CALLBACK (on_mark_set), app);
 
     g_signal_connect (G_OBJECT (view), "toggle-overwrite",
                       G_CALLBACK (on_insmode), app);

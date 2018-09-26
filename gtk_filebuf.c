@@ -1866,13 +1866,13 @@ void buffer_file_insert_dlg (gpointer data)
     gtk_widget_destroy (dialog);
 }
 
-/** open file and instert into unmodified "Untitled(n)" buffer, or create
+/** open file and insert into unmodified "Untitled(n)" buffer, or create
  *  new buffer inst and add to treeview.
  */
 void file_open (gpointer data, gchar *filename)
 {
     mainwin_t *app = data;
-    kinst_t *inst = app->einst[app->focused]->inst;
+    kinst_t *inst = app->einst[app->focused]->inst; /* current focused buf */
     gint cc;
     gboolean modified;
 
@@ -1910,6 +1910,11 @@ void file_open (gpointer data, gchar *filename)
         if (newinst) {
             // app->nfiles++;  /* update file count (no - done in get_new_inst) */
             buffer_insert_file (data, newinst, NULL);
+            /* TODO/FIXME validate einst coordination here to
+             * coordinate statusbar association with buffer, and
+             * potentially word completion association with view and buffer.
+             * (statusbar fixed with move of "changed" and "mark_set")
+             */
         }
         else {
             /* TODO add error dialog or infobar */
