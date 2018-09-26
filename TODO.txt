@@ -4,6 +4,8 @@ Overall
 
   * app->focused (which controls which view and buffer are currently active) needs to be traced to determine when it is update in relationship to where callbacks for statusbar update and on-mark-set are fired. The current view/buffer tracking scheme seems to get behind in some instances leading to statusbar updates to only one of multiple active views.
 
+  * implement projects to save and restore collections of files at once.
+
 buffer
 
   * adapt file open/save for document tree entries and check for buffer modified.
@@ -28,8 +30,11 @@ buffer
 
 find/replace
 
-  * free app->findtext/app->reptext on gtkate close
   * create findrep_t struct instead of the static globals in gtk_findreplace.c
+
+infobars
+
+  * rework edit window instances and bounding vbox settings so infobar does not cause expansion in vertical size of bounding vbox when inforbar shown.
 
 mainwin
 
@@ -43,19 +48,17 @@ settings
 
   * check app->comment free on close - settings entry currently set with either inst->comment_single if set, or app->comment otherwise.
 
-statusbar
+ statusbar
 
   * add colname to end of info.
 
-  * when split check einst[app->focused] to insure ->inst correctly assigned,
-
 toolbar
 
-  * incorporate toolbar from gtkwrite.
+  * done
 
 textview/multiview edit pane
 
-  * decide whether to place focus in new instance of leave on current
+  * decide whether to place focus in new instance or leave on current
    (chose focus on new inst/view).
 
   * decide whether to scroll new instance to match current insert mark.
