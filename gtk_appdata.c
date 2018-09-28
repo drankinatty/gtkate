@@ -544,7 +544,8 @@ static void context_read_keyfile (gpointer data)
         if (app->eoldefault < EOL_NO)
             app->eol = app->eoldefault;
         else
-            app->eol = app->eolos;
+            /* if not in range, set to eolos */
+            app->eoldefault = app->eol = app->eolos;
     }
 
     /** initialize "cleanup" values from keyfile */
