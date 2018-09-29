@@ -184,6 +184,9 @@ void treeview_setname (gpointer data, kinst_t *inst)
     }
 
     gtk_tree_store_set (treestore, iter, COLNAME, inst->fname, -1);
+
+    /* set window title */
+    gtkate_window_set_title (NULL, app);
 }
 
 /** check COLNAME entry in tree, and if "Untitled(n)" clear
@@ -230,7 +233,7 @@ kinst_t *treeview_append (mainwin_t *app, const gchar *filename)
     GtkTreeIter toplevel;
     GtkTreeSelection *selection;
     kinst_t *inst = buf_new_inst (app, filename);  /* new instance split filename */
-    gchar *name = NULL;
+    gchar *name = NULL, *title = NULL;
 //     const gchar prefix[] = "Untitled";
 //     gboolean isuntitled = FALSE;
 //     gint i;
@@ -281,8 +284,18 @@ kinst_t *treeview_append (mainwin_t *app, const gchar *filename)
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
     gtk_tree_selection_select_iter (selection, &toplevel);
 
+    /* check/set modified state in window title text on selection change */
+    if (gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf)))
+        title = g_strdup_printf ("%s - %s [modified]", APPNAME, name);
+    else
+        title = g_strdup_printf ("%s - %s", APPNAME, name);
+
+    /* set window title */
+    gtk_window_set_title (GTK_WINDOW (app->window), title);
+
     app->nfiles++;  /* update file count */
 
+    g_free (title); /* free title */
     g_free (name);  /* free name */
 
     return inst;
