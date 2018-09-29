@@ -24,7 +24,7 @@ buffer
 
   * write file data out containing line, col and sourceview lang_id to restore view on file open. Use GFile and GHashtable to hash pointer to info to use in kinst_t instance initialization, replace contents of file on close, write serialized binary format similar to 'line col szfilenm szlangid filename lang_id' (4 int, 2 strings). Add to hashtable on open/save/close/close-all. remainder of kinst_t information can be derived from this.
 
-  * file_open single "Untitled" need to set window-title on open.
+  * write manual close of all open windows prior to gtk_quit to insure a sequenced shutdown so there is no einst_reset() or buffer_del_inst() before all associated views holding the buffer are closed and the buffer freed.
 
   * additional infobar functions need to be incorporated from gtkwrite.
 
@@ -50,7 +50,9 @@ settings
 
  statusbar
 
-  * add colname to end of info.
+  * add settings option to add colname to end of info on statusbar.
+
+  * on split of view, statusbar not drawn until focus placed in view (consider grab_focus at end of ewin_create_view())
 
 toolbar
 
@@ -63,9 +65,15 @@ textview/multiview edit pane
 
   * decide whether to scroll new instance to match current insert mark.
 
+  * determine if current line highlight can be independent of buffer (doubtful since it is a sourceview feature attached to a sourcebuffer)
+
+  * add keypress event handling of shortcut keys to move between open view and prev/next document in treeview.
+
 treeview/model
 
   * consider (app->treeview)[n] to allow multiple views for showing files grouped by directory, or sorted based on opening or ascending/descending alphabetical sort.
 
   * set tooltip on each entry showing 'filename' (absolute path & filename)
+
+  * place focus on associated textview when selected.
 
