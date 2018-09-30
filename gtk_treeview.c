@@ -200,6 +200,12 @@ void check_untitled_remove (gpointer data)
     gchar *name = treeview_getname (data);
     gint n = 0;
 
+    /* validate name */
+    if (!name) {
+        g_error ("check_untitled_remove() name NULL");
+        return;
+    }
+
     /* check name "Untitled(n)", parse n */
     if ((n = untitled_get_no (name)) >= 0)
         untitled_remove (data, n);      /* clear bit n in app->nultitled */

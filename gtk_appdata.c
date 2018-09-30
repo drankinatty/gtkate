@@ -254,8 +254,12 @@ void on_mark_set (GtkTextBuffer *buffer, GtkTextIter *iter,
     // gboolean modified = gtk_text_buffer_get_modified (buffer);
 
     /* update window title */
-    // if (!modified)
-    //     gtkwrite_window_set_title (NULL, app);
+    /* FIXME add inst->modified flag and logic to get inst here so titlebar
+     * state can be controlled without firing the window set title on every
+     * signal.
+     */
+    // if (!inst->modified && modified)
+    //     gtkate_window_set_title (NULL, app);
 
     /* update status bar */
     if (app->nview)     /* only update after 1st view created/before quit */

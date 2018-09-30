@@ -1963,7 +1963,7 @@ void buffer_write_file (gpointer data)
     }
     else {
         gtk_text_buffer_set_modified (buffer, FALSE);
-        // gtkwrite_window_set_title (NULL, app);
+        gtkate_window_set_title (NULL, app);
 #ifndef HAVEMSWIN
         if (inst->filemode)     /* restore file mode, UID, GID */
             g_chmod (inst->filename, inst->filemode);
@@ -2004,6 +2004,8 @@ void file_save (gpointer data, gchar *filename)
             // if (!file_monitor_cancel (inst))    /* cancel existing monitor */
             //v{ /* handle error */ }
         }
+        else
+            check_untitled_remove (data);
 
         inst->filename = posixfn;       /* assign to app->filename */
         split_fname (inst);             /* split filename */
@@ -2025,6 +2027,7 @@ void file_save (gpointer data, gchar *filename)
                 g_free (newname);
                 return;
             }
+            check_untitled_remove (data);   /* unset "Untitled(n)" */
             inst->filename = posixfn;       /* assign to app->filename */
             split_fname (inst);             /* split filename */
             treeview_setname (data, inst);  /* set name in tree */
