@@ -1964,6 +1964,7 @@ void buffer_write_file (gpointer data)
     else {
         gtk_text_buffer_set_modified (buffer, FALSE);
         gtkate_window_set_title (NULL, app);
+        inst->modified = FALSE;
 #ifndef HAVEMSWIN
         if (inst->filemode)     /* restore file mode, UID, GID */
             g_chmod (inst->filename, inst->filemode);

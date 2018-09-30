@@ -107,6 +107,8 @@ typedef struct {
 
     guint filemode, fileuid, filegid;   /* file permissions & ownership */
 
+    gboolean modified;                  /* last state to avoid title set */
+
     GtkSourceLanguage *language;        /* sourceview language struct */
     /* don't store lang_id, write to cfg/key file */
     // const gchar     *lang_id;           /* sourceview language ID (for cfg) */

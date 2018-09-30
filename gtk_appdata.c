@@ -211,6 +211,8 @@ static kinst_t *kinst_init (kinst_t *inst)
     inst->fileuid = 0;
     inst->filegid = 0;
 
+    inst->modified = FALSE;
+
     inst->line = inst->col = 0;
 
     inst->language = NULL;
@@ -251,15 +253,17 @@ void on_mark_set (GtkTextBuffer *buffer, GtkTextIter *iter,
                   GtkTextMark *mark, gpointer data)
 {
     mainwin_t *app = data;
-    // gboolean modified = gtk_text_buffer_get_modified (buffer);
+    kinst_t *inst = app->einst[app->focused]->inst;
 
-    /* update window title */
-    /* FIXME add inst->modified flag and logic to get inst here so titlebar
-     * state can be controlled without firing the window set title on every
-     * signal.
-     */
-    // if (!inst->modified && modified)
-    //     gtkate_window_set_title (NULL, app);
+    if (inst) { /* validate inst set before testing modified */
+        gboolean modified = gtk_text_buffer_get_modified (buffer);
+
+        /* update window title */
+        if (inst->modified != modified) {
+            gtkate_window_set_title (NULL, app);
+            inst->modified = modified;
+        }
+    }
 
     /* update status bar */
     if (app->nview)     /* only update after 1st view created/before quit */
