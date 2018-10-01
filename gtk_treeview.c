@@ -704,20 +704,27 @@ void treeview_changed (GtkWidget *widget, gpointer data)
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
 
-    /* grab focus for textview -- cursor still not visible */
-    // gtk_widget_grab_focus (view);
+        /* scroll to current line */
+        if (inst->line > 0)
+            /* scroll to insert mark */
+            gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW(view),
+                        gtk_text_buffer_get_insert (GTK_TEXT_BUFFER(inst->buf)),
+                                        0.0, TRUE, 0.0, 0.5);
 
         /* set app->einst[app->focused]->inst to point to buffer inst */
         app->einst[app->focused]->inst = inst;
 
-    /* update statusbar */
-    status_set_default (data);
+        /* update statusbar */
+        status_set_default (data);
 
         g_free (value); /* values with type G_TYPE_STRING or G_TYPE_BOXED */
                         /* have to be freed, G_TYPE_POINTER does not */
         g_free (title);
+
+    /* grab focus for textview -- cursor still not visible */
+    // gtk_widget_grab_focus (view);
+
     }
 
-    if (data) {}
 }
 
