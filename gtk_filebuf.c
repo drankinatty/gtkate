@@ -320,14 +320,17 @@ gboolean buffer_reduce_selection (gpointer data)
 
     GtkTextBuffer *buffer = GTK_TEXT_BUFFER(inst->buf);
     GtkTextIter start, end;
+    gboolean selection = gtk_text_buffer_get_selection_bounds (buffer,
+                                                                &start, &end);
 
     /** check existing selection, bstack active and first movement RIGHT */
-    if (!gtk_text_buffer_get_selection_bounds (buffer, &start, &end) ||
-        !app->bindex || !app->bstack[0]) {
+    if (!selection || !app->bindex || !app->bstack[0]) {
         bstack_clear (app);
         return FALSE;
     }
 
+    g_print ("selection: %s  app->bindex: %u  app->bstack[0]: %u\n",
+            selection ? "TRUE" : "FALSE", app->bindex, app->bstack[0]);
     gtk_text_iter_backward_char (&end);
 
     /* select range */

@@ -709,7 +709,7 @@ void treeview_changed (GtkWidget *widget, gpointer data)
             /* scroll to insert mark */
             gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW(view),
                         gtk_text_buffer_get_insert (GTK_TEXT_BUFFER(inst->buf)),
-                                        0.0, TRUE, 0.0, 0.5);
+                                        0.0, TRUE, 0.0, 0.25);
 
         /* set app->einst[app->focused]->inst to point to buffer inst */
         app->einst[app->focused]->inst = inst;

@@ -77,3 +77,6 @@ treeview/model
 
   * place focus on associated textview when selected.
 
+  * treeview_changed() save rectangle to restore to exact col/line when buffer brought back into a sourceview window. Currently curor-line is restored at 25% of the window.
+
+

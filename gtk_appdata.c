@@ -638,6 +638,9 @@ void mainwin_init (gpointer data, char **argv)
     /* load default values */
     mainwin_set_defaults (app, argv);
 
+    /* initialze bstack variables zero */
+    bstack_clear (data);
+
     /* create an empty key_file */
     app->keyfile = g_key_file_new();
 

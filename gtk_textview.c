@@ -253,6 +253,10 @@ gboolean on_keypress (GtkWidget *widget, GdkEventKey *event, gpointer data)
 
     app->kphome = FALSE;    /* reset kphome - return above protects needed TRUE */
 
+    /* if any other key and bindex or bstack[0], clear stack */
+    if (app->bindex || app->bstack[0])
+        bstack_clear (data);
+
     return FALSE;
 
     if (widget) {}
@@ -361,7 +365,9 @@ GtkWidget *create_scrolled_view (mainwin_t *app)
     status_set_default (app);
     gtk_widget_show (ewin->sbar);
 
-
+    /* TODO/FIXME -  The unclassed pointer cast to GtkTextView after file_close
+     * is in treeview_remove_selected(). Review/simplify logic.
+     */
     /* causes focus to hide textview cursor until moved with key or mouse
      * in textview.
      */
