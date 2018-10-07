@@ -386,6 +386,8 @@ void inst_reset_state (kinst_t *inst)
     inst->changed_id  = 0;
     inst->mark_set_id = 0;
 
+    inst->modified = FALSE;
+
     inst->comment_single = NULL;
     inst->comment_blk_beg = NULL;
     inst->comment_blk_end = NULL;

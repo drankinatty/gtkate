@@ -601,7 +601,7 @@ gboolean treeview_remove_selected (gpointer data)
     /* free allocated memory associated with inst (except buf)
      * set freed values 0/NULL, in prep for reuse or deletion
      */
-    inst_reset_state (inst);    /* TEST - cause of status assertion */
+    inst_reset_state (inst);    /* TEST - cause of status assertion? */
 
     if (app->nfiles == 1) {             /* only single file, change buffer */
         gchar *uname, *title;           /* untitled name, window title */
@@ -613,6 +613,7 @@ gboolean treeview_remove_selected (gpointer data)
         /* TODO move to buffer_clear() funciton */
         gtk_text_buffer_set_text (GTK_TEXT_BUFFER(inst->buf), "", -1);
         gtk_text_buffer_set_modified (GTK_TEXT_BUFFER(inst->buf), FALSE);
+        inst->modified = FALSE;
 
         /* set window title */
         title = g_strdup_printf ("%s - %s", APPNAME, uname);
@@ -623,18 +624,17 @@ gboolean treeview_remove_selected (gpointer data)
         g_free (title);
         g_free (uname);
     }
-    else {  /* additional files remain open, just remove victim */
+    else if (app->nfiles > 1) {     /* additional files remain, remove victim */
         view = app->einst[app->focused]->view;  /* get current view widget */
-        inst = app->einst[app->focused]->inst;  /* update w/new app->focused */
 
         /* get first iter, iterate model to locate current inst, set selection */
         valid = gtk_tree_model_get_iter_first (model, &iter);
 
         while (valid) {         /* loop over each entry in model */
-            /* get colinst from iter */
-            gtk_tree_model_get (model, &iter, COLINST, &colinst, -1);
+            /* get inst from iter, colinst set from victim above */
+            gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
 
-            /* compare pointer to sourceview with buf from textview (widget) */
+            /* compare inst pointer to colinst of victim */
             if (inst == colinst) {
                 if (last) {
                     /* if last iter set, current to last */
@@ -651,7 +651,7 @@ gboolean treeview_remove_selected (gpointer data)
                 found = TRUE;   /* set found colinst flag */
                 break;
             }
-            lastinst = colinst; /* set last instance to current */
+            lastinst = inst;    /* set last instance to current */
             last = &iter;       /* set last iter to current */
 
             /* get next tree iter */
@@ -662,8 +662,8 @@ gboolean treeview_remove_selected (gpointer data)
         gtk_tree_store_remove (GTK_TREE_STORE(app->treemodel), victim);
         /* TEST */
         // buf_delete_inst (inst); /* to unregister "changed" & "mark_set" */
-        g_slice_free (kinst_t, inst);   /* free inst slice after removal */
-        app->nfiles--;                  /* decrement file count */
+        g_slice_free (kinst_t, colinst);    /* free colinst slice */
+        app->nfiles--;                      /* decrement file count */
     }
 
     if (!found) /* validate inst found or warn */
