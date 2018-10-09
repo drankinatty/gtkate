@@ -566,6 +566,7 @@ gboolean treeview_remove_selected (gpointer data)
      * VIEWs removal, and then simply remove the files. VIEW removal is the
      * same in both cases! Git rid of view, then remove 1-file.
      */
+    /* TODO move to separate function, 'view_close_all_with_inst()' */
     while (app->nview > 1 && n--) {
         einst_t *einst = app->einst[n];
 
@@ -601,8 +602,9 @@ gboolean treeview_remove_selected (gpointer data)
     /* free allocated memory associated with inst (except buf)
      * set freed values 0/NULL, in prep for reuse or deletion
      */
-    inst_reset_state (inst);    /* TEST - cause of status assertion? */
+    inst_reset_state (inst);
 
+    /* TODO move all removal logic to treeview_remove_inst(), (possibly) */
     if (app->nfiles == 1) {             /* only single file, change buffer */
         gchar *uname, *title;           /* untitled name, window title */
 
@@ -660,8 +662,8 @@ gboolean treeview_remove_selected (gpointer data)
 
         /* remove victim from tree and free allocated slice */
         gtk_tree_store_remove (GTK_TREE_STORE(app->treemodel), victim);
-        /* TEST */
-        // buf_delete_inst (inst); /* to unregister "changed" & "mark_set" */
+        /* TEST (results in assertion 'handler_id > 0' failed) */
+        // buf_delete_inst (colinst); /* to unregister "changed" & "mark_set" */
         g_slice_free (kinst_t, colinst);    /* free colinst slice */
         app->nfiles--;                      /* decrement file count */
     }
