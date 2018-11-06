@@ -28,7 +28,7 @@ void show_info_bar_choice (const gchar *msg, gint msgtype,
                             gpointer data);
 void show_info_bar_ok (const gchar *msg, gint msgtype, gpointer data);
 
-gchar *get_open_filename (gpointer data);
+GSList *get_open_filename (gpointer data);
 gchar *get_save_filename (gpointer data);
 
 #endif

@@ -35,6 +35,7 @@
 #else   /* WGTKSOURCEVIEW2 */
  #include <gtksourceview/gtksourceview.h>
  #include <gtksourceview/gtksourcelanguagemanager.h>
+ #include <gtksourceview/completion-providers/words/gtksourcecompletionwords.h>
 #endif
 
 #if defined (_WIN32) || defined (_WIN64) || defined (_WINNT)

@@ -2,7 +2,7 @@
 #define _gtk_textview_h_  1
 
 #include "gtk_appdata.h"
-// #include "gtk_completionsv.h"
+// #include "gtk_completion.h"
 #include "gtk_filebuf.h"
 #include "gtk_statusbar.h"
 #include "gtk_treeview.h"

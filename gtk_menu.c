@@ -821,13 +821,26 @@ void menu_file_new_activate (GtkMenuItem *menuitem, gpointer data)
 void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
 {
     /* get new filename */
-    gchar *newfile = get_open_filename (data);
+    GSList *files = get_open_filename (data),
+        *iter = files;
 
-    /* open newfile in current or new editor instance */
-    file_open (data, newfile);
+    if (!files) {
+        err_dialog ("Error:\n\nNo file selections.");
+        return;
+    }
 
-    /* newfile copied in get_posix_filename(), so free newfile */
-    g_free (newfile);
+    /* iterate over filenames opening each */
+    while (iter) {
+        file_open (data, iter->data);
+        iter = iter->next;
+    }
+
+    /* free filenames and list */
+    while (files) {
+        g_free (files->data);
+        files = files->next;
+    }
+    g_slist_free(files);
 
     if (menuitem) {}
 }

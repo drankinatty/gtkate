@@ -320,12 +320,12 @@ void show_info_bar_ok (const gchar *msg, gint msgtype, gpointer data)
     gtk_widget_show (infobar);  /* show the infobar */
 }
 
-gchar *get_open_filename (gpointer data)
+GSList *get_open_filename (gpointer data)
 {
     mainwin_t *app = data;
     kinst_t *inst = app->einst[app->focused]->inst;
     GtkWidget *chooser;
-    gchar *filename=NULL;
+    GSList *filenames = NULL;
 
     chooser = gtk_file_chooser_dialog_new ("Open File...",
                                             GTK_WINDOW (app->window),
@@ -335,10 +335,6 @@ gchar *get_open_filename (gpointer data)
                                             NULL);
 
     if (inst->filename) {
-#ifdef DEBUG
-        g_print ("get_open_filename() app->fpath: %s\napp->filename: %s\n",
-                inst->fpath, inst->filename);
-#endif
         /* set current file path beginning choice */
         gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER(chooser),
                                             inst->fpath);
@@ -347,13 +343,16 @@ gchar *get_open_filename (gpointer data)
                                         inst->filename);
     }
 
-    if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_OK)
-    {
-        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (chooser));
+    /* set multi-select */
+    gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(chooser),
+                                            TRUE);
+
+    if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_OK) {
+        filenames = gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER (chooser));
     }
     gtk_widget_destroy (chooser);
 
-    return filename;
+    return filenames;
 }
 
 gchar *get_save_filename (gpointer data)

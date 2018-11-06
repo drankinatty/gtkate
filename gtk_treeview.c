@@ -377,6 +377,11 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
 
     treemodel_init (app, argv); /* initialize treemodel, set app->treemodel */
 
+    /* set "has-tooltip" TRUE and then connect "query-tooltip" signal
+     * for handling by the gtk_tree_view_set_tooltip_row() function.
+     */
+    // g_object_set (view, "has-tooltip", TRUE, NULL);
+
     /* selection to set callback */
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(view));
 

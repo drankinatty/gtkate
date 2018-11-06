@@ -73,7 +73,7 @@ treeview/model
 
   * consider (app->treeview)[n] to allow multiple views for showing files grouped by directory, or sorted based on opening or ascending/descending alphabetical sort.
 
-  * set tooltip on each entry showing 'filename' (absolute path & filename)
+  * set tooltip on each entry showing 'filename' (absolute path & filename) in create_view_and_model(), set "has-tooltip" TRUE and then connect "query-tooltip" signal for handling by the gtk_tree_view_set_tooltip_row() function. e.g. g_object_set (view, "has-tooltip", TRUE, NULL);
 
   * place focus on associated textview when selected.
 
