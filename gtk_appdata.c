@@ -74,6 +74,10 @@ static void mainwin_set_defaults (mainwin_t *app, char **argv)
 #endif
     // app->laststyle      = NULL;
     app->highlight      = TRUE;         /* show syntax highlight */
+
+    /* sourcebuffer variable, flags */
+    app->roflag              = FALSE;   /* file_open_dlg checkbox flag */
+
     /* source completion variables & settings */
     app->completion     = NULL;         /* completion provider object */
     app->enablecmplt    = TRUE;         /* enable word completion */
@@ -224,6 +228,8 @@ static kinst_t *kinst_init (kinst_t *inst)
     inst->comment_single = NULL;
     inst->comment_blk_beg = NULL;
     inst->comment_blk_end = NULL;
+
+    inst->readonly = FALSE;
 
     return inst;
 }
@@ -391,6 +397,8 @@ void inst_reset_state (kinst_t *inst)
     inst->comment_single = NULL;
     inst->comment_blk_beg = NULL;
     inst->comment_blk_end = NULL;
+
+    inst->readonly = FALSE;
 }
 
 /* TODO - get_user_cfgfile() add error checks */

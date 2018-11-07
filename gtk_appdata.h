@@ -120,7 +120,7 @@ typedef struct {
     const gchar     *comment_blk_beg;   /* blobk comment begin */
     const gchar     *comment_blk_end;   /* block comment end */
 
-    // gboolean readonly;                  /* readonly flag */
+    gboolean readonly;                  /* readonly flag */
 } kinst_t;
 
 /** struct for each sourceview instance allowing split by showing/hiding
@@ -178,6 +178,9 @@ typedef struct mainwin {
     GtkWidget       *hghltmenu;         /* sourceview syntax highlight menu */
     gchar           *laststyle;         /* sourceview last highlight style */
     gboolean        highlight;          /* syntax highlight enable/disable */
+
+    /* sourcebuffer variable, flags */
+    gboolean        roflag;             /* file_open_dlg checkbox flag */
 
     /* source completion variables & settings */
     GtkSourceCompletion         *completion;

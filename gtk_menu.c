@@ -820,6 +820,8 @@ void menu_file_new_activate (GtkMenuItem *menuitem, gpointer data)
 
 void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
 {
+    mainwin_t *app = data;
+
     /* get new filename */
     GSList *files = get_open_filename (data),
         *iter = files;
@@ -841,6 +843,7 @@ void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
         files = files->next;
     }
     g_slist_free(files);
+    app->roflag = FALSE;    /* reset roflag FALSE */
 
     if (menuitem) {}
 }

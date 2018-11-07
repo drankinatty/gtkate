@@ -711,6 +711,10 @@ void treeview_changed (GtkWidget *widget, gpointer data)
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
 
+        /* set editable based on readonly flag */
+        gtk_text_view_set_editable (GTK_TEXT_VIEW(view),
+                                    inst->readonly ? FALSE : TRUE);
+
         /* scroll to current line */
         if (inst->line > 0)
             /* scroll to insert mark */

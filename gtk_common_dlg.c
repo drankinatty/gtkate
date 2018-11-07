@@ -325,6 +325,7 @@ GSList *get_open_filename (gpointer data)
     mainwin_t *app = data;
     kinst_t *inst = app->einst[app->focused]->inst;
     GtkWidget *chooser;
+    GtkWidget *read_only;
     GSList *filenames = NULL;
 
     chooser = gtk_file_chooser_dialog_new ("Open File...",
@@ -347,8 +348,15 @@ GSList *get_open_filename (gpointer data)
     gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(chooser),
                                             TRUE);
 
+    /* add read-only checkbox */
+    read_only = gtk_check_button_new_with_label ("Open file read-only");
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (read_only), app->roflag);
+    gtk_widget_show (read_only);
+    gtk_file_chooser_set_extra_widget (GTK_FILE_CHOOSER(chooser), read_only);
+
     if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_OK) {
         filenames = gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER (chooser));
+        app->roflag = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (read_only));
     }
     gtk_widget_destroy (chooser);
 

@@ -2,8 +2,6 @@ Overall
 
   * Rename funcitons used in multi-file/multi-view scheme. Come up with consistent and sane convention so that descriptive names describing functionality are used throughout.
 
-  * app->focused (which controls which view and buffer are currently active) needs to be traced to determine when it is update in relationship to where callbacks for statusbar update and on-mark-set are fired. The current view/buffer tracking scheme seems to get behind in some instances leading to statusbar updates to only one of multiple active views.
-
   * implement projects to save and restore collections of files at once.
 
 buffer
@@ -19,6 +17,8 @@ buffer
     - add to treemodel/treeview
     - display file in view
   * save will require check of NULL/filename
+
+  * add/incorporate read-only checkbox on file-open dialog and set read-only flag on kinst. (see toggle in ui/gtk/file_dialog_new.c)
 
   * close-all, handle in two parts, close all active view and then close all documents in tree, then close app.
 
@@ -52,8 +52,6 @@ settings
 
   * add settings option to add colname to end of info on statusbar.
 
-  * on split of view, statusbar not drawn until focus placed in view (consider grab_focus at end of ewin_create_view())
-
 toolbar
 
   * done
@@ -77,6 +75,6 @@ treeview/model
 
   * place focus on associated textview when selected.
 
-  * treeview_changed() save rectangle to restore to exact col/line when buffer brought back into a sourceview window. Currently curor-line is restored at 25% of the window.
+  * treeview_changed() save rectangle to restore to exact col/line when buffer brought back into a sourceview window. Currently cursor-line is restored at 25% of the window.
 
 

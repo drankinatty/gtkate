@@ -1822,6 +1822,9 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
             /* get file uid/gid and mode */
             file_get_stats (inst);
             gtk_text_buffer_set_modified (buffer, FALSE);   /* opened */
+            /* set editable based on readonly flag for 1st display of buf */
+            gtk_text_view_set_editable (GTK_TEXT_VIEW(einst->view),
+                                        inst->readonly ? FALSE : TRUE);
             buffer_get_eol (data);          /* detect EOL, LF, CRLF, CR */
 
 //             /* add GFileMonitor watch on file - or it buf_new_inst? */
@@ -1913,7 +1916,10 @@ void file_open (gpointer data, gchar *filename)
     else {  /* add new inst to tree and insert file in new buffer */
         kinst_t *newinst = treeview_append (app, filename);
         if (newinst) {
-            // app->nfiles++;  /* update file count (no - done in get_new_inst) */
+            /* TODO add check if inst->readonly before allowing insert of
+             * file into existing buffer if existing buffer is readonly
+             */
+            newinst->readonly = app->roflag;    /* set readonly flag for buf */
             buffer_insert_file (data, newinst, NULL);
             /* TODO/FIXME validate einst coordination here to
              * coordinate statusbar association with buffer, and
