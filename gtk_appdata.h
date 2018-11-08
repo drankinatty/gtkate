@@ -181,6 +181,7 @@ typedef struct mainwin {
 
     /* sourcebuffer variable, flags */
     gboolean        roflag;             /* file_open_dlg checkbox flag */
+    GtkWidget       *rdonlyMi;          /* menu item for set_sensitive */
 
     /* source completion variables & settings */
     GtkSourceCompletion         *completion;

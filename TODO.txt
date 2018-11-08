@@ -42,7 +42,7 @@ mainwin
 
 menu
 
-  * done.
+  * add tools menu entry to convert to read/write and from read/write to readonly. Set menu sensitive based on inst->readonly for buffer in active view.
 
 settings
 

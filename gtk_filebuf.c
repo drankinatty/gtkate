@@ -1825,6 +1825,7 @@ gboolean buffer_insert_file (gpointer data, kinst_t *inst, gchar *filename)
             /* set editable based on readonly flag for 1st display of buf */
             gtk_text_view_set_editable (GTK_TEXT_VIEW(einst->view),
                                         inst->readonly ? FALSE : TRUE);
+            gtk_widget_set_sensitive (app->rdonlyMi, TRUE);
             buffer_get_eol (data);          /* detect EOL, LF, CRLF, CR */
 
 //             /* add GFileMonitor watch on file - or it buf_new_inst? */

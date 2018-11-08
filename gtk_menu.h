@@ -28,6 +28,7 @@ void menu_file_saveas_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_file_pagesu_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_file_pprev_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_file_print_activate (GtkMenuItem *menuitem, gpointer data);
+void menu_file_rdonly_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_file_close_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_file_quit_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_edit_undo_activate (GtkMenuItem *menuitem, gpointer data);

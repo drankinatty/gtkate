@@ -701,6 +701,8 @@ void treeview_changed (GtkWidget *widget, gpointer data)
         /* check/set modified state in window title text on selection change */
         if (gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf)))
             title = g_strdup_printf ("%s - %s [modified]", APPNAME, value);
+        else if (inst->readonly)
+            title = g_strdup_printf ("%s - %s [read-only]", APPNAME, value);
         else
             title = g_strdup_printf ("%s - %s", APPNAME, value);
 
@@ -711,9 +713,10 @@ void treeview_changed (GtkWidget *widget, gpointer data)
         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                     GTK_TEXT_BUFFER(inst->buf));
 
-        /* set editable based on readonly flag */
+        /* set editable based on readonly flag, set menu item sensitivity */
         gtk_text_view_set_editable (GTK_TEXT_VIEW(view),
                                     inst->readonly ? FALSE : TRUE);
+        gtk_widget_set_sensitive (app->rdonlyMi, inst->readonly ? TRUE : FALSE);
 
         /* scroll to current line */
         if (inst->line > 0)

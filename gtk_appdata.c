@@ -1145,6 +1145,8 @@ void gtkate_window_set_title (GtkWidget *widget, gpointer data)
         /* check/set modified state in window title text on selection change */
         if (gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(inst->buf)))
             title = g_strdup_printf ("%s - %s [modified]", APPNAME, name);
+        else if (inst->readonly)
+            title = g_strdup_printf ("%s - %s [read-only]", APPNAME, name);
         else
             title = g_strdup_printf ("%s - %s", APPNAME, name);
 

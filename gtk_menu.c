@@ -110,6 +110,7 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     GtkWidget *tolowerMi;
     GtkWidget *totitleMi;
     GtkWidget *joinMi;
+    // GtkWidget *rdonlyMI;
 
     GtkWidget *helpMenu;        /* help menu        */
     GtkWidget *helpMi;
@@ -170,6 +171,9 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
                                                    NULL);
     printMi  = gtk_image_menu_item_new_from_stock (GTK_STOCK_PRINT,
                                                    NULL);
+    app->rdonlyMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_FLOPPY,
+                                                  NULL);
+    gtk_menu_item_set_label (GTK_MENU_ITEM (app->rdonlyMi), "_Remove Read-Only");
     closeMi  = gtk_image_menu_item_new_from_stock (GTK_STOCK_CLOSE,
                                                    NULL);
     quitMi   = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT,
@@ -196,9 +200,14 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), printMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu),
                            gtk_separator_menu_item_new());
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), app->rdonlyMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu),
+                           gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), closeMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (fileMenu), quitMi);
     gtk_menu_shell_append (GTK_MENU_SHELL (menubar), fileMi);
+
+    gtk_widget_set_sensitive (app->rdonlyMi, FALSE); /* default file is read/write */
 
     gtk_widget_add_accelerator (newMi, "activate", mainaccel,
                                 GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -222,6 +231,9 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
                                 GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (printMi, "activate", mainaccel,
                                 GDK_KEY_p, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (app->rdonlyMi, "activate", mainaccel,
+                                GDK_KEY_r, GDK_CONTROL_MASK | GDK_SHIFT_MASK,
+                                GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (closeMi, "activate", mainaccel,
                                 GDK_KEY_w, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (quitMi, "activate", mainaccel,
@@ -651,6 +663,9 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     g_signal_connect (G_OBJECT (closeMi), "activate",        /* file Quit    */
                       G_CALLBACK (menu_file_close_activate), data);
 
+    g_signal_connect (G_OBJECT (app->rdonlyMi), "activate",  /* file Read-Only */
+                      G_CALLBACK (menu_file_rdonly_activate), data);
+
     g_signal_connect (G_OBJECT (quitMi), "activate",        /* file Quit    */
                       G_CALLBACK (menu_file_quit_activate), data);
 
@@ -950,6 +965,35 @@ void menu_file_print_activate (GtkMenuItem *menuitem, gpointer data)
     do_print(data);
 
     if (menuitem) {}
+}
+
+void menu_file_rdonly_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    GtkTreeSelection *selection;        /* tree selection for buffer inst */
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    mainwin_t *app = data;
+    GtkWidget *view = app->einst[app->focused]->view;
+    kinst_t *inst = NULL;
+
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(app->treeview));
+    if (gtk_tree_selection_get_selected (selection, &model, &iter)) {
+        gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
+    }
+    if (!inst)
+        g_warning ("inst_get_selected() - no selection found.");
+
+    if (inst->readonly) {
+        inst->readonly = FALSE;
+        gtk_text_view_set_editable (GTK_TEXT_VIEW(view),
+                                    inst->readonly ? FALSE : TRUE);
+        gtk_widget_set_sensitive (GTK_WIDGET(menuitem), inst->readonly);
+    }
+    else {
+        g_warning ("file read-only menu should not be active.\n");
+    }
+
+    gtkate_window_set_title (NULL, data);
 }
 
 void menu_file_close_activate (GtkMenuItem *menuitem, gpointer data)
