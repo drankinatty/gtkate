@@ -28,6 +28,8 @@ buffer
 
   * additional infobar functions need to be incorporated from gtkwrite.
 
+  * add checks for inst->readonly before allowing "Insert File at Cursor" or "Insert Time and Date".
+
 find/replace
 
   * create findrep_t struct instead of the static globals in gtk_findreplace.c
@@ -42,7 +44,7 @@ mainwin
 
 menu
 
-  * add tools menu entry to convert to read/write and from read/write to readonly. Set menu sensitive based on inst->readonly for buffer in active view.
+  * done.
 
 settings
 
