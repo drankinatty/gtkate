@@ -534,6 +534,10 @@ gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter)
  *  returned from tree_get_iter_from_view(). returns true on success, false
  *  otherwise.
  */
+/* FIXME - make sure focus is set on textview instance to be removed, not
+ *         simply focused on the name of the file in the tree. look at
+ *         adding a grab_focus on the text view prior to calling removl.
+ */
 gboolean treeview_remove_selected (gpointer data)
 {
     mainwin_t *app = data;
@@ -547,7 +551,7 @@ gboolean treeview_remove_selected (gpointer data)
     GtkWidget *view = NULL;
     gchar *name = NULL;
     gint n = app->nview;
-    gboolean valid = FALSE, found = FALSE;
+    gboolean valid = FALSE, found = FALSE, first = TRUE;
 
     /* save iter-to-selected here, then loop closing all instances */
     victim = tree_get_iter_from_view (data);
@@ -643,7 +647,28 @@ gboolean treeview_remove_selected (gpointer data)
 
             /* compare inst pointer to colinst of victim */
             if (inst == colinst) {
-                if (last) {
+                /* add gboolean first = TRUE; and check if (first) get next
+                 * and set next to current
+                 */
+                if (first) {
+                    kinst_t *nextinst = NULL;
+                    if (gtk_tree_model_iter_next (model, &iter)) {
+                        /* get next instance from tree */
+                        gtk_tree_model_get (model, &iter, COLINST, &nextinst, -1);
+                        /* set current to next */
+                        app->einst[app->focused]->inst = nextinst;
+                        /* set buffer in active textview */
+                        gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
+                                                    GTK_TEXT_BUFFER(nextinst->buf));
+                        g_print ("before set selection\n");
+                        /* set treeview selection on current buf COLNAME */
+                        tree_set_selection (view, data);
+                        g_print ("after set selection\n");
+                    }
+                    found = TRUE;   /* set found colinst flag */
+                    goto removefirst;
+                }
+                else if (last) {
                     /* if last iter set, current to last */
                     app->einst[app->focused]->inst = lastinst;
                     /* set buffer in active textview */
@@ -660,10 +685,12 @@ gboolean treeview_remove_selected (gpointer data)
             }
             lastinst = inst;    /* set last instance to current */
             last = &iter;       /* set last iter to current */
+            first = FALSE;      /* unset flag for first file */
 
             /* get next tree iter */
             valid = gtk_tree_model_iter_next (model, &iter);
         }
+        removefirst:;
 
         /* remove victim from tree and free allocated slice */
         gtk_tree_store_remove (GTK_TREE_STORE(app->treemodel), victim);
