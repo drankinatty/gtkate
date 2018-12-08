@@ -660,10 +660,8 @@ gboolean treeview_remove_selected (gpointer data)
                         /* set buffer in active textview */
                         gtk_text_view_set_buffer (GTK_TEXT_VIEW(view),
                                                     GTK_TEXT_BUFFER(nextinst->buf));
-                        g_print ("before set selection\n");
                         /* set treeview selection on current buf COLNAME */
                         tree_set_selection (view, data);
-                        g_print ("after set selection\n");
                     }
                     found = TRUE;   /* set found colinst flag */
                     goto removefirst;
