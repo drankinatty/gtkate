@@ -6,17 +6,11 @@ Overall
 
 buffer
 
-  * adapt file open/save for document tree entries and check for buffer modified.
-    - get_open_filename
-    - split filename
+  * move check_unsaved() logic from on_window_delete_event() to common function to be called on quit or exit as well.
+
+  * adapt file monitoring for document tree entries.
     - get g_stat info
-    - read file
-    - set sourceview language
     - set gfile monitor
-    - update kinst members for app->focused view
-    - add to treemodel/treeview
-    - display file in view
-  * save will require check of NULL/filename
 
   * add/incorporate read-only checkbox on file-open dialog and set read-only flag on kinst. (see toggle in ui/gtk/file_dialog_new.c)
 
@@ -40,7 +34,7 @@ infobars
 
 mainwin
 
-  * fix update window title on file open.
+  * done.
 
 menu
 
