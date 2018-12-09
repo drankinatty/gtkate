@@ -1034,8 +1034,11 @@ void menu_edit_undo_activate (GtkMenuItem *menuitem, gpointer data)
 
     GtkSourceBuffer *buffer = inst->buf;
 
-    if (gtk_source_buffer_can_undo (buffer))
+    if (gtk_source_buffer_can_undo (buffer)) {
         gtk_source_buffer_undo (buffer);
+        /* update modified flag for check_unsaved() if exit after undo */
+        inst->modified = gtk_text_buffer_get_modified (GTK_TEXT_BUFFER(buffer));
+    }
     else
         // show_info_bar_markup_ok ("Unable to undo previous operation.",
         //                         GTK_MESSAGE_INFO, app);

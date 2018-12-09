@@ -5,6 +5,7 @@
 // #include <gdk/gdkkeysyms.h>  /* for GDK key values (moved appdata.h) */
 
 #include "gtk_appdata.h"
+#include "gtk_common_dlg.h"
 #include "gtk_menu.h"
 #include "gtk_textview.h"
 #include "gtk_toolbar.h"

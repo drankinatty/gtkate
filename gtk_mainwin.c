@@ -22,8 +22,26 @@ void on_window_destroy (GtkWidget *widget, gpointer data)
 gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
                                  gpointer data)
 {
-    on_window_destroy (widget, data);
-    return FALSE;
+    // on_window_destroy (widget, data);
+    // return FALSE;
+    const gchar *title = "WARNING - Unsaved Files!";
+    gboolean choice = TRUE;
+    gint unsaved = check_unsaved (data);
+
+    if (!unsaved || unsaved == -1)  /* if no unsaved or error in check */
+        return FALSE;               /* call on_window_destroy */
+
+    gchar *msg = g_strdup_printf ("Warning: %d files are unsaved.\n\n"
+                                  "Cancel Exit and Return to Editor?",
+                                  unsaved);
+
+    // g_warning ("%s\n", msg);
+
+    choice = dlg_yes_no_msg (data, msg, title, TRUE);   /* show dialog */
+
+    g_free (msg);   /* free dialog msg */
+
+    return choice;  /* if "Yes" (TRUE) return to editor and allow save */
 
     if (widget) {}
     if (event) {}
@@ -158,7 +176,7 @@ GtkWidget *create_window (mainwin_t *app)
 
     /* connect all signals */
     g_signal_connect (G_OBJECT (app->window), "delete-event", /* window del */
-                      G_CALLBACK (on_window_delete_event), NULL);
+                      G_CALLBACK (on_window_delete_event), app);
 
     g_signal_connect (G_OBJECT (app->window), "destroy",    /* window dest  */
                       G_CALLBACK (on_window_destroy), NULL);

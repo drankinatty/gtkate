@@ -706,6 +706,35 @@ gboolean treeview_remove_selected (gpointer data)
     return found;
 }
 
+/** check_unsaved buffers by iterating tree and checking inst->modified.
+ *  takes pointer to mainwin_t instance and returns number of unsaved
+ *  files on success (-1 on error).
+ */
+gint check_unsaved (gpointer data)
+{
+    mainwin_t *app = data;
+    GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->treeview));
+    GtkTreeIter iter;
+    gboolean valid;
+    gint unsaved = 0;
+
+    if (!model) {
+        g_error ("error: check_unsaved() tree_view_get_model failed.");
+        return -1;
+    }
+
+    valid = gtk_tree_model_get_iter_first (model, &iter);
+    while (valid) {
+        kinst_t *inst = NULL;
+        gtk_tree_model_get (model, &iter, COLINST, &inst, -1);
+        if (inst->modified)
+            unsaved++;
+        valid = gtk_tree_model_iter_next (model, &iter);
+    }
+
+    return unsaved;
+}
+
 /** doctree callbacks */
 
 /* GtkTreeSelection "changed" signal callback */
