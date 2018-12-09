@@ -185,6 +185,8 @@ static void mainwin_set_defaults (mainwin_t *app, char **argv)
     app->overwrite      = FALSE;        /* ins/overwrite mode flag */
     app->poscurend      = FALSE;        /* scroll to end of file on open */
 
+    app->warnunsaved    = TRUE;         /* warn of unsaved on close */
+
     app->nrecent        = 40;           /* no. of recent chooser files */
     app->nuntitled      = 0;            /* next "Untitled(n) in tree */
 
@@ -568,6 +570,10 @@ static void context_read_keyfile (gpointer data)
             app->eoldefault = app->eol = app->eolos;
     }
 
+    bv = g_key_file_get_boolean (app->keyfile, "editor",
+                                        "warnunsaved", &err);
+    if (chk_key_ok (&err)) app->warnunsaved = bv;
+
     /** initialize "cleanup" values from keyfile */
     bv = g_key_file_get_boolean (app->keyfile, "cleanup",
                                         "posixeof", &err);
@@ -714,6 +720,7 @@ static void context_write_keyfile (gpointer data)
     g_key_file_set_boolean (app->keyfile, "editor", "cmtusesingle", app->cmtusesingle);
     g_key_file_set_boolean (app->keyfile, "editor", "poscurend", app->poscurend);
     g_key_file_set_integer (app->keyfile, "editor", "eoldefault", app->eoldefault);
+    g_key_file_set_boolean (app->keyfile, "editor", "warnunsaved", app->warnunsaved);
     g_key_file_set_boolean (app->keyfile, "cleanup", "posixeof", app->posixeof);
     g_key_file_set_boolean (app->keyfile, "cleanup", "trimendws", app->trimendws);
     g_key_file_set_boolean (app->keyfile, "sourceview", "highlight", app->highlight);

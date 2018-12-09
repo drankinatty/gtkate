@@ -287,6 +287,8 @@ typedef struct mainwin {
     gboolean        posixeof;           /* enforce POSIX eof */
     gboolean        trimendws;          /* trim ending whitespace on save */
 
+    gboolean        warnunsaved;        /* warn of unsaved on close */
+
     gint            nrecent;            /* no. of recent files in chooser */
 
     /* treeview display parameters */

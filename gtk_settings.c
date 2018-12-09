@@ -56,6 +56,7 @@ GtkWidget *create_settings_dlg (gpointer data)
     GtkWidget *chkcmtusesngl;   /* checkbox - use single-line comment */
     // GtkWidget *commentbox;      /* combobox - holds single-line comment string */
     GtkWidget *cmbeoldefault;   /* combobox - set default EOL handling */
+    GtkWidget *chkunsaved;      /* checkbox - prompt for unsaved on close */
     GtkWidget *chktrimendws;    /* checkbox - remove trailing whitespace */
     GtkWidget *chkposixeof;     /* checkbox - require POSIX end of file */
     GtkWidget *spinrecent;      /* spinbutton - no. files in recent chooser */
@@ -653,6 +654,31 @@ GtkWidget *create_settings_dlg (gpointer data)
 
     /* frame within page */
     frame = gtk_frame_new (NULL);
+    gtk_frame_set_label (GTK_FRAME (frame), "User Notifications");
+    gtk_frame_set_label_align (GTK_FRAME (frame), 0.0, 0.5);
+    gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_ETCHED_OUT);
+    gtk_container_set_border_width (GTK_CONTAINER (frame), 5);
+    gtk_widget_show (frame);
+
+    /* table inside frame */
+    table = gtk_table_new (1, 2, TRUE);
+    gtk_table_set_row_spacings (GTK_TABLE (table), 5);
+    gtk_table_set_col_spacings (GTK_TABLE (table), 3);
+    gtk_container_set_border_width (GTK_CONTAINER (table), 5);
+    gtk_container_add (GTK_CONTAINER (frame), table);
+    gtk_widget_show (table);
+
+    /* options checkboxs */
+    chkunsaved = gtk_check_button_new_with_mnemonic ("Warn of _unsaved on close");
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (chkunsaved), app->warnunsaved);
+    gtk_table_attach_defaults (GTK_TABLE (table), chkunsaved, 0, 1, 0, 1);
+    gtk_widget_show (chkunsaved);
+
+    /* pack frame into notebook vboxnb */
+    gtk_box_pack_start (GTK_BOX (vboxnb), frame, FALSE, FALSE, 0);
+
+    /* frame within page */
+    frame = gtk_frame_new (NULL);
     gtk_frame_set_label (GTK_FRAME (frame), "Automatic Cleanups on Load/Save");
     gtk_frame_set_label_align (GTK_FRAME (frame), 0.0, 0.5);
     gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_ETCHED_OUT);
@@ -831,6 +857,9 @@ GtkWidget *create_settings_dlg (gpointer data)
 
     g_signal_connect (cmbeoldefault, "changed",
                       G_CALLBACK (cmbeoldefault_changed), data);
+
+    g_signal_connect (chkunsaved, "toggled",
+                      G_CALLBACK (chkunsaved_toggled), data);
 
     g_signal_connect (chktrimendws, "toggled",
                       G_CALLBACK (chktrimendws_toggled), data);
@@ -1191,6 +1220,14 @@ void cmbeoldefault_changed (GtkWidget *widget, gpointer data)
 
 //     g_print ("settings - eoldefault: %s eoltxt[%d] : %s\n",
 //             selected, app->eoldefault, app->eoltxt[app->eoldefault]);
+}
+
+/** prompt for unsaved on close */
+void chkunsaved_toggled (GtkWidget *widget, gpointer data)
+{
+    mainwin_t *app = data;
+
+    app->warnunsaved = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
 }
 
 /** remove trailing whitespace checkbox */

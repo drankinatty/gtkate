@@ -34,6 +34,7 @@ void entry_comment_activate (GtkWidget *widget, gpointer data);
 void spinwordsize_changed (GtkWidget *widget, gpointer data);
 void chkposcurend_toggled (GtkWidget *widget, gpointer data);
 void cmbeoldefault_changed (GtkWidget *widget, gpointer data);
+void chkunsaved_toggled (GtkWidget *widget, gpointer data);
 void chktrimendws_toggled (GtkWidget *widget, gpointer data);
 void chkposixeof_toggled (GtkWidget *widget, gpointer data);
 void spinrecent_changed (GtkWidget *widget, gpointer data);

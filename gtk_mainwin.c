@@ -25,11 +25,15 @@ gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
     // on_window_destroy (widget, data);
     // return FALSE;
     const gchar *title = "WARNING - Unsaved Files!";
+    mainwin_t *app = data;
     gboolean choice = TRUE;
-    gint unsaved = check_unsaved (data);
+    gint unsaved = 0;
 
-    if (!unsaved || unsaved == -1)  /* if no unsaved or error in check */
+    /* if no unsaved or error in check, or warnunsaved = FALSE */
+    if (!unsaved || unsaved == -1 || !app->warnunsaved)
         return FALSE;               /* call on_window_destroy */
+
+    unsaved = check_unsaved (data); /* get number of unsaved files */
 
     gchar *msg = g_strdup_printf ("Warning: %d files are unsaved.\n\n"
                                   "Cancel Exit and Return to Editor?",
