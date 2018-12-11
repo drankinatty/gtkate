@@ -2,6 +2,38 @@
 
 #define NTESTFN 16
 
+/** handle_unsaved on WM_CLOSE, called from within on_window_delete_event,
+ *  and elsewhere to prompt for save of unsaved files. returns TRUE if
+ *  unsaved files exist, FALSE otherwise.
+ */
+gboolean handle_unsaved (gpointer data)
+{
+    const gchar *title = "WARNING - Unsaved Files!";
+    mainwin_t *app = data;
+    gboolean choice = TRUE;
+    gint unsaved = 0;
+
+    /* check whether to warn on unsaved files */
+    if (!app->warnunsaved)
+        return FALSE;               /* call on_window_destroy */
+
+    unsaved = treeview_count_unsaved (data); /* get number of unsaved files */
+
+    /* if no unsaved or error in check */
+    if (!unsaved || unsaved == -1)
+        return FALSE;               /* call on_window_destroy */
+
+    gchar *msg = g_strdup_printf ("Warning: %d files are unsaved.\n\n"
+                                  "Cancel Exit and Return to Editor?",
+                                  unsaved);
+
+    choice = dlg_yes_no_msg (data, msg, title, TRUE);   /* show dialog */
+
+    g_free (msg);   /* free dialog msg */
+
+    return choice;  /* if "Yes" (TRUE) return to editor and allow save */
+}
+
 /*
  * window callbacks
  */
@@ -22,30 +54,7 @@ void on_window_destroy (GtkWidget *widget, gpointer data)
 gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
                                  gpointer data)
 {
-    // on_window_destroy (widget, data);
-    // return FALSE;
-    const gchar *title = "WARNING - Unsaved Files!";
-    mainwin_t *app = data;
-    gboolean choice = TRUE;
-    gint unsaved = 0;
-
-    /* if no unsaved or error in check, or warnunsaved = FALSE */
-    if (!unsaved || unsaved == -1 || !app->warnunsaved)
-        return FALSE;               /* call on_window_destroy */
-
-    unsaved = check_unsaved (data); /* get number of unsaved files */
-
-    gchar *msg = g_strdup_printf ("Warning: %d files are unsaved.\n\n"
-                                  "Cancel Exit and Return to Editor?",
-                                  unsaved);
-
-    // g_warning ("%s\n", msg);
-
-    choice = dlg_yes_no_msg (data, msg, title, TRUE);   /* show dialog */
-
-    g_free (msg);   /* free dialog msg */
-
-    return choice;  /* if "Yes" (TRUE) return to editor and allow save */
+    return handle_unsaved (data);
 
     if (widget) {}
     if (event) {}

@@ -25,7 +25,7 @@ void doctree_for_each (GtkWidget *widget, mainwin_t *app);
 void doctree_newfile (mainwin_t *app, const gchar *filename);
 gboolean doctree_remove_iter (gpointer data, GtkTreeIter *iter);
 gboolean treeview_remove_selected (gpointer data);
-gint check_unsaved (gpointer data);
+gint treeview_count_unsaved (gpointer data);
 
 /** doctree callbacks */
 void treeview_changed (GtkWidget *widget, gpointer data);

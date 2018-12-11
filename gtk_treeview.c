@@ -710,7 +710,7 @@ gboolean treeview_remove_selected (gpointer data)
  *  takes pointer to mainwin_t instance and returns number of unsaved
  *  files on success (-1 on error).
  */
-gint check_unsaved (gpointer data)
+gint treeview_count_unsaved (gpointer data)
 {
     mainwin_t *app = data;
     GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(app->treeview));
