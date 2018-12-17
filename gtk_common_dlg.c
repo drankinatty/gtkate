@@ -358,6 +358,10 @@ GSList *get_open_filename (gpointer data)
         filenames = gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER (chooser));
         app->roflag = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (read_only));
     }
+    else {
+        g_warning ("user canceled file-open.\n");
+        // dlg_info ("user canceled file-open", "GTK_RESPONSE_CANCEL");
+    }
     gtk_widget_destroy (chooser);
 
     return filenames;

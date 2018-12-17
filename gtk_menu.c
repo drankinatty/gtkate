@@ -842,7 +842,8 @@ void menu_file_open_activate (GtkMenuItem *menuitem, gpointer data)
         *iter = files;
 
     if (!files) {
-        err_dialog ("Error:\n\nNo file selections.");
+        // err_dialog ("Error:\n\nNo file selections.");
+        g_warning ("user canceled file-open.\n");
         return;
     }
 
