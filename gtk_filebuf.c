@@ -2068,6 +2068,15 @@ void file_save (gpointer data, gchar *filename)
  */
 void file_close (gpointer data)
 {
+    mainwin_t *app = data;
+    kinst_t *inst = app->einst[app->focused]->inst;
+
+    /* if unsaved and option to warn set, prompt with save dialog */
+    if (inst->modified && app->warnunsaved) {
+        g_warning ("%s unsaved.", inst->fname);
+        file_save (data, inst->fname);
+    }
+
     if (treeview_remove_selected (data) == FALSE)
         g_error ("treeview_remove_selected() - failed\n");
 

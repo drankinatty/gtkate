@@ -8,6 +8,8 @@ buffer
 
   * move check_unsaved() logic from on_window_delete_event() to common function to be called on quit or exit as well.
 
+  * add check_unsaved() for new modified buffer (Untitled(x)).
+
   * adapt file monitoring for document tree entries.
     - get g_stat info
     - set gfile monitor
