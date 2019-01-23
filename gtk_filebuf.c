@@ -716,8 +716,19 @@ void buffer_comment_lines (gpointer data, GtkTextIter *start, GtkTextIter *end)
     gboolean bracket_hl;
     gint start_pos, end_pos;
 
-    if (inst->comment_single)               /* if comment based on lang_id */
+    /* FIXME - update inst->comment_single so it reflects sourceview language
+     *         and comemnt selection. Not being updated currently on open.
+     */
+    if (inst->comment_single) {             /* if comment based on lang_id */
         commentstr = inst->comment_single;  /* update commentstr from lang_id */
+//         if (!commentstr) {  /* no effect until comment str updated on file open */
+//             const char *msg = "Error: single-comment not defined for language,\n"
+//                               "but, use single-line comment selected in settings\n"
+//                               "Editing -> Comment Settings.\n";
+//             err_dialog_win (app, msg);
+//             return;
+//         }
+    }
 
     bracket_hl = gtk_source_buffer_get_highlight_matching_brackets (GTK_SOURCE_BUFFER (buffer));
     gtk_source_buffer_set_highlight_matching_brackets (GTK_SOURCE_BUFFER (buffer), FALSE);
@@ -1255,6 +1266,7 @@ void buffer_remove_trailing_ws (gpointer data)
     }
 }
 
+/* FIXME move to treeview to be called on all open files on close */
 void buffer_require_posix_eof (gpointer data)
 {
     mainwin_t *app = data;

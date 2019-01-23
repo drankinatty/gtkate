@@ -478,6 +478,7 @@ void sourceview_set_comment_syntax (gpointer data)
                                     { "c-sharp" ,   "// ",   "/* ",    " */" },
                                     { "cmake"   ,   "# " ,    NULL,     NULL },
                                     { "cpp"     ,   "// ",   "/* ",    " */" },
+                                    { "css"     ,    NULL,   "/* ",    " */" },
                                     { "desktop" ,   "# " ,    NULL,     NULL },
                                     { "diff"    ,   "# " ,    NULL,     NULL },
                                     { "dosbatch", "rem " ,    NULL,     NULL },
