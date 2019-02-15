@@ -360,7 +360,8 @@ GtkWidget *create_view_and_model (mainwin_t *app, gchar **argv)
     col = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(col, "Documents");
     /* set column header off (or on) FALSE/TRUE */
-    gtk_tree_view_set_headers_visible (GTK_TREE_VIEW(view), FALSE);
+    // gtk_tree_view_set_headers_visible (GTK_TREE_VIEW(view), FALSE);
+    gtk_tree_view_set_headers_visible (GTK_TREE_VIEW(view), TRUE);
     /* if header is shown, below makes header clickable to sort ascending
      * or descending -- but I don't like the header shown, so we will have
      * to do sort in context menu.

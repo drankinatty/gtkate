@@ -32,7 +32,11 @@
   <color name="bgblack"     value="#06090D"/>
   <color name="bgblackhlt"  value="#121928"/>
   <color name="bgblue"      value="#0E141F"/>
-  <color name="bgbluesel"   value="#122555"/>
+  <color name="bgbluesel"   value="#192E65"/>
+  <!--<color name="bgbluesel"   value="#1C3A86"/>-->
+  <!--<color name="bgbluesel"   value="#1F4092"/>-->
+  <!--<color name="bgbluesel"   value="#2348A5"/>-->
+  <!--<color name="bgbluesel"   value="#14285D"/>-->
   <color name="blue"        value="#4C55FF"/>
   <color name="bluebasen"   value="#55DAE6"/>
   <color name="bluedoxy"    value="#1F1FFF"/>
