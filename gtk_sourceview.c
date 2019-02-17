@@ -471,6 +471,7 @@ void sourceview_set_comment_syntax (gpointer data)
     const gchar *lang_id = gtk_source_language_get_id (inst->language);
 
     const comment_t cmtsyntax[] = { { "ada"     ,   "-- ",    NULL,     NULL },
+                                    { "asm"     ,   "; " ,    NULL,     NULL },
                                     { "asp"     ,   "' " ,    NULL,     NULL },
                                     { "awk"     ,   "# " ,    NULL,     NULL },
                                     { "c"       ,   "// ",   "/* ",    " */" },
