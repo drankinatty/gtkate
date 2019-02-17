@@ -42,6 +42,7 @@
   <color name="bluedoxy"    value="#1F1FFF"/>
   <color name="bluefn"      value="#5C8AFD"/>
   <color name="bluemkr"     value="#253451"/>
+  <color name="bluemkrlt"   value="#2B3C5F"/>
   <color name="blueval"     value="#518BFF"/>
   <color name="bordeaux"    value="#A52A2A"/>
   <color name="cyan"        value="#008A8C"/>
@@ -54,6 +55,7 @@
   <color name="greenhlt"    value="#56B179"/>
   <color name="greenstr"    value="#2E8B57"/>
   <color name="magenta"     value="#FF00FF"/>
+  <color name="magentadk"   value="#FF2AFF"/>
   <color name="orange"      value="#E85848"/>
   <color name="purblefp"    value="#C83BCD"/>
   <color name="purple"      value="#B556F0"/>
@@ -71,7 +73,10 @@
   <style name="bookmark"                    background="bgbluesel"/>
 
   <!-- Bracket Matching -->
-  <style name="bracket-match"               background="bluemkr" bold="true"/>
+  <style name="bracket-match"               foreground="yellow" background="bluemkrlt"/>
+  <!-- <style name="bracket-match"               foreground="magentadk" background="bluemkrlt" bold="true"/> -->
+  <!-- <style name="bracket-match"               foreground="magenta" background="bluemkr" bold="true"/> -->
+  <!-- <style name="bracket-match"               background="bluemkr" bold="true"/> -->
   <style name="bracket-mismatch"            foreground="#white" background="#red" bold="true"/>
 
   <!-- Search Matching -->
