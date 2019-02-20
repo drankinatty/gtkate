@@ -45,7 +45,7 @@
 #define APPNAME "GtKate"
 #define APPSTR "GtKate Text Editor"
 
-#define VER         "0.0.1"
+#define VER         "0.0.2"
 #define SITE        "https://www.rankinlawfirm.com"
 #define LICENSE     "LICENSE"
 #define CFGDIR      "gtkate"

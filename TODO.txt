@@ -8,7 +8,9 @@ buffer
 
   * move check_unsaved() logic from on_window_delete_event() to common function to be called on quit or exit as well.
 
-  * add check_unsaved() for new modified buffer (Untitled(x)).
+  * pre-window close add iteration over all open files and buffers to check_unsaved() for all files including for new modified buffers (Untitled(x)).
+
+  * add post_window_closed iteration over open files applying line-ending and excess whitespace cleanup.
 
   * adapt file monitoring for document tree entries.
     - get g_stat info
@@ -46,7 +48,11 @@ settings
 
   * check app->comment free on close - settings entry currently set with either inst->comment_single if set, or app->comment otherwise.
 
- statusbar
+sourceview
+
+  * find way to change private buffer that is bound to text completion object that is preventing changing buffers shown in active window and allowing text completion to continue working with the current buffer word-list.
+
+statusbar
 
   * add settings option to add colname to end of info on statusbar.
 
