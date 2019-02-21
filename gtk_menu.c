@@ -1308,6 +1308,8 @@ void menu_status_bigredbtn_activate (GtkMenuItem *menuitem, gpointer data)
     // selection_dump (GTK_TEXT_BUFFER(app->buffer), dump2lower);
     /* default if nothing being tested */
     // err_dialog ("Note:  Noting currently hooked to Big Red Button...");
+    // g_print ("sourceview_get_languange_info (data)\n");
+    // sourceview_get_languange_info (data);
     if (menuitem || data) {}
 }
 
@@ -1607,7 +1609,7 @@ void help_about (gpointer data)
     };
 
     static const gchar copyright[] = \
-            "Copyright \xc2\xa9 2018 David C. Rankin";
+            "Copyright \xc2\xa9 2019 David C. Rankin";
 
     static const gchar comments[] = APPSTR;
 
