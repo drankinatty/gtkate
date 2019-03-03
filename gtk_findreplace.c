@@ -1060,6 +1060,9 @@ void btnreplace_activate (GtkWidget *widget, gpointer data)
                             GTK_COMBO_BOX_TEXT(entryreplace));
 
     /* add new terms to find/replace lists (no dups) */
+#ifdef DEBUG
+    g_print ("btnreplace_activate - checking find\n");
+#endif
     for (i = 0; i < app->nfentries; i++)
         if (g_strcmp0 (app->findtext[i], findtext) == 0) goto fdup;
 
@@ -1068,6 +1071,9 @@ void btnreplace_activate (GtkWidget *widget, gpointer data)
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT(entryfind), findtext);
 
   fdup:
+#ifdef DEBUG
+    g_print ("btnreplace_activate - checking replace\n");
+#endif
     for (i = 0; i < app->nrentries; i++)
         if (g_strcmp0 (app->reptext[i], replacetext) == 0) goto rdup;
     /* add to array of entries  & increment indexes */
@@ -1076,6 +1082,9 @@ void btnreplace_activate (GtkWidget *widget, gpointer data)
 
   rdup:
 
+#ifdef DEBUG
+    g_print ("btnreplace_activate - checking realloc\n");
+#endif
     chk_realloc_ent (app);  /* check/realloc find/rep text */
 
     if (app->optprompt) {   /* if option prompt_on_replace do once */
@@ -1163,7 +1172,7 @@ void chk_realloc_ent (gpointer data)
     /* check/realloc find/rep text */
     if (app->nfentries == app->fmax) {
         gchar **tmp = g_realloc (app->findtext,
-                                 2 * app->nfentries * sizeof *(app->findtext));
+                        (app->nfentries + MAXLE) * sizeof *(app->findtext));
         if (!tmp) {
             err_dialog ("btnreplace_activate()\nvirtual memory exhausted.");
             // findrep_destroy (app); /* TODO: graceful exit */
@@ -1175,7 +1184,7 @@ void chk_realloc_ent (gpointer data)
 
     if (app->nrentries == app->rmax) {
         gchar **tmp = g_realloc (app->reptext,
-                                 2 * app->nrentries * sizeof *(app->reptext));
+                        (app->nrentries + MAXLE) * sizeof *(app->reptext));
         if (!tmp) {
             err_dialog ("btnreplace_activate()\nvirtual memory exhausted.");
             // findrep_destroy (app); /* TODO: graceful exit */

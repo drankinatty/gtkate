@@ -2013,6 +2013,11 @@ void file_save (gpointer data, gchar *filename)
     kinst_t *inst = app->einst[app->focused]->inst;
     gchar *posixfn = NULL;
 
+    file_get_stats (inst);              /* update file stats before write
+                                         * to preserve any permission changes
+                                         * since last write, e.g 'chmod +x'
+                                         */
+
     if (filename) {                     /* file_save_as new filename */
         posixfn = get_posix_filename (filename);
         if (!posixfn) {
