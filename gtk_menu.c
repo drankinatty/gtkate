@@ -75,7 +75,6 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
         GtkWidget *tbtextMi;
         GtkWidget *tbiconsMi;
         GtkWidget *tbbothMi;
-    GtkWidget *linenoMi;
     GtkWidget *linehlMi;
     GtkWidget *marginMi;
     GtkWidget *syntaxMi;
@@ -83,6 +82,8 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     GtkWidget *highlightMenu;
     GtkWidget *synschemeMi;
     GtkWidget *synschemeMenu = NULL;
+    GtkWidget *linenoMi;
+    GtkWidget *wordwrapMi;
 
     GtkWidget *statusMenu;      /* status menu      */
     GtkWidget *statusMi;
@@ -376,6 +377,9 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     linenoMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_EDIT,
                                                   NULL);
     gtk_menu_item_set_label (GTK_MENU_ITEM (linenoMi), "Line _Numbers");
+    wordwrapMi = gtk_image_menu_item_new_from_stock (GTK_STOCK_JUSTIFY_FILL,
+                                                  NULL);
+    gtk_menu_item_set_label (GTK_MENU_ITEM (wordwrapMi), "_Word Wrap (on/off)");
 
     /* create entries under 'View' then add to menubar */
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (viewMi), viewMenu);
@@ -416,6 +420,7 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     gtk_menu_shell_append (GTK_MENU_SHELL (viewMenu),
                            gtk_separator_menu_item_new());
     gtk_menu_shell_append (GTK_MENU_SHELL (viewMenu), linenoMi);
+    gtk_menu_shell_append (GTK_MENU_SHELL (viewMenu), wordwrapMi);
 
     gtk_menu_shell_append (GTK_MENU_SHELL (menubar), viewMi);
 
@@ -448,6 +453,8 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
                                 GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator (linenoMi, "activate", mainaccel,
                                 GDK_KEY_F11, 0, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator (wordwrapMi, "activate", mainaccel,
+                                GDK_KEY_F12, 0, GTK_ACCEL_VISIBLE);
 
     /* define status menu */
     statusMi = gtk_menu_item_new_with_mnemonic ("_Status");
@@ -743,6 +750,8 @@ GtkWidget *create_menubar (gpointer data, GtkAccelGroup *mainaccel)
     g_signal_connect (G_OBJECT (linenoMi), "activate",      /* line numbers */
                       G_CALLBACK (menu_view_lineno_activate), data);
 
+    g_signal_connect (G_OBJECT (wordwrapMi), "activate",    /* word wrap    */
+                      G_CALLBACK (menu_view_wordwrap_activate), app);
 
     /* Status Menu */
     g_signal_connect (G_OBJECT (clearMi), "activate",       /* stat Clear   */
@@ -1279,6 +1288,18 @@ void menu_view_lineno_activate (GtkMenuItem *menuitem, gpointer data)
     app->lineno = app->lineno ? FALSE : TRUE;   /* toggle value */
     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW(view),
                                             app->lineno);
+
+    if (menuitem) {}
+}
+
+void menu_view_wordwrap_activate (GtkMenuItem *menuitem, gpointer data)
+{
+    mainwin_t *app = data;
+    GtkWidget *view = app->einst[app->focused]->view;
+
+    app->dynwrap = app->dynwrap ? FALSE : TRUE;
+    gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (view),
+            app->dynwrap ? GTK_WRAP_WORD : GTK_WRAP_NONE);
 
     if (menuitem) {}
 }

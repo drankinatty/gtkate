@@ -52,6 +52,7 @@ void menu_tbshow_text_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_tbshow_icons_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_tbshow_both_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_font_select_activate (GtkMenuItem *menuitem, gpointer data);
+void menu_view_wordwrap_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_status_clear_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_status_properties_activate (GtkMenuItem *menuitem, gpointer data);
 void menu_status_bigredbtn_activate (GtkMenuItem *menuitem, gpointer data);

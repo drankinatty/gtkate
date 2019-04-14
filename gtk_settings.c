@@ -931,8 +931,11 @@ void settings_fontbtn (GtkWidget *widget, gpointer data)
 void chkdynwrap_toggled (GtkWidget *widget, gpointer data)
 {
     mainwin_t *app = data;
+    GtkWidget *view = app->einst[app->focused]->view;
 
     app->dynwrap = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+    gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (view),
+            app->dynwrap ? GTK_WRAP_WORD : GTK_WRAP_NONE);
 }
 
 void chkshowdwrap_toggled (GtkWidget *widget, gpointer data)
