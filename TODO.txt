@@ -48,6 +48,8 @@ settings
 
   * check app->comment free on close - settings entry currently set with either inst->comment_single if set, or app->comment otherwise.
 
+  * there are a number of other globals like dynwrap that need to be moved to buffer instance settings -- after word-completion initial buffer-binding limitation overcome. settings will need to be reloaded on access to re-read individual buffer instance settings.
+
 sourceview
 
   * find way to change private buffer that is bound to text completion object that is preventing changing buffers shown in active window and allowing text completion to continue working with the current buffer word-list.
@@ -70,6 +72,8 @@ textview/multiview edit pane
   * determine if current line highlight can be independent of buffer (doubtful since it is a sourceview feature attached to a sourcebuffer)
 
   * add keypress event handling of shortcut keys to move between open view and prev/next document in treeview.
+
+  * fix dynwrap to be stored as a buffer instance variable rather than global. Implement re-read of settings per-buffer on settings activate. (there are a number of other globals that need to be moved -- after word-completion initial buffer-binding limitation overcome)
 
 treeview/model
 
