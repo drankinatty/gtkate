@@ -5,13 +5,13 @@ SYMNAME := $(APPNAME)_dev
 BINDIR := bin
 OBJDIR := obj
 SRCDIR := .
+# compiler flags
 CFLAGS  := -Wall -Wextra -pedantic -finline-functions -std=gnu11 -Ofast
 CFLAGS  += `pkg-config --cflags gtk+-2.0`
+CFLAGS	+= `pkg-config --cflags gtksourceview-2.0`
 CFLAGS  += -MP -MD
 CFLAGS  += $(with)
 CFLAGS  += $(defn)
-CFLAGS  += -I/usr/include/gtksourceview-2.0/
-LIBS    := -lgtksourceview-2.0
 # auto dependency generation above (remember to add to clean:)
 SOURCES	:= $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
@@ -19,15 +19,9 @@ OBJECTS := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 # linking
 CCLD    := $(CC)
 LDFLAGS := `pkg-config --libs gtk+-2.0`
-# conditional naming, includes and libraries
-# ifeq ($(with),-DWGTKSOURCEVIEW2)
-# APPNAME := gtkwrite
-# SYMNAME := $(APPNAME)_dev
-# CFLAGS  += -I/usr/include/gtksourceview-2.0/
-# LIBS    := -lgtksourceview-2.0
-# else
-# LIBS    :=
-# endif
+LDFLAGS	+= `pkg-config --libs gtksourceview-2.0`
+LIBS    :=
+# conditional naming, includes and libraries for windows
 ifeq ($(ss),-DWIN)
 APPNAME := $(APPNAME).exe
 SYMNAME := $(SYMNAME).exe
