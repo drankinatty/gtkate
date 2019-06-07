@@ -1,10 +1,12 @@
+#default compiler (for windows)
+CC	:= gcc
 # application name
 APPNAME := gtkate
 SYMNAME := $(APPNAME)_dev
 # source/output directories
-BINDIR := bin
-OBJDIR := obj
-SRCDIR := .
+BINDIR 	:= bin
+OBJDIR 	:= obj
+SRCDIR 	:= .
 # compiler flags
 CFLAGS  := -Wall -Wextra -pedantic -finline-functions -std=gnu11 -Ofast
 CFLAGS  += `pkg-config --cflags gtk+-2.0`
