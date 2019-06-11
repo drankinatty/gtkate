@@ -500,7 +500,8 @@ GtkWidget *create_settings_dlg (gpointer data)
         gtk_widget_show (hbtweak);
         gtk_widget_show (label);
 
-        if (inst->comment_blk_beg && inst->comment_blk_end) {
+        if ((inst->comment_blk_beg && inst->comment_blk_end) ||
+            inst->comment_single) {
             msg = g_markup_printf_escaped ("<tt> </tt>language:<tt><b> %s    </b></tt>"
                                         "single-line:<tt><b> '%s'    </b></tt>"
                                         "block:<tt><b> '%s...%s'</b></tt>",
