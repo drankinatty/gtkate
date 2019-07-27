@@ -19,7 +19,7 @@ static gboolean chk_key_ok (GError **err)
 /** default values for main window before settings read from keyfile */
 static void mainwin_set_defaults (mainwin_t *app, char **argv)
 {
-    app->user           = g_get_user_name ();               /* system username */
+    app->user           = g_get_user_name ();   /* system username */
 #ifndef HAVEMSWIN
     app->usrdatadir     = g_strdup_printf ("%s/%s", g_get_user_data_dir(), CFGDIR);
     app->sysdatadir     = g_strdup (NIXSHARE);
@@ -675,7 +675,7 @@ void mainwin_init (gpointer data, char **argv)
     // findrep_init (app);  /* not needed, just free  app->findtext/reptext */
 
     /* process command line arguments */
-    if (argv) {}
+    // if (argv) {}
 }
 
 static void context_write_keyfile (gpointer data)

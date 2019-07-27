@@ -75,7 +75,7 @@ GtkWidget *create_window (mainwin_t *app)
     /* temp vars */
     gint bordersz = 0;
 
-    gchar *iconfile;            /* filename to loading icon */
+    gchar *iconfile;                /* filename to loading icon */
 
     /* create toplevel window */
     if (!(app->window = gtk_window_new (GTK_WINDOW_TOPLEVEL))) {
@@ -219,4 +219,11 @@ GtkWidget *create_window (mainwin_t *app)
     // gtk_widget_show_all (app->window);
 
     return app->window;
+}
+
+/** load files provided on the command line */
+void load_files_from_cli (mainwin_t *app, char **argv)
+{
+    for (gint i = 1; argv[i]; i++)
+        file_open (app, argv[i]);
 }

@@ -30,7 +30,7 @@ buffer
 
 find/replace
 
-  * create findrep_t struct instead of the static globals in gtk_findreplace.c
+  * create findrep_t struct instead of the static globals in gtk_findreplace.c. Fix random crash after multiple documents opened and search performed.
 
 infobars
 

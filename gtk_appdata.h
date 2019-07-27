@@ -45,7 +45,7 @@
 #define APPNAME "GtKate"
 #define APPSTR "GtKate Text Editor"
 
-#define VER         "0.0.2"
+#define VER         "0.0.3"
 #define SITE        "https://www.rankinlawfirm.com"
 #define LICENSE     "LICENSE"
 #define CFGDIR      "gtkate"
@@ -139,6 +139,7 @@ typedef struct {
 
 /** structure for application main window and settings */
 typedef struct mainwin {
+
     /* user, path and config settings */
     const gchar     *user;              /* current username */
     gchar           *usrdatadir;        /* user data dir    */

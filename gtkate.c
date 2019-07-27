@@ -20,6 +20,8 @@ int main (int argc, char **argv) {
         return 1;
     }
 
+    load_files_from_cli (app, argv);
+
     gtk_main ();
 
     mainwin_destroy (app);             /* free allocated members */
