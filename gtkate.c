@@ -15,12 +15,10 @@ int main (int argc, char **argv) {
         return 1;
     }
 
-    if (!create_window (app)) {        /* create the main window   */
+    if (!create_window (app, argv)) {  /* create the main window   */
         g_fprintf (stderr, "error: create_window failed.\n");
         return 1;
     }
-
-    load_files_from_cli (app, argv);
 
     gtk_main ();
 

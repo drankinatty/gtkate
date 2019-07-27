@@ -2,6 +2,13 @@
 
 #define NTESTFN 16
 
+/** load files provided on the command line */
+void load_files_from_cli (mainwin_t *app, char **argv)
+{
+    for (gint i = 1; argv[i]; i++)
+        file_open (app, argv[i]);
+}
+
 /** handle_unsaved on WM_CLOSE, called from within on_window_delete_event,
  *  and elsewhere to prompt for save of unsaved files. returns TRUE if
  *  unsaved files exist, FALSE otherwise.
@@ -64,7 +71,7 @@ gboolean on_window_delete_event (GtkWidget *widget, GdkEvent *event,
  *  and connect callback functions. 'app' contains
  *  widgets for window, text_view and statusbar.
  */
-GtkWidget *create_window (mainwin_t *app)
+GtkWidget *create_window (mainwin_t *app, char **argv)
 {
     GtkAccelGroup *mainaccel;
     GtkWidget *vbox;                /* vbox container   */
@@ -215,15 +222,11 @@ GtkWidget *create_window (mainwin_t *app)
     gtk_widget_grab_focus (app->treeview);
     gtk_widget_grab_focus (app->einst[0]->view);
 
+    /* load all files provided on command line */
+    load_files_from_cli (app, argv);
+
     /* showall widgets */
     // gtk_widget_show_all (app->window);
 
     return app->window;
-}
-
-/** load files provided on the command line */
-void load_files_from_cli (mainwin_t *app, char **argv)
-{
-    for (gint i = 1; argv[i]; i++)
-        file_open (app, argv[i]);
 }

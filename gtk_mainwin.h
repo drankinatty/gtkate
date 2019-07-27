@@ -12,8 +12,7 @@
 #include "gtk_treeview.h"
 #include "gtk_filebuf.h"
 
-GtkWidget *create_window (mainwin_t *app);
-void load_files_from_cli (mainwin_t *app, char **argv);
+GtkWidget *create_window (mainwin_t *app, char **argv);
 
 #endif
 
