@@ -7,6 +7,9 @@ void load_files_from_cli (mainwin_t *app, char **argv)
 {
     for (gint i = 1; argv[i]; i++)
         file_open (app, argv[i]);
+#ifdef DEBUG
+    g_print ("app->nfiles: %d\napp->focused: %d\n", app->nfiles, app->focused);
+#endif
 }
 
 /** handle_unsaved on WM_CLOSE, called from within on_window_delete_event,
@@ -218,12 +221,12 @@ GtkWidget *create_window (mainwin_t *app, char **argv)
     treeview_append (app, NULL);
 #endif
 
+    /* load all files provided on command line */
+    load_files_from_cli (app, argv);
+
     /* return focus to edit window */
     gtk_widget_grab_focus (app->treeview);
     gtk_widget_grab_focus (app->einst[0]->view);
-
-    /* load all files provided on command line */
-    load_files_from_cli (app, argv);
 
     /* showall widgets */
     // gtk_widget_show_all (app->window);

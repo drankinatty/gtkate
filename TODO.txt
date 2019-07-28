@@ -85,4 +85,6 @@ treeview/model
 
   * treeview_changed() save rectangle to restore to exact col/line when buffer brought back into a sourceview window. Currently cursor-line is restored at 25% of the window.
 
+word-completion
 
+  * We are currently fighting a limitation in GtkSourceview2 word-completion that inexplicably binds the initial buffer displayed in a textview to the completion object (owned by the textview). That makes it virtually impossible to do the efficient thing of simply associating different buffers with existing textview objects and unregistering the current buffer and registering the new with the completion object. So unless a solution is found it appears a significant rewrite will be needed to change from creating a single buffer per-file that can be shown in any textview to creating a single textview for each file that must be shown or hidden instead.
