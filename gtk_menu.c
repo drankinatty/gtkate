@@ -1301,6 +1301,8 @@ void menu_view_wordwrap_activate (GtkMenuItem *menuitem, gpointer data)
     gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (view),
             app->dynwrap ? GTK_WRAP_WORD : GTK_WRAP_NONE);
 
+    status_set_default (data);
+
     if (menuitem) {}
 }
 

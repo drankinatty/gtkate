@@ -69,12 +69,13 @@ void status_set_default (gpointer data)
     /* get displayed name from treemodel */
     // name = treeview_getname (data);
 
-    status = g_strdup_printf (" line:%5d / %d  col:%4d  |  %s  |  "
-                            "%s  |  %s  |  %s",/*  |  %s",*/
+    status = g_strdup_printf (" Line:%5d / %d  Col:%4d  |  %s  |  "
+                            "%s  |  %s  |  %s  |  %s",
                             inst->line + 1, lines, inst->col + 1,
                             app->overwrite ? "OVR" : "INS",
                             app->eolnm[app->eol], bomstr[app->bom],
-                            langname/*, name*/);
+                            langname,
+                            app->dynwrap ? "Word Wrap" : "Wrap Off");
 
     if (einst->cid)     /* pop previous statusbar entry */
         gtk_statusbar_pop (GTK_STATUSBAR(einst->sbar), einst->cid);
