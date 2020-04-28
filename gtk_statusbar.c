@@ -75,7 +75,7 @@ void status_set_default (gpointer data)
                             app->overwrite ? "OVR" : "INS",
                             app->eolnm[app->eol], bomstr[app->bom],
                             langname,
-                            app->dynwrap ? "Word Wrap" : "Wrap Off");
+                            app->dynwrap ? "Wrap On" : "Wrap Off");
 
     if (einst->cid)     /* pop previous statusbar entry */
         gtk_statusbar_pop (GTK_STATUSBAR(einst->sbar), einst->cid);
