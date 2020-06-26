@@ -716,7 +716,8 @@ static void context_write_keyfile (gpointer data)
     g_key_file_set_boolean (app->keyfile, "editor", "indentwspc", app->indentwspc);
     g_key_file_set_boolean (app->keyfile, "editor", "indentmixd", app->indentmixd);
     g_key_file_set_boolean (app->keyfile, "editor", "indentauto", app->indentauto);
-    g_key_file_set_string  (app->keyfile, "editor", "comment", app->comment);
+    if (app->comment)
+        g_key_file_set_string  (app->keyfile, "editor", "comment", app->comment);
     g_key_file_set_boolean (app->keyfile, "editor", "cmtusesingle", app->cmtusesingle);
     g_key_file_set_boolean (app->keyfile, "editor", "poscurend", app->poscurend);
     g_key_file_set_integer (app->keyfile, "editor", "eoldefault", app->eoldefault);
