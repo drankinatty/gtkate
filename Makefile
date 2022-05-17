@@ -11,7 +11,7 @@ SRCDIR 	:= .
 CFLAGS  := -Wall -Wextra -pedantic -finline-functions -std=gnu11 -Ofast
 CFLAGS  += `pkg-config --cflags gtk+-2.0`
 CFLAGS	+= `pkg-config --cflags gtksourceview-2.0`
-CFLAGS  += -MP -MD
+CFLAGS  += -MP -MMD
 CFLAGS  += $(with)
 CFLAGS  += $(defn)
 # auto dependency generation above (remember to add to clean:)
