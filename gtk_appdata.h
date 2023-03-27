@@ -254,7 +254,7 @@ typedef struct mainwin {
     gchar           *fontname;          /* pango fontname */
 
     gint            tabstop;            /* number of spaces in tab */
-    gint            softtab;            /* number of spaced to indent */
+    gint            softtab;            /* number of spaces to indent */
     gchar           *tabstring;         /* chars that make up tabstring */
     gboolean        expandtab;          /* insert spaces for tabs */
     gboolean        showtabs;           /* show tab markers */
@@ -267,10 +267,10 @@ typedef struct mainwin {
     gboolean        indentwspc;         /* indent with spaces not tabs */
     gboolean        indentmixd;         /* EMACS mixed spaces/tabs */
 
-    gboolean        dynwrap;
-    gboolean        showdwrap;
-    gboolean        wraptxtcsr;
-    gboolean        pgudmvscsr;
+    gboolean        dynwrap;            /* enable dynamic word-wrap */
+    gboolean        showdwrap;          /* show word-wrap indicators */
+    gboolean        wraptxtcsr;         /* wrap text cursor */
+    gboolean        pgudmvscsr;         /* page up/down moves cursor */
 
     gboolean        lineno;             /* show line numbers */
     gboolean        linehghlt;          /* current line highlight */
@@ -285,7 +285,7 @@ typedef struct mainwin {
     gboolean        overwrite;          /* ins/overwrite mode flag */
     gboolean        poscurend;          /* scroll to end of opened file */
 
-    gboolean        posixeof;           /* enforce POSIX eof */
+    gboolean        posixeof;           /* ensure POSIX eof (last line \n)*/
     gboolean        trimendws;          /* trim ending whitespace on save */
 
     gboolean        warnunsaved;        /* warn of unsaved on close */
